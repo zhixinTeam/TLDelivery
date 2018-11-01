@@ -26,6 +26,7 @@ type
     Timer1: TTimer;
     BtnConn: TButton;
     Timer2: TTimer;
+    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer1Timer(Sender: TObject);
@@ -34,6 +35,7 @@ type
     procedure IdTCPServer1Execute(AContext: TIdContext);
     procedure BtnConnClick(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     FTrayIcon: TTrayIcon;
@@ -256,7 +258,7 @@ var nStr: string;
 begin
   nHint := '';
   Result := False;
-  
+
   nStr := 'Select *,%s As L_ValidMoney From %s b Where L_ID=''%s''';
   nStr := Format(nStr, [nMoney, sTable_Bill, nBill]);
 
@@ -358,7 +360,9 @@ begin
   else if Pos('42', Result) > 0 then
     Result := gPath + 'Report\HuaYan42.fr3'
   else if Pos('52', Result) > 0 then
-    Result := gPath + 'Report\HuaYan42.fr3'
+    Result := gPath + 'Report\HuaYan52.fr3'
+  else if Pos('sl', Result) > 0 then
+    Result := gPath + 'Report\HuaYan_sl.fr3'
   else Result := '';
 end;
 
@@ -578,6 +582,25 @@ begin
     FIsBusy := False;
     WriteLog('打印结束.');
   end;
+end;
+
+procedure TfFormMain.Button1Click(Sender: TObject);
+var
+  nStr:string;
+  myini:TIniFile;
+begin
+  FSyncLock.Enter;
+  myini := TIniFile.Create(gPath + 'Config.ini');
+  try
+    nStr:=myini.ReadString('Test','Data','');
+    if nStr<>'' then
+      FBillList.Add(nStr);
+  finally
+    myini.Free;
+    FSyncLock.Leave;
+  end;
+
+  WriteLog(Format('添加测试打印交货单: %s', [nStr]));
 end;
 
 end.

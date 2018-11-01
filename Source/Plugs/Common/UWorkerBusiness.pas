@@ -671,11 +671,12 @@ end;
 //Desc: 获取指定纸卡的可用金额
 function TWorkerBusinessCommander.GetZhiKaValidMoney(var nData: string): Boolean;
 var nStr: string;
-    nCErpWorker: PDBWorker;
+    nCErpWorker, nCErpWorker2: PDBWorker;
     nVal,nMoney,nCredit: Double;
 begin
   Result := False;
   nCErpWorker := nil;
+  nCErpWorker2 := nil;
   nVal := 0;
 
   nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_ from '+
@@ -694,20 +695,32 @@ begin
         Exit;
       end;
       nMoney := Fields[0].AsFloat;
-
-      nStr := 'select * from %s where A_CID=''%s''';
-      nStr := Format(nStr,[sTable_CusAccount,FIn.FData]);
-      with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-      begin
-        if RecordCount > 0 then
-          nVal := fieldbyname('A_FreezeMoney').AsFloat;
-      end;
-
-      FOut.FData := FloatToStr(nMoney - nVal);
-      Result := True;
     end;
+
+    nStr := 'select * from SAL.SAL_Contract where contractCode=''%s''' ;
+    nStr := Format(nStr,[FIn.FData]);
+    with gDBConnManager.SQLQuery(nStr, nCErpWorker2, sFlag_CErp) do
+    begin
+      if RecordCount > 0 then
+      begin
+        if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
+          nMoney := nMoney + FieldByName('oweValue').AsFloat;
+      end;
+    end;
+
+    nStr := 'select * from %s where A_CID=''%s''';
+    nStr := Format(nStr,[sTable_CusAccount,FIn.FData]);
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    begin
+      if RecordCount > 0 then
+        nVal := fieldbyname('A_FreezeMoney').AsFloat;
+    end;
+
+    FOut.FData := FloatToStr(nMoney - nVal);
+    Result := True;
   finally
     gDBConnManager.ReleaseConnection(nCErpWorker);
+    gDBConnManager.ReleaseConnection(nCErpWorker2);
   end;
 end;
 {$ENDIF}
@@ -2492,7 +2505,7 @@ begin
         else
         begin
           nBill := FieldByName('col_0_0_').AsString;
-          nID := StrToInt(Copy(nBill,8,5));
+          nID := StrToInt(Copy(nBill,11,5));
           Inc(nID);
           nBill := inttostr(nID);
           while Length(nBill) < 5 do
@@ -2501,7 +2514,7 @@ begin
         end;
       end;
 
-      nSQL := 'select isnull(sum(tcontractr0_.rtnSum), 0) as col_0_0_ from SAL.SAL_ContractRtn '+
+      nSQL := 'select isnull(sum(rtnSum), 0) as col_0_0_ from SAL.SAL_ContractRtn '+
               'where contractCode=''%s''';
       nSQL := Format(nSQL,[FieldByName('L_ZhiKa').AsString]);
       with gDBConnManager.WorkerQuery(nErpWorker, nSQL) do
@@ -2519,7 +2532,7 @@ begin
                   SF('pBillCode',               nBill),  //提货单
                   SF('contractCode',            FieldByName('L_ZhiKa').AsString),                        //合同
                   SF('pbillDate',               FieldByName('L_Date').AsString),                         //
-                  //SF('pbillPerson',             FieldByName('L_Man').AsString),                          //开单人
+                  SF('pbillPerson',             FieldByName('L_Man').AsString),                          //开单人
                   SF('pbilltype',               'CTR'),                        //单据类型
                   SF('pbillPsnName',            FieldByName('L_Man').AsString),                          //开单人
                   SF('rcvAccountCode',          FieldByName('L_CusID').AsString),                        //
@@ -2531,12 +2544,14 @@ begin
                   SF('payTypeName',             nTmpDataSet.FieldByName('payTypeName').AsString),        //
                   SF('carCode',                 FieldByName('L_Truck').AsString),                        //
                   SF('enaBeginDate',            FieldByName('L_inTime').AsString),                       //
-                  SF('enaEndDate',              FieldByName('L_OutFact').AsString),                      //
+                  SF('enaEndDate',              FieldByName('L_OutFact').AsString),//sField_SQLServer_Now, sfVal),
                   SF('pickDate',                FieldByName('L_LadeTime').AsString),                     //
                   SF('blncTypeCode',            nTmpDataSet.FieldByName('blncTypeCode').AsString),       //
                   SF('blncTypeName',            nTmpDataSet.FieldByName('blncTypeName').AsString),       //
                   SF('originalDate',            FieldByName('L_Date').AsString),                         //
                   SF('balFlag',                 'Y'),
+                  SF('balanceDate',             FieldByName('L_OutFact').AsString),//sField_SQLServer_Now, sfVal),
+                  SF('salOrgzCode',             '001'),
                   SF('remark',                  FieldByName('L_ID').AsString),                                                               //
                   SF('fillDate',                FieldByName('L_Date').AsString)                                                     //
                   ], 'SAL.SAL_PickBill',             '', True);
@@ -2548,7 +2563,7 @@ begin
                   SF('pBillCode',               nBill),  //提货单
                   SF('seqId',                   1),       //
                   SF('itemCode',                FieldByName('L_Order').AsString),      //物料小编号
-                  SF('prodCode',                FieldByName('L_StockNo').AsString),
+                  SF('prodCode',                Copy(FieldByName('L_StockNo').AsString,1, Length(FieldByName('L_StockNo').AsString)-1)),
                   SF('prodName',                FieldByName('L_StockName').AsString),
                   SF('packForm',                nTmpDataSet.FieldByName('packForm').AsString),
                   SF('packFormName',            nTmpDataSet.FieldByName('packFormName').AsString),
@@ -2572,7 +2587,7 @@ begin
                   SF('rtnSum',                 -FieldByName('L_Value').AsFloat*FieldByName('L_Price').AsFloat, sfVal),
                   SF('accountCode',             FieldByName('L_CusID').AsString),
                   SF('accountName',             FieldByName('L_CusName').AsString),
-                  SF('inputDate',               FormatDateTime('yyyy-mm-dd HH:MM:SS',Now)),
+                  SF('inputDate',               FieldByName('L_OutFact').AsString),
                   SF('inputPsnName',            FieldByName('L_Man').AsString),
                   SF('remark',                  '销售提货'),
                   SF('feeType',                 'PICK'),
@@ -2586,7 +2601,7 @@ begin
                   SF('Order_Code',              nBill),  //提货单
                   SF('PMp_id',                  FieldByName('P_MStation').AsString),
                   //SF('PMp_Name',                         ''),
-                  SF('Item_Code',               FieldByName('L_StockNo').AsString),
+                  SF('Item_Code',               Copy(FieldByName('L_StockNo').AsString,1, Length(FieldByName('L_StockNo').AsString)-1)),
                   SF('Item_Name',               FieldByName('L_StockName').AsString),
 
                   SF('Tare_Time',               FieldByName('L_PDate').AsString),         //皮重信息
@@ -2609,6 +2624,12 @@ begin
                   //SF('Serial_Num',                         ''),
                    ], 'MEM_WTData',             '', True);
       FListB.Add(nSQL);
+
+      nSQL := 'update SAL.SAL_CTRItem set pickQty=pickQty+%s where contractCode=''%s'' and itemCode=''%s'''+
+              ' and prodCode=''%s''';
+      nSQL := Format(nSQL,[FieldByName('L_Value').AsString,FieldByName('L_ZhiKa').AsString,FieldByName('L_Order').AsString,
+              Copy(FieldByName('L_StockNo').AsString,1, Length(FieldByName('L_StockNo').AsString)-1)]);
+      FListA.Add(nSQL);
 
       Next;
     end;
@@ -2721,7 +2742,7 @@ begin
         else
         begin
           nBill := FieldByName('col_0_0_').AsString;
-          nID := StrToInt(Copy(nBill,9,5));
+          nID := StrToInt(Copy(nBill,11,5));
           Inc(nID); 
           nBill := inttostr(nID);
           while Length(nBill) < 5 do
@@ -3007,14 +3028,26 @@ var nStr: string;
 begin
   Result := True;
 
+  //临时业务是否长期
   nStr := 'select * from %s where B_Card=''%s''';
   nStr := Format(nStr, [sTable_TransBase, FIn.FData]);
-
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   begin
     if RecordCount > 0 then
+    begin
       if FieldByName('B_Ctype').AsString = sFlag_OrderCardG then
         Result := False;
+      Exit;
+    end;
+  end;
+
+  //采购业务是否长期
+  nStr := 'select * from %s where O_Card=''%s'' and O_CType=''%s''';
+  nStr := Format(nStr, [sTable_Order, FIn.FData, sFlag_OrderCardG]);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+      Result := False;
   end;
 end;
 

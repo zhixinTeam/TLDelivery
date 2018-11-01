@@ -116,7 +116,8 @@ procedure TfFormGetZhiKa.InitFormData(const nCusName: string);
 var nStr: string;
 begin
   nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
-          ' where (contractStat in (''Formal'' , ''Balance''))';
+          ' where (contractStat in (''Formal'' , ''Balance'')) '+
+          ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
 
   if nCusName <> '' then
     nStr := nStr + ' And (' + nCusName + ')';
@@ -159,6 +160,9 @@ begin
 end;
 
 procedure TfFormGetZhiKa.BtnOKClick(Sender: TObject);
+var
+  nStr, nType:string;
+  nValue:Double;
 begin
   if cxView1.DataController.GetSelectedCount < 0 then
   begin
@@ -170,17 +174,25 @@ begin
   begin
     FZhiKa       := FieldByName('contractCode').AsString;
     FType        := FieldByName('packFormName').AsString;
-//    if Pos('袋' , FType) > 0 then
-//         FType := sFlag_Dai
-//    else FType := sFlag_San;
+
     FStockNo     := FieldByName('ProdCode').AsString;
     FStockName   := FieldByName('ProdName').AsString;
     FCusID       := FieldByName('accountCode').AsString;
     FCusName     := FieldByName('accountName').AsString;
     FPrice       := FieldByName('salePrice').AsFloat;
-    FValue       := FieldByName('leaveQty').AsFloat;
     FFactory     := FieldByName('itemCode').AsString;
 
+    //计算已开单未出厂的量，计算剩余可提货量
+
+    if Pos('袋' , FType) > 0 then
+         nType := sFlag_Dai
+    else nType := sFlag_San;
+    nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_OutFact is null';
+    nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo+nType]);
+    with FDM.QueryTemp(nStr) do
+      nValue := Fields[0].AsFloat;
+
+    FValue       := FieldByName('leaveQty').AsFloat - nValue;
     FStatus      := '';
   end;
   ModalResult := mrOk;

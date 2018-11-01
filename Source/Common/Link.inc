@@ -64,7 +64,7 @@
   //计数器应答模式
   {$DEFINE PrintHYEach}
   //随车开化验单
-  {$DEFINE PrintHeGeZheng}
+  {.$DEFINE PrintHeGeZheng}
   {$DEFINE PrintHuaYanDan}
   //随车开单时打合格证、化验单
   {$DEFINE BatchInHYOfBill}

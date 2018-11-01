@@ -2418,12 +2418,7 @@ begin
     end;
 
     //{$IFDEF UseERP_K3}
-    nStr := CombinStr(FListB, ',', True);
-    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
-    begin
-      nData := nOut.FData;
-      Exit;
-    end;
+
     //{$ENDIF}
 
     nSQL := 'Update %s Set C_Status=''%s'' Where C_Card=''%s''';
@@ -2551,6 +2546,16 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
+  end;
+  
+  if FIn.FExtParam = sFlag_TruckOut then //同步数据
+  begin
+    nStr := CombinStr(FListB, ',', True);
+    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
+    begin
+      nData := nOut.FData;
+      Exit;
+    end;
   end;
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重

@@ -1,2 +1,2 @@
-{.$DEFINE USE_MIT}
+{$DEFINE USE_MIT}
 //中间件控制计数器

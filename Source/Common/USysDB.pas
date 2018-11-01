@@ -547,7 +547,7 @@ const
   -----------------------------------------------------------------------------}
 
   sSQL_NewCustomer = 'Create Table $Table(R_ID $Inc, C_ID varChar(15), ' +
-       'C_Name varChar(80), C_PY varChar(80), C_Addr varChar(100), ' +
+       'C_Name varChar(200), C_PY varChar(200), C_Addr varChar(100), ' +
        'C_FaRen varChar(50), C_LiXiRen varChar(50), C_WeiXin varChar(15),' +
        'C_Phone varChar(15), C_Fax varChar(15), C_Tax varChar(32),' +
        'C_Bank varChar(35), C_Account varChar(18), C_SaleMan varChar(15),' +
@@ -883,7 +883,7 @@ const
        'O_Type Char(1), O_StockNo varChar(32), O_StockName varChar(80),' +
        'O_Truck varChar(15), O_OStatus Char(1),' +
        'O_Man varChar(32), O_Date DateTime,' +
-       'O_KFValue varChar(16), O_KFLS varChar(32),' +
+       'O_KFValue varChar(16), O_KFLS varChar(32),O_StockPrc $Float,' +
        'O_DelMan varChar(32), O_DelDate DateTime, O_Memo varChar(500))';
   {-----------------------------------------------------------------------------
    采购订单表: Order
@@ -1459,7 +1459,7 @@ const
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockBatcode = 'Create Table $Table(R_ID $Inc, B_Stock varChar(32),' +
-       'B_Name varChar(80), B_Prefix varChar(5), B_UseYear Char(1),' +
+       'B_Name varChar(80), B_Prefix varChar(15), B_UseYear Char(1),' +
        'B_Base Integer, B_Incement Integer, B_Length Integer, ' +
        'B_Value $Float, B_Low $Float, B_High $Float, B_Interval Integer,' +
        'B_AutoNew Char(1), B_UseDate Char(1), B_FirstDate DateTime,' +
@@ -1533,6 +1533,67 @@ const
    *.WOM_MsgType: 消息类型 开单  出厂  报表 删单
    *.WOM_SyncNum: 发送次数
    *.WOM_BillType: 业务类型  采购 销售
+  -----------------------------------------------------------------------------}
+  sSQL_NewTransBase = 'Create Table $Table(R_ID $Inc, B_ID varChar(20),' +
+       'B_CType Char(1), B_Card varChar(32), B_Truck varChar(15), ' +
+       'B_TID varChar(15), B_SrcAddr varChar(160), B_DestAddr varChar(160),' +
+       'B_Type Char(1), B_StockNo varChar(32), B_StockName varChar(160),' +
+       'B_PValue $Float, B_PDate DateTime, B_PMan varChar(32),' +
+       'B_MValue $Float, B_MDate DateTime, B_MMan varChar(32),' +
+       'B_Status Char(1), B_NextStatus Char(1), B_IsUsed Char(1),' +
+       'B_Value $Float, B_Man varChar(32), B_Date DateTime,' +
+       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500))';
+  {-----------------------------------------------------------------------------
+   短倒基础表: TransBase
+   *.R_ID: 编号
+   *.B_ID: 短倒基础编号
+   *.B_Card: 磁卡号
+   *.B_Truck: 车牌号
+   *.B_SrcAddr:倒出地点
+   *.B_DestAddr:倒入地点
+   *.B_Type: 类型(袋,散)
+   *.B_StockNo: 物料编号
+   *.B_StockName: 物料描述
+   *.B_PValue,B_PDate,B_PMan: 称皮重
+   *.B_MValue,B_MDate,B_MMan: 称毛重
+   *.B_Status: 当前车辆状态
+   *.B_NextStus: 下一状态
+   *.B_IsUsed: 订单是否占用(Y、正在使用;N、未占用)
+   *.B_Value: 收货量
+   *.B_Man,B_Date: 单据信息
+   *.B_DelMan,B_DelDate: 删除信息
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewTransfer = 'Create Table $Table(R_ID $Inc, T_ID varChar(20),' +
+       'T_Card varChar(32), T_Truck varChar(15), T_PID varChar(15),' +
+       'T_SrcAddr varChar(160), T_DestAddr varChar(160),' +
+       'T_Type Char(1), T_StockNo varChar(32), T_StockName varChar(160),' +
+       'T_PValue $Float, T_PDate DateTime, T_PMan varChar(32),' +
+       'T_MValue $Float, T_MDate DateTime, T_MMan varChar(32),' +
+       'T_Status Char(1), T_NextStatus Char(1), ' +
+       'T_Value $Float, T_Man varChar(32), T_Date DateTime,' +
+       'T_InTime DateTime, T_InMan varChar(32),' +
+       'T_OutFact DateTime, T_OutMan varChar(32),' +
+       'T_DelMan varChar(32), T_DelDate DateTime, T_Memo varChar(500))';
+  {-----------------------------------------------------------------------------
+   入厂表: Transfer
+   *.R_ID: 编号
+   *.T_ID: 短倒业务号
+   *.T_PID: 磅单编号
+   *.T_Card: 磁卡号
+   *.T_Truck: 车牌号
+   *.T_SrcAddr:倒出地点
+   *.T_DestAddr:倒入地点
+   *.T_Type: 类型(袋,散)
+   *.T_StockNo: 物料编号
+   *.T_StockName: 物料描述
+   *.T_PValue,T_PDate,T_PMan: 称皮重
+   *.T_MValue,T_MDate,T_MMan: 称毛重
+   *.T_Value: 收货量
+   *.T_Man,T_Date: 单据信息
+   *.T_InMan,T_InTime:进场信息
+   *.T_OutMan,T_OutFact:出厂信息
+   *.T_DelMan,T_DelDate: 删除信息
   -----------------------------------------------------------------------------}
 
 function CardStatusToStr(const nStatus: string): string;
@@ -1674,6 +1735,12 @@ begin
   AddSysTableItem(sTable_K3_SalePlan, sSQL_NewK3SalePlan);
   AddSysTableItem(sTable_WebOrderMatch,sSQL_NewWebOrderMatch);
   AddSysTableItem(sTable_AuditTruck, sSQL_NewAuditTruck);
+
+  //内倒业务表
+  AddSysTableItem(sTable_TransBase, sSQL_NewTransBase);
+  AddSysTableItem(sTable_TransBaseBak, sSQL_NewTransBase);
+  AddSysTableItem(sTable_Transfer, sSQL_NewTransfer);
+  AddSysTableItem(sTable_TransferBak, sSQL_NewTransfer);
 end;
 
 //Desc: 清理系统表

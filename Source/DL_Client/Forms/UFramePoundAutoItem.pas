@@ -682,7 +682,7 @@ begin
     end;
   end;
 
-  if FUIData.FMData.FValue > 100 then
+  if FUIData.FMData.FValue > 150 then
   begin
     nStr := '超出最大限载重量，请返厂卸车';
     WriteLog(nStr);
@@ -957,7 +957,9 @@ begin
   if Length(FBillItems) < 1 then Exit;
   //无称重数据
 
-  if FCardUsed = sFlag_Provide then
+  //if FCardUsed = sFlag_Provide then
+  //临时过磅也对调重量
+  if FCardUsed <> sFlag_Sale then
   begin
     if FInnerData.FPData.FValue > 0 then
     begin
@@ -1039,7 +1041,14 @@ begin
 
     TimerDelay.Enabled := True
   end
-  else Timer_SaveFail.Enabled := True;
+  else
+  begin
+    Timer_SaveFail.Enabled := True;
+    nStr := '本次称重无效,请下磅后联系管理员处理.';
+    PlayVoice(nStr);
+    LEDDisplay(nStr);
+    WriteLog('车辆[ '+FUIData.FTruck+' ]称重无效,请核对订单所属单位资金是否充足.');
+  end;
 
   if FBarrierGate then
     OpenDoorByReader(FLastReader, sFlag_No);

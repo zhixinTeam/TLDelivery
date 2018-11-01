@@ -10,7 +10,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormBase, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxCheckBox, cxTextEdit,
-  dxLayoutControl, StdCtrls, cxMaskEdit, cxDropDownEdit, cxLabel;
+  dxLayoutControl, StdCtrls, cxMaskEdit, cxDropDownEdit, cxLabel,
+  dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormBatcode = class(TfFormNormal)

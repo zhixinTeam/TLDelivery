@@ -1512,20 +1512,24 @@ begin
   nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_ from '+
           ' SAL.SAL_ContractRtn where contractCode=''$ZID''';
   nStr := MacroValue(nStr, [ MI('$ZID', nCustomer)]);
-  writelog('获取用户可用金SQL：'+nStr);
-
-  with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp) do
-  begin
-    if RecordCount < 1 then
+  //writelog('获取用户可用金SQL：'+nStr);
+  nDBWorker := nil;
+  try
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp) do
     begin
-      nStr := '编号为[ %s ]的合同不存在,或客户账户无效.';
-      nStr := Format(nStr, [nCustomer]);
-      WriteLog(nStr);
-      Exit;
-    end;
-    nVal := Fields[0].AsFloat;
+      if RecordCount < 1 then
+      begin
+        nStr := '编号为[ %s ]的合同不存在,或客户账户无效.';
+        nStr := Format(nStr, [nCustomer]);
+        WriteLog(nStr);
+        Exit;
+      end;
+      nVal := Fields[0].AsFloat;
 
-    Result := Float2PInt(nVal, cPrecision, False) / cPrecision;
+      Result := Float2PInt(nVal, cPrecision, False) / cPrecision;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
   end;
 end;
 {var nStr: string;
