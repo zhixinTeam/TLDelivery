@@ -11,7 +11,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   UFormBase, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxMaskEdit, cxDropDownEdit,
-  cxTextEdit, dxLayoutControl, StdCtrls, cxCheckBox;
+  cxTextEdit, dxLayoutControl, StdCtrls, cxCheckBox, dxSkinsCore,
+  dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormTruck = class(TfFormNormal)
@@ -35,6 +36,9 @@ type
     CheckGPS: TcxCheckBox;
     dxLayout1Item10: TdxLayoutItem;
     dxLayout1Group4: TdxLayoutGroup;
+    checkVipCus: TcxCheckBox;
+    dxLayout1Item11: TdxLayoutItem;
+    dxLayout1Group5: TdxLayoutGroup;
     procedure BtnOKClick(Sender: TObject);
   protected
     { Protected declarations }
@@ -118,12 +122,13 @@ begin
 
     CheckVip.Checked   := FieldByName('T_VIPTruck').AsString = sFlag_TypeVIP;
     CheckGPS.Checked   := FieldByName('T_HasGPS').AsString = sFlag_Yes;
+    checkVipCus.Checked:= FieldByName('T_VipCus').AsString = sFlag_Yes;
   end;
 end;
 
 //Desc: ±£´æ
 procedure TfFormTruck.BtnOKClick(Sender: TObject);
-var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent: string;
+var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent,nVipCus: string;
 begin
   nTruck := UpperCase(Trim(EditTruck.Text));
   if nTruck = '' then
@@ -153,6 +158,11 @@ begin
        nGps := sFlag_Yes
   else nGps := sFlag_No;
 
+  if checkVipCus.Checked then
+    nVipCus := sFlag_Yes
+  else
+    nVipCus := sFlag_No;
+
   if FTruckID = '' then
        nStr := ''
   else nStr := SF('R_ID', FTruckID, sfVal);
@@ -165,6 +175,7 @@ begin
           SF('T_PrePUse', nP),
           SF('T_VIPTruck', nVip),
           SF('T_HasGPS', nGps),
+          SF('T_VipCus', nVipCus),
           SF('T_LastTime', sField_SQLServer_Now, sfVal)
           ], sTable_Truck, nStr, FTruckID = '');
   FDM.ExecuteSQL(nStr);

@@ -477,6 +477,43 @@ begin
   Result := FDR.PrintSuccess;
 end;
 
+function PrintDuanDaoOrderReport(const nOrder: string; var nHint: string;
+ const nPrinter: string = ''; const nMoney: string = '0'): Boolean;
+var nStr: string;
+    nDS: TDataSet;
+begin
+  nHint := '';
+  Result := False;
+
+  nStr := ' Select * from %s where T_ID=''%s''';
+  nStr := Format(nStr, [sTable_Transfer,nOrder]);
+
+  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
+  if not Assigned(nDS) then Exit;
+
+  if nDS.RecordCount < 1 then
+  begin
+    nHint := '短倒单[ %s ] 已无效!!';
+    nHint := Format(nHint, [nOrder]);
+    Exit;
+  end;
+
+  nStr := gPath + 'Report\DuanDaoOrder.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nHint := '无法正确加载报表文件: ' + nStr;
+    Exit;
+  end;
+
+  if nPrinter = '' then
+       FDR.Report1.PrintOptions.Printer := 'My_Default_Printer'
+  else FDR.Report1.PrintOptions.Printer := nPrinter;
+
+  FDR.Dataset1.DataSet := FDM.SQLQuery1;
+  FDR.PrintReport;
+  Result := FDR.PrintSuccess;
+end;
+
 //------------------------------------------------------------------------------
 //Desc: 打印单据
 procedure TfFormMain.PrintBill(var nBase: TRPDataBase; var nBuf: TIdBytes;
@@ -499,7 +536,7 @@ end;
 
 procedure TfFormMain.Timer2Timer(Sender: TObject);
 var nPos: Integer;
-    nBill,nHint,nPrinter,nHYPrinter,nMoney, nType: string;
+    nStr,nBill,nHint,nPrinter,nHYPrinter,nMoney, nType: string;
 begin
   if not FIsBusy then
   begin
@@ -557,6 +594,11 @@ begin
       if nType = 'P' then
       begin
         PrintOrderReport(nBill, nHint, nPrinter);
+        if nHint <> '' then WriteLog(nHint);
+      end else
+      if nType = 'D' then
+      begin
+        PrintDuanDaoOrderReport(nBill, nHint, nPrinter);
         if nHint <> '' then WriteLog(nHint);
       end else
       begin

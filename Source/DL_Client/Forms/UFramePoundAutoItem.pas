@@ -619,7 +619,7 @@ end;
 //Desc: 保存销售
 function TfFrameAutoPoundItem.SavePoundSale: Boolean;
 var nStr: string;
-    nVal,nNet: Double;
+    nVal,nNet,nLoadLimit: Double;
 begin
   Result := False;
   //init
@@ -682,7 +682,16 @@ begin
     end;
   end;
 
-  if FUIData.FMData.FValue > 150 then
+  nStr := 'select T_VipCus from %s where T_Truck=''%s''';
+  nStr := Format(nStr,[sTable_Truck,FUIData.FTruck]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if FieldByName('T_VipCus').AsString = sflag_yes then
+      nLoadLimit := 150
+    else
+      nLoadLimit := 100;
+  end;    
+  if FUIData.FMData.FValue > nLoadLimit then
   begin
     nStr := '超出最大限载重量，请返厂卸车';
     WriteLog(nStr);
@@ -843,7 +852,8 @@ end;
 //------------------------------------------------------------------------------
 //Desc: 原材料或临时
 function TfFrameAutoPoundItem.SavePoundData: Boolean;
-var nNextStatus: string;
+var nNextStatus, nStr: string;
+    nVal: Double;
 begin
   Result := False;
   //init
@@ -853,6 +863,19 @@ begin
     if FUIData.FPData.FValue > FUIData.FMData.FValue then
     begin
       WriteLog('皮重应小于毛重');
+      Exit;
+    end;
+  end;
+
+  //如果拒收，判断皮毛重误差，太多不允许出厂
+  if (FCardUsed = sFlag_Provide) and (FUIData.FYSValid = sFlag_No) then
+  begin
+    nVal := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue);
+    if nVal > gSysParam.FEmpTruckWc then
+    begin
+      nStr := '采购拒收车辆皮毛重误差查出标准值,请联系管理员处理.';
+      WriteSysLog(nStr);
+      PlayVoice(nStr);
       Exit;
     end;
   end;
@@ -1047,7 +1070,7 @@ begin
     nStr := '本次称重无效,请下磅后联系管理员处理.';
     PlayVoice(nStr);
     LEDDisplay(nStr);
-    WriteLog('车辆[ '+FUIData.FTruck+' ]称重无效,请核对订单所属单位资金是否充足.');
+    WriteSysLog('车辆[ '+FUIData.FTruck+' ]称重无效,请核对订单所属单位资金是否充足.');
   end;
 
   if FBarrierGate then
