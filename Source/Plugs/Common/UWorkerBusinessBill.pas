@@ -799,6 +799,8 @@ begin
       System.Delete(FOut.FData, nIdx, 1);
     //xxxxx
 
+    writelog('订单['+FListA.Values['ZhiKa']+'], 车辆['+FListA.Values['Truck']+
+               '],开提货单['+nOut.FData+']时,可用余额['+floattostr(nMoney)+']');
     FDBConn.FConn.CommitTrans;
     Result := True;
   except
@@ -2168,6 +2170,9 @@ begin
             Exit;
             {$ENDIF}
           end;
+
+          writelog('客户['+FCusID+'],提货单['+FID+'],车辆['+FTruck+'],过毛重时可用余额['+
+            FloatToStr(m)+'],实际提货金额['+FloatToStr(FPrice*FValue)+']');
 
           m := Float2Float(FPrice * FValue, cPrecision, True);
           m := m - Float2Float(FPrice * nVal, cPrecision, True);

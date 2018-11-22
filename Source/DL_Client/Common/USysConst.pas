@@ -244,6 +244,7 @@ type
     FVoiceUser  : Integer;                           //语音计数
     FProberUser : Integer;                           //检测器技术
     FEmpTruckWc : Double;                            //空车出厂误差
+    FJsWc       : Double;                            //采购拒收误差
   end;
   //系统参数
 

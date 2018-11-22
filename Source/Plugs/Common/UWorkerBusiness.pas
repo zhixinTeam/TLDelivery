@@ -678,6 +678,7 @@ begin
   nCErpWorker := nil;
   nCErpWorker2 := nil;
   nVal := 0;
+  nCredit := 0;
 
   nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_ from '+
           ' SAL.SAL_ContractRtn where contractCode=''$ZID''';
@@ -704,7 +705,7 @@ begin
       if RecordCount > 0 then
       begin
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
-          nMoney := nMoney + FieldByName('oweValue').AsFloat;
+          nCredit := FieldByName('oweValue').AsFloat;
       end;
     end;
 
@@ -716,7 +717,11 @@ begin
         nVal := fieldbyname('A_FreezeMoney').AsFloat;
     end;
 
-    FOut.FData := FloatToStr(nMoney - nVal);
+    FOut.FData := FloatToStr(nMoney + nCredit - nVal);
+
+    writelog('订单['+FIn.FData+'],余额['+FloatToStr(nMoney)+'],允欠['+FloatToStr(nCredit)+
+             '],冻结['+FloatToStr(nVal)+'],可用['+FOut.FData+']');
+
     Result := True;
   finally
     gDBConnManager.ReleaseConnection(nCErpWorker);

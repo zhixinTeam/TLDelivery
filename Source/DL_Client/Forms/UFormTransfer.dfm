@@ -2,23 +2,23 @@ inherited fFormTransfer: TfFormTransfer
   Left = 438
   Top = 340
   Caption = #20498#26009#31649#29702
-  ClientHeight = 251
-  ClientWidth = 385
+  ClientHeight = 256
+  ClientWidth = 368
   Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 385
-    Height = 251
+    Width = 368
+    Height = 256
     inherited BtnOK: TButton
-      Left = 239
-      Top = 218
-      TabOrder = 8
+      Left = 222
+      Top = 223
+      TabOrder = 9
     end
     inherited BtnExit: TButton
-      Left = 309
-      Top = 218
-      TabOrder = 9
+      Left = 292
+      Top = 223
+      TabOrder = 10
     end
     object EditMate: TcxTextEdit [2]
       Left = 81
@@ -102,15 +102,27 @@ inherited fFormTransfer: TfFormTransfer
       OnKeyPress = EditTruckKeyPress
       Width = 121
     end
-    object CheckBox1: TCheckBox [9]
+    object chkNeiDao: TcxCheckBox [9]
+      Left = 113
+      Top = 223
+      Caption = #22330#20869#20498#36816
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      TabOrder = 8
+      Width = 88
+    end
+    object CheckBox1: TcxCheckBox [10]
       Left = 11
-      Top = 218
-      Width = 97
-      Height = 17
+      Top = 223
       Caption = #27492#21345#20026#22266#23450#21345
-      Color = clWindow
-      ParentColor = False
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
       TabOrder = 7
+      Width = 97
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -152,10 +164,15 @@ inherited fFormTransfer: TfFormTransfer
       end
       inherited dxLayout1Group1: TdxLayoutGroup
         object dxLayout1Item10: TdxLayoutItem [0]
-          CaptionOptions.Text = 'CheckBox1'
+          CaptionOptions.Text = 'cxCheckBox1'
           CaptionOptions.Visible = False
           Control = CheckBox1
-          ControlOptions.AutoColor = True
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item11: TdxLayoutItem [1]
+          CaptionOptions.Text = 'cxCheckBox1'
+          CaptionOptions.Visible = False
+          Control = chkNeiDao
           ControlOptions.ShowBorder = False
         end
       end

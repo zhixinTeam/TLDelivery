@@ -177,6 +177,9 @@ type
     FHYDan      : string;          //化验单号
     FMemo       : string;          //动作备注
     FLadeTime   : string;          //提货时间
+
+    FPrePData   : string;          //预置皮重
+    FIsNei      : string;          //厂内倒料
   end;
 
   TLadingBillItems = array of TLadingBillItem;

@@ -871,7 +871,7 @@ begin
   if (FCardUsed = sFlag_Provide) and (FUIData.FYSValid = sFlag_No) then
   begin
     nVal := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue);
-    if nVal > gSysParam.FEmpTruckWc then
+    if nVal > gSysParam.FJsWc then
     begin
       nStr := '采购拒收车辆皮毛重误差查出标准值,请联系管理员处理.';
       WriteSysLog(nStr);

@@ -32,9 +32,11 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
     Height = 150
     object cxTextEdit1: TcxTextEdit [0]
       Left = 81
-      Top = 96
+      Top = 93
       Hint = 'T.L_Truck'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 125
     end
@@ -48,15 +50,20 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 125
     end
     object cxTextEdit3: TcxTextEdit [2]
       Left = 269
-      Top = 96
+      Top = 93
       Hint = 'T.L_StockName'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 125
     end
@@ -71,6 +78,9 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 2
       Width = 185
     end
@@ -84,49 +94,54 @@ inherited fFrameTruckQuery: TfFrameTruckQuery
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 125
     end
     object cxTextEdit5: TcxTextEdit [5]
       Left = 457
-      Top = 96
+      Top = 93
       Hint = 'T.L_Status'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 181
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item2: TdxLayoutItem
-          Caption = #36710#29260#21495#30721':'
+          CaptionOptions.Text = #36710#29260#21495#30721':'
           Control = EditTruck
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item8: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
-          Caption = #26085#26399#31579#36873':'
+          CaptionOptions.Text = #26085#26399#31579#36873':'
           Control = EditDate
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #36710#29260#21495#30721':'
+          CaptionOptions.Text = #36710#29260#21495#30721':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item5: TdxLayoutItem
-          Caption = #27700#27877#21517#31216':'
+          CaptionOptions.Text = #27700#27877#21517#31216':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem
-          Caption = #24403#21069#29366#24577':'
+          CaptionOptions.Text = #24403#21069#29366#24577':'
           Control = cxTextEdit5
           ControlOptions.ShowBorder = False
         end

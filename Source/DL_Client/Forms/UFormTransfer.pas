@@ -12,7 +12,7 @@ uses
   Dialogs, UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, dxLayoutControl, StdCtrls, cxContainer, cxEdit,
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxButtonEdit,
-  dxLayoutcxEditAdapters, dxSkinsCore, dxSkinsDefaultPainters;
+  dxLayoutcxEditAdapters, dxSkinsCore, dxSkinsDefaultPainters, cxCheckBox;
 
 type
   TfFormTransfer = class(TfFormNormal)
@@ -30,7 +30,9 @@ type
     dxLayout1Item9: TdxLayoutItem;
     EditTruck: TcxButtonEdit;
     dxLayout1Item4: TdxLayoutItem;
-    CheckBox1: TCheckBox;
+    chkNeiDao: TcxCheckBox;
+    dxLayout1Item11: TdxLayoutItem;
+    CheckBox1: TcxCheckBox;
     dxLayout1Item10: TdxLayoutItem;
     procedure BtnOKClick(Sender: TObject);
     procedure EditMIDPropertiesChange(Sender: TObject);
@@ -117,6 +119,11 @@ begin
         Values['CType'] := 'G'
       else
         Values['CType'] := 'L';
+
+      if chkneidao.Checked then
+        Values['NeiDao'] := 'Y'
+      else
+        Values['NeiDao'] := 'N';
     end;
 
     nStr := SaveDDBases(PackerEncodeStr(nList.Text));

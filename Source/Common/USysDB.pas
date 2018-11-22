@@ -198,6 +198,7 @@ const
   sFlag_NFStock       = 'NoFaHuoStock';              //现场无需发货
   sFlag_StrictSanVal  = 'StrictSanVal';              //严格控制散装超发
   sFlag_PEmpTWuCha    = 'EmpTruckWuCha';             //空车出厂误差
+  sFlag_JsWc          = 'PoundJSWc';                 //采购拒收误差
 
   sFlag_CommonItem    = 'CommonItem';                //公共信息
   sFlag_CardItem      = 'CardItem';                  //磁卡信息项
@@ -1544,7 +1545,8 @@ const
        'B_MValue $Float, B_MDate DateTime, B_MMan varChar(32),' +
        'B_Status Char(1), B_NextStatus Char(1), B_IsUsed Char(1),' +
        'B_Value $Float, B_Man varChar(32), B_Date DateTime,' +
-       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500))';
+       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500),'+
+       'B_IsNei char(1) Default ''N'')';
   {-----------------------------------------------------------------------------
    短倒基础表: TransBase
    *.R_ID: 编号
@@ -1564,6 +1566,7 @@ const
    *.B_Value: 收货量
    *.B_Man,B_Date: 单据信息
    *.B_DelMan,B_DelDate: 删除信息
+   *.B_IsNei : 厂内倒料车辆   Y、N
   -----------------------------------------------------------------------------}
 
   sSQL_NewTransfer = 'Create Table $Table(R_ID $Inc, T_ID varChar(20),' +

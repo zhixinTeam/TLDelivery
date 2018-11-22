@@ -13,7 +13,9 @@ uses
   dxLayoutControl, cxGridLevel, cxClasses, cxControls, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   ComCtrls, ToolWin, cxMaskEdit, cxButtonEdit, cxTextEdit, Menus,
-  UBitmapPanel, cxSplitter, cxLookAndFeels, cxLookAndFeelPainters;
+  UBitmapPanel, cxSplitter, cxLookAndFeels, cxLookAndFeelPainters,
+  dxSkinsCore, dxSkinsDefaultPainters, dxSkinscxPCPainter,
+  dxLayoutcxEditAdapters;
 
 type
   TfFrameTruckQuery = class(TfFrameNormal)
@@ -83,7 +85,7 @@ end;
 //------------------------------------------------------------------------------
 function TfFrameTruckQuery.InitFormDataSQL(const nWhere: string): string;
 begin
-  EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
+  EditDate.Text := Format('%s 至 %s', [DateTime2Str(FStart), DateTime2Str(FEnd)]);
   //xxxxx
   Result := 'Select * from $Bill b ';
                
@@ -99,7 +101,7 @@ begin
   //xxxxx
   
   Result := MacroValue(Result, [MI('$Bill', sTable_Bill),
-            MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
+            MI('$S', DateTime2Str(FStart)), MI('$End', DateTime2Str(FEnd))]);
   //xxxxx
 end;
 
@@ -113,7 +115,7 @@ end;
 procedure TfFrameTruckQuery.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
+  if ShowDateFilterForm(FStart, FEnd, True) then InitFormData(FWhere);
 end;
 
 //Desc: 执行查询

@@ -197,6 +197,7 @@ begin
 
             SF('B_Status', sFlag_BillNew),
             SF('B_IsUsed', sFlag_No),
+            SF('B_IsNei', FListA.Values['NeiDao']),
 
             SF('B_Man', FIn.FBase.FFrom.FUser),
             SF('B_Date', sField_SQLServer_Now, sfVal)
@@ -470,8 +471,10 @@ end;
 function TWorkerBusinessDuanDao.GetPostDDItems(var nData: string): Boolean;
 var nStr: string;
     nBills: TLadingBillItems;
+    nNewTransBase : Boolean;
 begin
   Result := False;
+  nNewTransBase := False;
 
   nStr := 'Select C_Status,C_Freeze From %s Where C_Card=''%s''';
   nStr := Format(nStr, [sTable_Card, FIn.FData]);
@@ -500,9 +503,18 @@ begin
     end;
   end;
 
-  nStr := 'Select * From $TransBase b ';
+  {nStr := 'Select * From $TransBase b ';
   nStr := nStr + 'Where B_Card=''$CD''';
   nStr := MacroValue(nStr, [MI('$TransBase', sTable_TransBase),
+          MI('$CD', FIn.FData)]);
+  //xxxxx }
+
+  nStr := 'Select a.*, b.T_Truck, IsNull(b.T_PrePUse, ''N'') PrePUse, IsNull(b.T_PValue, 0) PrePValue, '+
+                 'IsNull(b.T_PrePMan, '''') PrePMan, IsNull(b.T_PrePTime, GETDATE()) PrePTime  '+
+          ' From $TransBase a  Left Join $Truck b On T_Truck=B_Truck ';
+  nStr := nStr + 'Where B_Card=''$CD'' ';
+  nStr := MacroValue(nStr, [MI('$TransBase', sTable_TransBase),
+          MI('$Truck', sTable_Truck),
           MI('$CD', FIn.FData)]);
   //xxxxx
 
@@ -536,11 +548,41 @@ begin
       FNextStatus := FieldByName('B_NextStatus').AsString;
 
       FIsVIP      := FieldByName('B_IsUsed').AsString;
+      FIsNei      := FieldByName('B_IsNei').AsString;  //是否内倒
 
       if FIsVIP <> sFlag_Yes then
       begin
         FStatus     := sFlag_TruckNone;
         FNextStatus := sFlag_TruckNone;
+
+        IF (FIsNei=sFlag_Yes) then    //  厂内内倒车辆
+        begin
+          FStatus     := sFlag_TruckIn;
+          FNextStatus := sFlag_TruckBFP;
+          FValue      := 0;
+
+          FPData.FValue  := 0;
+          FPData.FOperator := '';
+
+          FMData.FValue  := 0;
+          FMData.FOperator := '';
+
+          nNewTransBase:= True;
+        end;
+
+        FPrePData:= FieldByName('PrePUse').AsString;
+        if (FPrePData=sFlag_Yes) then
+        begin
+            FPData.FDate    := FieldByName('PrePTime').AsDateTime;
+            FPData.FValue   := FieldByName('PrePValue').AsFloat;
+            FPData.FOperator:= FieldByName('PrePMan').AsString;
+
+            if FPData.FValue >0 then
+            begin
+              FStatus     := sFlag_TruckBFP;
+              FNextStatus := sFlag_TruckBFM;
+            end;
+        end;
       end;
       //如果订单非占用状态
 
@@ -555,6 +597,14 @@ begin
       FYSValid      := FieldByName('B_DestAddr').AsString;
       FSelected := True;
     end;
+  end;
+
+  if nNewTransBase then
+  begin
+    FIn.FExtParam := sFlag_TruckIn;
+    FIn.FData:= CombineBillItmes(nBills);
+    SavePostDDItems(nData);
+    nBills[0].FID := FOut.FData;
   end;
 
   FOut.FData := CombineBillItmes(nBills);
@@ -896,6 +946,16 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
+  end;
+
+  with nPound[0] do           //  厂内短倒自动出厂
+  begin
+    if (FIsNei=sFlag_Yes)And(FNextStatus = sFlag_TruckOut) then
+    begin
+      FIn.FExtParam := sFlag_TruckOut;
+      FIn.FData:= CombineBillItmes(nPound);
+      SavePostDDItems(nData);
+    end;
   end;
 end;
 

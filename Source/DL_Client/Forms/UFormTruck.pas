@@ -39,6 +39,8 @@ type
     checkVipCus: TcxCheckBox;
     dxLayout1Item11: TdxLayoutItem;
     dxLayout1Group5: TdxLayoutGroup;
+    editPreValue: TcxTextEdit;
+    dxLayout1Item12: TdxLayoutItem;
     procedure BtnOKClick(Sender: TObject);
   protected
     { Protected declarations }
@@ -115,6 +117,7 @@ begin
     EditTruck.Text := FieldByName('T_Truck').AsString;     
     EditOwner.Text := FieldByName('T_Owner').AsString;
     EditPhone.Text := FieldByName('T_Phone').AsString;
+    editPreValue.Text := FieldByName('T_PrePValue').AsString;
     
     CheckVerify.Checked := FieldByName('T_NoVerify').AsString = sFlag_No;
     CheckValid.Checked := FieldByName('T_Valid').AsString = sFlag_Yes;
@@ -135,6 +138,13 @@ begin
   begin
     ActiveControl := EditTruck;
     ShowMsg('请输入车牌号码', sHint);
+    Exit;
+  end;
+
+  if not IsNumber(editPreValue.Text, True) then
+  begin
+    ActiveControl := editPreValue;
+    ShowMsg('请输入有效的皮重数据', sHint);
     Exit;
   end;
 
@@ -176,6 +186,9 @@ begin
           SF('T_VIPTruck', nVip),
           SF('T_HasGPS', nGps),
           SF('T_VipCus', nVipCus),
+          SF('T_PrePMan', gSysParam.FUserName),
+          SF('T_PrePTime', sField_SQLServer_Now, sfVal),
+          SF('T_PrePValue', editPreValue.Text),
           SF('T_LastTime', sField_SQLServer_Now, sfVal)
           ], sTable_Truck, nStr, FTruckID = '');
   FDM.ExecuteSQL(nStr);
