@@ -319,6 +319,15 @@ begin
     Exit;
   end;
 
+  nStr := 'select * from %s where C_Id=''%s''';
+  nStr := Format(nStr,[sTable_Customer,gBillItem.FCusID]);
+  with FDM.QueryTemp(nStr) do
+    if recordcount < 1 then
+    begin
+      ShowMsg('客户档案没有该客户,请先同步客户.',sHint);
+      Exit;
+    end;
+
   nStocks := TStringList.Create;
   nList := TStringList.Create;
   nTmp := TStringList.Create;

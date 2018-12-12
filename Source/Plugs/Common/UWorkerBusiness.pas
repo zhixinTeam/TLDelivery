@@ -670,7 +670,7 @@ end;
 //Date: 2014-09-05
 //Desc: 获取指定纸卡的可用金额
 function TWorkerBusinessCommander.GetZhiKaValidMoney(var nData: string): Boolean;
-var nStr: string;
+var nStr, nCusId: string;
     nCErpWorker, nCErpWorker2: PDBWorker;
     nVal,nMoney,nCredit: Double;
 begin
@@ -680,8 +680,8 @@ begin
   nVal := 0;
   nCredit := 0;
 
-  nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_ from '+
-          ' SAL.SAL_ContractRtn where contractCode=''$ZID''';
+  nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_,accountCode from '+
+          ' SAL.SAL_ContractRtn where contractCode=''$ZID'' group by accountCode';
   nStr := MacroValue(nStr, [ MI('$ZID', FIn.FData)]);
   //xxxxx
   try
@@ -696,6 +696,7 @@ begin
         Exit;
       end;
       nMoney := Fields[0].AsFloat;
+      nCusId := Fields[1].AsString;
     end;
 
     nStr := 'select * from SAL.SAL_Contract where contractCode=''%s''' ;
@@ -710,7 +711,8 @@ begin
     end;
 
     nStr := 'select * from %s where A_CID=''%s''';
-    nStr := Format(nStr,[sTable_CusAccount,FIn.FData]);
+    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+
     with gDBConnManager.WorkerQuery(FDBConn, nStr) do
     begin
       if RecordCount > 0 then
@@ -2685,7 +2687,7 @@ begin
   nSQL := 'select O_ID,O_Truck,O_SaleID,O_ProID,O_StockNo,O_StockPrc,O_Date,O_Man,O_BID,O_Value,' +
           ' D_ID, (D_MValue-D_PValue-isnull(D_KZValue,0)) as D_Value,D_InTime,D_PMan,D_MMan, ' +
           ' D_PValue, D_MValue, D_YSResult, D_KZValue,D_MDate,D_PDate, P_MStation,P_PStation, ' +
-          ' O_StockName, O_ProName '+
+          ' O_StockName, O_ProName, D_OutFact '+
           ' From $OD od , $OO oo, $PL pl ' +
           ' where od.D_OID=oo.O_ID and od.D_ID=pl.P_Order and D_ID=''$IN''';
   nSQL := MacroValue(nSQL, [MI('$OD', sTable_OrderDtl) ,
@@ -2774,7 +2776,7 @@ begin
                     SF('makeDate',              FieldByName('O_Date').AsString),
                     SF('makeEmpId',             FieldByName('O_Man').AsString),  //开单人
                     SF('makeEmpName',           FieldByName('O_Man').AsString),
-                    SF('mdate',                 FieldByName('D_MDate').AsString),
+                    SF('mdate',                 FieldByName('D_OutFact').AsString),  //从毛重时间改成出厂时间
                     SF('itemCode',              FieldByName('O_StockNo').AsString),
                     SF('itemName',              FieldByName('O_StockName').AsString),
                     SF('carNo',                 FieldByName('O_Truck').AsString),
@@ -2788,6 +2790,7 @@ begin
                     SF('unitName',              '吨'),
                     SF('grossWeight',           FieldByName('D_MValue').AsFloat),
                     SF('tareWeight',            FieldByName('D_PValue').AsFloat),
+                    SF('notes',                 FieldByName('D_ID').AsString),
                     SF('waterFlag',             '0')    //全部0
                     ], 'PUR.PUR_InvCheckDetailCar',      '',    True);
       FListA.Add(nSQL);

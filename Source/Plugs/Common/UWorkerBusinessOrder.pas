@@ -1030,12 +1030,7 @@ begin
     end;
 
     //{$IFDEF UseERP_K3}
-    nStr := nPound[0].FID;
-    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockOrder, nStr, '', @nOut) then
-    begin
-      nData := nOut.FData;
-      Exit;
-    end;
+
     //{$ENDIF}
 
     nSQL := 'Select O_CType,O_Card From %s Where O_ID=''%s''';
@@ -1067,6 +1062,16 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
+  end;
+
+  if FIn.FExtParam = sFlag_TruckOut then //称量毛重
+  begin
+    nStr := nPound[0].FID;
+    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockOrder, nStr, '', @nOut) then
+    begin
+      nData := nOut.FData;
+      Exit;
+    end;
   end;
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
