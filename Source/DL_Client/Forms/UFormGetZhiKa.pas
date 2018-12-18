@@ -13,7 +13,7 @@ uses
   cxDropDownEdit, cxTextEdit, cxMaskEdit, cxButtonEdit, cxMCListBox,
   dxLayoutControl, StdCtrls, cxStyles, cxCustomData, cxFilter, cxData,
   cxDataStorage, DB, cxDBData, ADODB, cxGridLevel, cxClasses,
-  cxGridCustomView, cxGridCustomTableView, cxGridTableView,
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, Dialogs,
   cxGridDBTableView, cxGrid, dxSkinsCore, dxSkinsDefaultPainters,
   dxLayoutcxEditAdapters, dxSkinscxPCPainter;
 
@@ -117,8 +117,8 @@ var nStr: string;
 begin
   nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
           ' where (contractStat in (''Formal'' , ''Balance'')) '+
+          ' and enableFlag=''Y''' +
           ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
-
   if nCusName <> '' then
     nStr := nStr + ' And (' + nCusName + ')';
   FDM.QueryData(ADOQuery1, nStr, True);
@@ -161,13 +161,69 @@ end;
 
 procedure TfFormGetZhiKa.BtnOKClick(Sender: TObject);
 var
-  nStr, nType:string;
-  nValue:Double;
+  nStr, nType, nSql, nPreFun, nAddOrDec:string;   //nPreFun 价格方案  nAddOrDec 加or减
+  nValue, nPriceNow, nPriceZX, nPriceGP, nZXFD:Double;
+  //nPriceNow现合同价  nPriceZX最终执行价  nPriceGP挂牌价   nZXFD挂牌价执行幅度
 begin
   if cxView1.DataController.GetSelectedCount < 0 then
   begin
     ShowMsg('请选择订单', sHint);
     Exit;
+  end;
+
+
+  //验证价格是否是最新的
+  with ADOQuery1 do
+  begin
+    nPriceNow := FieldByName('salePrice').AsFloat;
+    nPreFun := FieldByName('realProj').AsString;
+
+    nSql := 'select *,GETDATE() as dtNow from SAL.SAL_ProdPrice_v '+
+          'where priceStat=''1'' and prodCode=''%s'' and packCode=''%s''';
+    nSql := Format(nSql,[FieldByName('ProdCode').AsString,FieldByName('packForm').AsString]);
+  end;
+
+  with FDM.QueryTemp(nSql, True) do
+  begin
+    if recordcount < 1 then
+    begin
+      showmessage('没有可用的挂牌价.');
+      Exit;
+    end;
+
+    if (FieldByName('dtNow').AsDateTime >= FieldByName('enaBeginDate').AsDateTime)
+      and (FieldByName('dtNow').AsDateTime < FieldByName('enaEndDate').AsDateTime) then
+    begin
+      nPriceGP := FieldByName('prodPrice').AsFloat;
+      nAddOrDec := Copy(nPreFun,2,1);
+      nZXFD := StrToFloat(Copy(nPreFun,3,Length(nPreFun)-2));
+      if nAddOrDec = '-' then
+        nPriceZX := nPriceGP - nZXFD
+      else
+        nPriceZX := nPriceGP + nZXFD;
+    end
+    else
+    begin
+      showmessage('挂牌价过期.');
+      Exit;
+    end;
+  end;
+
+  //如果当前合同价不等于最终执行价，修改合同价格
+  if nPriceZX <> nPriceNow then
+  begin
+    nsql := 'update SAL.SAL_CTRItem set salePrice=''%s'' where contractCode=''%s'''+
+            ' and itemCode=''%s'' and prodCode=''%s'' and packForm=''%s''';
+    with ADOQuery1 do
+      nSql := Format(nSql,[FloatToStr(nPriceZX),FieldByName('contractCode').AsString,
+              FieldByName('itemCode').AsString, FieldByName('prodCode').AsString,
+              FieldByName('packForm').AsString]);
+    try
+      fdm.ExecuteSQL(nSql,True);
+    except
+      ShowMessage('调整价格失败请新开单.');
+      Exit;
+    end;
   end;
 
   with ADOQuery1,FBillItem^ do
@@ -179,7 +235,7 @@ begin
     FStockName   := FieldByName('ProdName').AsString;
     FCusID       := FieldByName('accountCode').AsString;
     FCusName     := FieldByName('accountName').AsString;
-    FPrice       := FieldByName('salePrice').AsFloat;
+    FPrice       := nPriceZX;//FieldByName('salePrice').AsFloat;
     FFactory     := FieldByName('itemCode').AsString;
 
     //计算已开单未出厂的量，计算剩余可提货量
