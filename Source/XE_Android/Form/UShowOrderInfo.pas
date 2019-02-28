@@ -23,6 +23,7 @@ type
     lblProvider: TLabel;
     lblID: TLabel;
     Label1: TLabel;
+    CheckBox1: TCheckBox;
     procedure tmrGetOrderTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
@@ -32,6 +33,7 @@ type
     procedure FormActivate(Sender: TObject);
   private
     { Private declarations }
+    FYSTime,FYSBM: string;   //验收次数，验收部门
   public
     { Public declarations }
   end;
@@ -43,8 +45,9 @@ var
 implementation
 var
   gOrders: TLadingBillItems;
-
 {$R *.fmx}
+
+
 
 procedure TFrmShowOrderInfo.BtnCancelClick(Sender: TObject);
 begin
@@ -54,14 +57,39 @@ begin
 end;
 
 procedure TFrmShowOrderInfo.BtnOKClick(Sender: TObject);
+var
+  nYSVaid: string;
 begin
   inherited;
   if Length(gOrders)>0 then
   with gOrders[0] do
   begin
+    if CheckBox1.IsChecked then
+          nYSVaid := 'N'
+    else  nYSVaid := 'Y';
+    FYSValid := nYSVaid;
+
     FKZValue := StrToFloatDef(EditKZValue.Text, 0);
 
-    if SavePurchaseOrders('X', gOrders) then MainForm.Show;
+    if FYSTime ='N' then
+    begin
+      if SavePurchaseOrders('X', gOrders)then
+        MainForm.Show;
+    end;
+    if FYSTime ='Y' then
+    begin
+      if gsysparam.FGroup='WLBGroup' then //如果是化验室
+      begin
+        if SaveWlbYS('X', gOrders)then
+          MainForm.Show;
+      end
+      else
+      begin
+        if SavePurchaseOrders('X', gOrders)then
+          MainForm.Show;
+      end;
+    end;
+
   end;
 end;
 
@@ -115,7 +143,7 @@ end;
 
 procedure TFrmShowOrderInfo.tmrGetOrderTimer(Sender: TObject);
 var nIdx, nInt: Integer;
-    nStr : string;
+    nStr, nStockNo, nYSTime,nYSBM: string;
 begin
   tmrGetOrder.Enabled := False;
 
@@ -150,7 +178,27 @@ begin
     lblTruck.Text    := FTruck;
 
     EditKZValue.Text := FloatToStr(FKZValue);
+    nStockNo := FStockNo;
   end;
+  if not GetYSRules(nStockNo, nYSTime, nYSBM) then
+  begin
+    ShowMessage('获取验收规则和验收部门失败.');
+    Exit;
+  end;
+
+  if nYSTime = 'N' then  //一次验收
+  begin
+    if ((nYSBM ='Y') and (gSysParam.FGroup='HYSGroup')) or ((nYSBM ='N') and (gSysParam.FGroup='WLBGroup')) then
+    begin
+    end
+    else
+    begin
+      ShowMessage('没有该品种的验收权限.');
+      Exit;
+    end;
+  end;
+  FYSTime := nYSTime;
+  FYSBM := nYSBM;
 
   BtnOK.Enabled := True;
 end;

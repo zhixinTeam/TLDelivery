@@ -1,6 +1,7 @@
 inherited FrmShowOrderInfo: TFrmShowOrderInfo
   Caption = 'frmFormBase1'
   ClientWidth = 351
+  Position = Designed
   OnActivate = FormActivate
   OnKeyUp = FormKeyUp
   OnShow = FormShow
@@ -135,6 +136,17 @@ inherited FrmShowOrderInfo: TFrmShowOrderInfo
         Size.PlatformDefault = False
         TextSettings.Font.Size = 16.000000000000000000
         Text = #27966#36710#21333#21495':'
+      end
+      object CheckBox1: TCheckBox
+        StyledSettings = [Family, Style, FontColor]
+        Position.X = 8.000000000000000000
+        Position.Y = 330.000000000000000000
+        Size.Width = 265.000000000000000000
+        Size.Height = 33.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 13
+        Text = #25298#25910
+        TextSettings.Font.Size = 24.000000000000000000
       end
     end
   end

@@ -52,6 +52,7 @@ type
     CheckDelete: TcxCheckBox;
     N10: TMenuItem;
     N11: TMenuItem;
+    ERP1: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -68,6 +69,7 @@ type
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
     procedure cxView1DblClick(Sender: TObject);
+    procedure ERP1Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
@@ -272,6 +274,11 @@ var nStr: string;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
+    if SQLQuery.FieldByName('L_OutFact').AsString = '' then
+    begin
+      ShowMessage('尚未出厂,不能打印提货单.');
+      Exit;
+    end;
     nStr := SQLQuery.FieldByName('L_ID').AsString;
     PrintBillReport(nStr, False);
   end;
@@ -453,6 +460,11 @@ begin
     CreateBaseFormItem(cFI_FormMemo, '', @nP);
     //display
   end;
+end;
+
+procedure TfFrameBill.ERP1Click(Sender: TObject);
+begin
+  //
 end;
 
 initialization

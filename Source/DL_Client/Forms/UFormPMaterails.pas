@@ -12,7 +12,7 @@ uses
   UDataModule, UFormBase, cxGraphics, dxLayoutControl, StdCtrls,
   cxMaskEdit, cxDropDownEdit, cxMCListBox, cxMemo, cxContainer, cxEdit,
   cxTextEdit, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
-  dxSkinsCore, dxSkinsDefaultPainters;
+  dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
 
 type
   TfFormMaterails = class(TBaseForm)
@@ -57,6 +57,10 @@ type
     EditID: TcxTextEdit;
     cxbLs: TcxComboBox;
     dxLayoutControl1Item15: TdxLayoutItem;
+    editYSTime: TcxComboBox;
+    dxLayoutControl1Item16: TdxLayoutItem;
+    editYSBM: TcxComboBox;
+    dxLayoutControl1Item17: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnAddClick(Sender: TObject);
@@ -65,6 +69,7 @@ type
     procedure BtnExitClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure cxComboBox1PropertiesChange(Sender: TObject);
   private
     { Private declarations }
     FRecordID: string;
@@ -220,6 +225,20 @@ begin
          nData := sFlag_Yes
     else nData := sFlag_No;
   end;
+
+  if Sender = editYSTime then
+  begin
+    if editYSTime.ItemIndex = 1 then
+         nData := sFlag_Yes
+    else nData := sFlag_No;
+  end;
+
+  if Sender = editYSBM then
+  begin
+    if editYSBM.ItemIndex = 1 then
+         nData := sFlag_Yes
+    else nData := sFlag_No;
+  end;
 end;
 
 function TfFormMaterails.SetData(Sender: TObject; const nData: string): Boolean;
@@ -233,6 +252,24 @@ begin
     if nData = sFlag_Yes then
          EditPValue.ItemIndex := 0
     else EditPValue.ItemIndex := 1;
+  end;
+
+  if Sender = editYSTime then
+  begin
+    Result := True;
+
+    if nData = sFlag_Yes then
+         editYSTime.ItemIndex := 1
+    else editYSTime.ItemIndex := 0;
+  end;
+
+  if Sender = editYSBM then
+  begin
+    Result := True;
+
+    if nData = sFlag_Yes then
+         editYSBM.ItemIndex := 1
+    else editYSBM.ItemIndex := 0;
   end;
 end;
 
@@ -334,17 +371,17 @@ begin
     ShowMsg('请填写原材料名称', sHint); Exit;
   end;
 
-  if not IsNumber(EditPrice.Text, True) then
-  begin
-    EditPrice.SetFocus;
-    ShowMsg('请输入有效的单价', sHint); Exit;
-  end;
-
-  if (not IsNumber(EditPTime.Text, False)) or (StrToInt(EditPTime.Text) < 1) then
-  begin
-    EditPTime.SetFocus;
-    ShowMsg('时限为>0的整数', sHint); Exit;
-  end;
+//  if not IsNumber(EditPrice.Text, True) then
+//  begin
+//    EditPrice.SetFocus;
+//    ShowMsg('请输入有效的单价', sHint); Exit;
+//  end;
+//
+//  if (not IsNumber(EditPTime.Text, False)) or (StrToInt(EditPTime.Text) < 1) then
+//  begin
+//    EditPTime.SetFocus;
+//    ShowMsg('时限为>0的整数', sHint); Exit;
+//  end;
 
   nList := TStringList.Create;
   nList.Text := SF('M_PY', GetPinYinOfStr(EditName.Text));
@@ -402,6 +439,14 @@ begin
     FDM.ADOConn.RollbackTrans;
     ShowMsg('数据保存失败', '未知原因');
   end;
+end;
+
+procedure TfFormMaterails.cxComboBox1PropertiesChange(Sender: TObject);
+begin
+  if editYSTime.ItemIndex = 1 then
+    editYSBM.Enabled := False
+  else
+    editYSBM.Enabled := True;
 end;
 
 initialization

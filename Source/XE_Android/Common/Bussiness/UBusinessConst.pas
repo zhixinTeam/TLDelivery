@@ -78,6 +78,10 @@ const
   cBC_SyncStockBill           = $0082;   //同步单据到远程
   cBC_CheckStockValid         = $0083;   //验证是否允许发货
 
+  cBC_GetYSRules              = $1001;   //获取原材料验收规则
+  cBC_SaveWlbYs               = $1002;   //保存物流部二次验收
+  cBC_GetWlbYsStatus          = $1003;   //获取物流部验收结果
+
 type
   PSystemParam = ^TSystemParam;
   TSystemParam = record
@@ -95,6 +99,7 @@ type
     FAutoLogin:Boolean;
 
     FSvrService:string;
+    FGroup:string;
   end;
 
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
@@ -148,6 +153,8 @@ type
 
     FKZValue    : Double;          //供应扣除
     FMemo       : string;          //动作备注
+
+    FYSValid    : string;          //验收通过'Y';拒收'N'
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -278,6 +285,7 @@ begin
              FKZValue := StrToFloatDef(nStr, 0)
         else FKZValue := 0;
 
+        FYSValid := Values['YSValid'];
         FMemo := Values['Memo'];
       end;
 
@@ -355,6 +363,7 @@ begin
 
         Values['KZValue']    := FloatToStr(FKZValue);
         Values['Memo']       := FMemo;
+        Values['YSValid']    := FYSValid;
       end;
 
       nListA.Add(PackerEncodeStr(nListB.Text));

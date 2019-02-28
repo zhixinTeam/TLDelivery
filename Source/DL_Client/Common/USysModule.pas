@@ -44,8 +44,8 @@ uses
   //----------------------------------------------------------------------------
   UFormGetWechartAccount, UFrameAuditTruck, UFormAuditTruck, UFrameBillBuDanAudit,
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo,
-  UFrameHYStock, UFrameHYData, UFrameHYRecord,
-  UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail ;
+  UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormChangeState,
+  UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail,UFormCusLimit ;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

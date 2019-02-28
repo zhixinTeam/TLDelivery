@@ -135,6 +135,22 @@ begin
     end;
   end;
 
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, 'GPSParam', 'GPSFactID']);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    gSysParam.FGPSFactID := Fields[0].AsString;
+  end;
+
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, 'GPSParam', 'GPSValidTime']);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    gSysParam.FGPSValidTime := Fields[0].AsString;
+  end;
+
   //----------------------------------------------------------------------------
   nStr := 'Select D_Value From %s Where D_Name=''%s''';
   nStr := Format(nStr, [sTable_SysDict, sFlag_MITSrvURL]);

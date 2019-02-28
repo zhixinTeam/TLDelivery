@@ -120,6 +120,11 @@ const
   cBC_WX_DownLoadPic          = $0522;   //微信：下载图片
   cBC_WX_get_shoporderbyTruck = $0523;   //微信：根据车牌号获取订单信息
 
+  cBC_GetYSRules              = $1001;   //获取原材料验收规则
+  cBC_SaveWlbYs               = $1002;   //保存物流部二次验收
+  cBC_GetWlbYsStatus          = $1003;   //获取物流部验收结果
+  cBC_GetReaderCard           = $1004;   //读卡器有效卡
+
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
   TWorkerQueryFieldData = record

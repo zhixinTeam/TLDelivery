@@ -302,7 +302,14 @@ var nIdx: Integer;
 begin
   Result := False;
   nTruck := FListA.Values['Truck'];
-  if not VerifyTruckNO(nTruck, nData) then Exit;
+  //if not VerifyTruckNO(nTruck, nData) then Exit;
+
+  if not TWorkerBusinessCommander.CallMe(cBC_SyncCustomer, nStr, '', @nOut) then
+  begin
+    nData := nOut.FData;
+    Exit;
+  end;
+  //同步客户
 
   nStr := 'Select %s as T_Now,T_LastTime,T_NoVerify,T_Valid From %s ' +
           'Where T_Truck=''%s''';
@@ -425,7 +432,7 @@ begin
 
   nCErpWorker := nil;
   nStr := 'select * from sal.SAL_Contract_v where '+
-          ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s''';
+          ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
   nStr := Format(nStr,[FListA.Values['ZhiKa'],nStockNo,nType]);
 
   try
@@ -709,6 +716,7 @@ begin
             SF('T_Valid'   , sFlag_Yes),
             SF('T_Value'   , FListC.Values['Value'], sfVal),
             SF('T_VIP'     , FListA.Values['IsVIP']),
+            SF('T_CusName' , FListA.Values['CusName']),
             SF('T_HKBills' , nOut.FData + '.')
             ], sTable_ZTTrucks, '', True);
           gDBConnManager.WorkerExec(FDBConn, nSQL);
@@ -2560,6 +2568,14 @@ begin
     begin
       nData := nOut.FData;
       Exit;
+    end
+    else
+    begin
+      nStr := AdjustListStrFormat2(FListB, '''', True, ',', False);
+
+      nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID In (%s)';
+      nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes, nStr]);
+      gDBConnManager.WorkerExec(FDBConn, nSQL);
     end;
   end;
 

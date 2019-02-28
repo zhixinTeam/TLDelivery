@@ -179,6 +179,9 @@ const
 
   cFI_FrameTransferDetailQuery = $0094;              //短倒明细查询
   cFI_FormTransDetail   = $0096;                     //短倒办理
+  cFI_FormChangeState   = $0097;                     //修改过磅单状态
+  cFI_FormCusLimit      = $0098;                     //客户提货限制
+
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -362,10 +365,12 @@ begin
   AddMenuModuleItem('MAIN_D10', cFI_FrameSanPreHK);
   AddMenuModuleItem('MAIN_D11', cFI_FrameAuditTruck);
   AddMenuModuleItem('MAIN_D12', cFI_FrameBillBuDanAudit);
+  AddMenuModuleItem('MAIN_D13', cFI_FormCusLimit, mtForm);
 
   AddMenuModuleItem('MAIN_E01', cFI_FramePoundManual);
   AddMenuModuleItem('MAIN_E02', cFI_FramePoundAuto);
   AddMenuModuleItem('MAIN_E03', cFI_FramePoundQuery);
+  AddMenuModuleItem('MAIN_E04', cFI_FormChangeState, mtForm);     //修改状态重新过磅
 
   AddMenuModuleItem('MAIN_F01', cFI_FormLadDai, mtForm);
   AddMenuModuleItem('MAIN_F03', cFI_FrameZhanTaiQuery);

@@ -285,5 +285,9 @@ inherited fFrameBill: TfFrameBill
       Caption = #26597#35810#26410#23436#25104
       OnClick = N4Click
     end
+    object ERP1: TMenuItem
+      Caption = #21516#27493#21333#25454#33267'ERP'
+      OnClick = ERP1Click
+    end
   end
 end

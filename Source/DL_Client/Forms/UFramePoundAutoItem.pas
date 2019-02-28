@@ -67,6 +67,8 @@ type
     procedure EditBillKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
+    FLogin: Integer;
+    //摄像机登陆
     FCardUsed: string;
     //卡片类型
     FLEDContent: string;
@@ -117,6 +119,7 @@ type
     //播放语音
     procedure LEDDisplay(const nContent: string);
     //LED显示
+    function IfForceLable:Boolean;
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -153,12 +156,16 @@ begin
 
   FLEDContent := '';
   FEmptyPoundInit := 0;
+  FLogin := -1;
 end;
 
 procedure TfFrameAutoPoundItem.OnDestroyFrame;
 begin
   gPoundTunnelManager.ClosePort(FPoundTunnel.FID);
   //关闭表头端口
+  {$IFDEF CapturePictureEx}
+  FreeCapture(FLogin);
+  {$ENDIF}
   inherited;
 end;
 
@@ -243,6 +250,13 @@ begin
 
   FPoundTunnel := nTunnel;
   SetUIData(True);
+
+  {$IFDEF CapturePictureEx}
+  if not InitCapture(FPoundTunnel,FLogin) then
+    WriteLog('通道:'+ FPoundTunnel.FID+'初始化失败,错误码:'+IntToStr(FLogin))
+  else
+    WriteLog('通道:'+ FPoundTunnel.FID+'初始化成功,登陆ID:'+IntToStr(FLogin));
+  {$ENDIF}
 
   if Assigned(FPoundTunnel.FOptions) then
   with FPoundTunnel.FOptions do
@@ -422,6 +436,19 @@ begin
                  (FNextStatus = sFlag_TruckBFM);
     //可称重状态判定
 
+    //供应类业务,且物流部未验收，则直接跳出循环
+    if (FCardUsed=sFlag_Provide) and (FNextStatus = sFlag_TruckBFM) and GetWlbYsStatus(FStockNo,FID) then
+    begin
+      nInt := 0;
+      nVoice := '物流部未验收,车辆 %s 不能过磅';
+      nVoice := Format(nVoice, [FTruck]);
+
+      nStr := '※.单号:[ %s ] 状态: 物流部未验收';
+      nstr := Format(nStr,[FID]);
+      nHint := nStr;
+      Break;
+    end;
+
     if FSelected then
     begin
       Inc(nInt);
@@ -492,11 +519,23 @@ begin
   if FVirPoundID <> '' then
   begin
     nLabel := GetTruckRealLabel(FUIData.FTruck);
-    if nLabel <> '' then
+    //强制电子标签
+    if IfForceLable and (nLabel='') then
+    begin
+      nStr := '请办理电子标签.';
+      WriteSysLog(nStr);
+      PlayVoice(nStr);
+      Exit;
+    end;
+    
     begin
       nHint := ReadPoundCardEx(nStr, FVirPoundID);
-      if (nHint = '') or (Pos(nLabel, nHint) < 1) then
+      if (nHint = nLabel) or (Pos(nLabel, nHint) > 0) then
       begin
+        WriteSysLog('电子标签匹配无误.nLabel::'+nLabel+',nHint'+nHint);
+      end
+      else
+      begin     //if (nHint = '') or (Pos(nLabel, nHint) < 1) then
         nStr := '未识别电子签,请移动车辆.';
         PlayVoice(nStr);
 
@@ -844,7 +883,7 @@ begin
 
     FPoundID := sFlag_Yes;
     //标记该项有称重数据
-    Result := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel);
+    Result := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel, FLogin);
     //保存称重
   end;
 end;
@@ -898,8 +937,8 @@ begin
   end;
   
   if FCardUsed = sFlag_Provide then
-       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
-  else Result := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel);
+       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel, FLogin)
+  else Result := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel, FLogin);
   //保存称重
   //Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   //保存称重
@@ -1225,6 +1264,20 @@ begin
     gDisplayManager.Display(FPoundTunnel.FID, nContent);
   end;
   {$ENDIF}
+end;
+
+function TfFrameAutoPoundItem.IfForceLable: Boolean;
+var
+  nStr: string;
+begin
+  Result := False;
+  nStr := 'select * from %s where D_Name=''%s''';
+  nStr := Format(nStr,[sTable_SysDict,sFlag_IfFocreLabel]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if FieldByName('D_Value').AsString = sflag_Yes then
+      Result := True;
+  end;
 end;
 
 end.

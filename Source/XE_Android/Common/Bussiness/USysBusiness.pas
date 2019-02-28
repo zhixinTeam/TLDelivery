@@ -64,7 +64,12 @@ function GetPurchaseOrders(const nCard,nPost: string;
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems): Boolean;
 //保存指定岗位的采购单
 
-function LogIn: Boolean;
+function SaveWlbYS(const nPost: string; const nData: TLadingBillItems): Boolean;
+//化验室验收
+
+function GetYSRules(const nID:string; var YS2Time,HysYs:string):Boolean;
+
+function LogIn(var nGroup:string): Boolean;
 function LogOut: Boolean;
 
 function IsStockValid(const nStocks: string): Boolean;
@@ -317,6 +322,19 @@ begin
   Result := CallBusinessPurchaseOrder(cBC_DeleteOrder, nOrder, '', @nOut);
 end;
 
+//Date: 2019-01-28
+//Parm: 物料编号
+//Desc: 获取物料的验收方式
+function GetYSRules(const nID:string;var YS2Time,HysYs:string):Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessPurchaseOrder(cBC_GetYSRules, nID, '', @nOut);
+  if Result then
+  begin
+    YS2Time := nOut.FData;
+    HysYs   := nOut.FExtParam;
+  end;
+end;
 
 //Date: 2014-09-17
 //Parm: 磁卡号;岗位;交货单列表
@@ -343,7 +361,19 @@ begin
   if (not Result) or (nOut.FData = '') then Exit;
 end;
 
-function Login:Boolean;
+//Date: 2019-01-30
+//Parm: 岗位;交货单列表;磅站通道
+//Desc: 化验室验收
+function SaveWlbYS(const nPost: string; const nData: TLadingBillItems): Boolean;
+var nStr: string;
+    nOut: TWorkerBusinessCommand;
+begin
+  nStr := CombineBillItmes(nData);
+  Result := CallBusinessPurchaseOrder(cBC_SaveWlbYS, nStr, nPost, @nOut);
+  if (not Result) or (nOut.FData = '') then Exit;
+end;
+
+function Login(var nGroup:string):Boolean;
 var nStr: string;
     nOut: TWorkerBusinessCommand;
 begin
@@ -358,6 +388,7 @@ begin
 
   Result := CallBusinessCommand(cBC_UserLogin, nStr, '', @nOut);
   if (not Result) or (nOut.FData = '') then Exit;
+  nGroup := nOut.FData;
 end;
 
 function LogOut:Boolean;

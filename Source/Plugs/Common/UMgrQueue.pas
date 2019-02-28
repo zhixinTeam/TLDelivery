@@ -68,6 +68,8 @@ type
     FPoundQueue : Boolean;     //延时排队(厂内依据过皮时间)
     FNetVoice   : Boolean;     //网络播放语音
     FFobiddenInMul : Boolean;  //禁止多次进厂
+    FDaiForceQueue : Boolean;  //袋装强制排队
+    FSanForceQueue : Boolean;  //散装强制排队
   end;
 
   TStockMatchItem = record
@@ -203,6 +205,9 @@ type
     property LineChanged: Int64 read FLineChanged;
     property SyncLock: TCriticalSection read FSyncLock;
     //属性相关
+    function IsSanForceQueue: Boolean;
+    function IsDaiForceQueue: Boolean;
+    //队列参数
   end;
 
 var
@@ -719,6 +724,8 @@ begin
 
     FNetVoice   := False;
     FFobiddenInMul := False;
+    FDaiForceQueue := False;
+    FSanForceQueue := False;
   end;
 
   FWaiter := TWaitObject.Create;
@@ -992,6 +999,12 @@ begin
 
       if CompareText(Fields[1].AsString, sFlag_FobiddenInMul) = 0 then
         FParam.FFobiddenInMul := Fields[0].AsString = sFlag_Yes;
+        
+      if CompareText(Fields[1].AsString, sFlag_DaiForceQueue) = 0 then
+        FParam.FDaiForceQueue := Fields[0].AsString = sFlag_Yes;
+
+      if CompareText(Fields[1].AsString, sFlag_SanForceQueue) = 0 then
+        FParam.FSanForceQueue := Fields[0].AsString = sFlag_Yes;
       Next;
     end;
   end;
@@ -1180,6 +1193,7 @@ begin
         FBuCha      := FieldByName('T_BuCha').AsInteger;
         FIsBuCha    := FNormal > 0;
         FDai        := 0;
+        FCusName    := FieldByName('T_CusName').AsString;
       end;
       
       Inc(nIdx);
@@ -1613,6 +1627,32 @@ begin
       nList[nInt] := nList[nIdx];
       nList[nIdx] := nTruck;
     end;
+  end;
+end;
+
+function TTruckQueueManager.IsSanForceQueue: Boolean;
+begin
+  Result := False;
+
+  if Assigned(FDBReader) then
+  try
+    FSyncLock.Enter;
+    Result := FDBReader.FParam.FSanForceQueue;
+  finally
+    FSyncLock.Leave;
+  end;
+end;
+
+function TTruckQueueManager.IsDaiForceQueue: Boolean;
+begin
+  Result := False;
+
+  if Assigned(FDBReader) then
+  try
+    FSyncLock.Enter;
+    Result := FDBReader.FParam.FDaiForceQueue;
+  finally
+    FSyncLock.Leave;
   end;
 end;
 

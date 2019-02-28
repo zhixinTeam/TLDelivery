@@ -272,6 +272,14 @@ const
   sFlag_Transfer      = 'Bus_Transfer';              //短倒单号
   sFlag_TransBase     = 'Bus_TransBase';             //短倒申请单号
   sFlag_TransferPound = 'TransferPound';             //短倒是否过磅
+  sFlag_HYSGroup      = 'HYSGroup';                  //化验室组
+  sFlag_WLBGroup      = 'WLBGroup';                  //化验室组
+  sFlag_IfFocreLabel  = 'IfFocreLabel';              //强制电子标签
+
+  sFlag_DaiForceQueue = 'DaiForceQueue';             //袋装强制排队
+  sFlag_SanForceQueue = 'SanForceQueue';             //散装强制排队
+  sFlag_AreaLimit     = 'AreaLimit';                 //客户发货日限额
+
 
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组
@@ -353,10 +361,11 @@ const
   sTable_K3_Customer  = 'MDM.MDM_Account';           //组织结构(客户,供应商)
   sTable_K3_SalePlan  = 'S_K3_SalePlan';             //销售计划
 
-  sTable_TransBase    = 'P_TransBase';                //短倒单
-  sTable_TransBaseBak = 'P_TransBaseBak';             //短倒单
+  sTable_TransBase    = 'P_TransBase';               //短倒单
+  sTable_TransBaseBak = 'P_TransBaseBak';            //短倒单
   sTable_Transfer     = 'P_Transfer';                //短倒明细单
-  sTable_TransferBak  = 'P_TransferBak';             //短倒明细单 
+  sTable_TransferBak  = 'P_TransferBak';             //短倒明细单
+  sTable_AreaLimit    = 'S_AreaLimit';               //客户限提
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -552,7 +561,7 @@ const
        'C_FaRen varChar(50), C_LiXiRen varChar(50), C_WeiXin varChar(15),' +
        'C_Phone varChar(15), C_Fax varChar(15), C_Tax varChar(32),' +
        'C_Bank varChar(35), C_Account varChar(18), C_SaleMan varChar(15),' +
-       'C_Param varChar(32), C_Memo varChar(50), C_XuNi Char(1))';
+       'C_Param varChar(32), C_Memo varChar(50), C_XuNi Char(1),C_Area varchar(20))';
   {-----------------------------------------------------------------------------
    客户信息表: Customer
    *.R_ID: 记录号
@@ -572,6 +581,7 @@ const
    *.C_Param: 备用参数
    *.C_Memo: 备注信息
    *.C_XuNi: 虚拟(临时)客户
+   *.C_Area:所属区域
   -----------------------------------------------------------------------------}
   
   sSQL_NewCusAccount = 'Create Table $Table(R_ID $Inc, A_CID varChar(15),' +
@@ -793,7 +803,8 @@ const
        'L_Audit char(1) not null default(''N''),' +
        'L_EmptyOut char(1) not null default(''N''),' +
        'L_Man varChar(32), L_Date DateTime,' +
-       'L_DelMan varChar(32), L_DelDate DateTime, L_Memo varChar(320))';
+       'L_DelMan varChar(32), L_DelDate DateTime, L_Memo varChar(320),'+
+       'L_SyncStatus char(1) default(''N''))';
   {-----------------------------------------------------------------------------
    交货单表: Bill
    *.R_ID: 编号
@@ -832,6 +843,7 @@ const
    *.L_DelMan: 交货单删除人员
    *.L_DelDate: 交货单删除时间
    *.L_Memo: 动作备注
+   *.L_SyncStatus:同步状态 默认N未同步
   -----------------------------------------------------------------------------}
 
   sSQL_NewBillHK = 'Create Table $Table(R_ID $Inc, H_Bill varChar(20),' +
@@ -924,7 +936,8 @@ const
        'D_Value $Float,D_KZValue $Float, D_AKValue $Float,' +
        'D_YLine varChar(15), D_YLineName varChar(32), D_Unload varChar(80),' +
        'D_DelMan varChar(32), D_DelDate DateTime, D_YSResult Char(1), ' +
-       'D_OutFact DateTime, D_OutMan varChar(32), D_Memo varChar(500))';
+       'D_OutFact DateTime, D_OutMan varChar(32), D_Memo varChar(500),'+
+       'D_WlbYTime DateTime, D_WlbYMan varchar(32),D_WlbYS char(1) Default ''N'')';
   {-----------------------------------------------------------------------------
    采购订单明细表: OrderDetail
    *.R_ID: 编号
@@ -950,6 +963,7 @@ const
    *.D_UnLoad: 卸货地点/库房
    *.D_YSResult: 验收结果
    *.D_OutFact,D_OutMan: 出厂放行
+   *.D_WlbYTime,D_WlbYMan,D_WlbYS:物流部验收时间，人，结果
   -----------------------------------------------------------------------------}
 
   sSQL_NewCard = 'Create Table $Table(R_ID $Inc, C_Card varChar(16),' +
@@ -1101,7 +1115,8 @@ const
        'T_InLade DateTime, T_VIP Char(1), T_Valid Char(1), T_Bill varChar(15),' +
        'T_Value $Float, T_PeerWeight Integer, T_Total Integer Default 0,' +
        'T_Normal Integer Default 0, T_BuCha Integer Default 0,' +
-       'T_PDate DateTime, T_IsPound Char(1),T_HKBills varChar(200))';
+       'T_PDate DateTime, T_IsPound Char(1),T_HKBills varChar(200),'+
+       'T_CusName varchar(100))';
   {-----------------------------------------------------------------------------
    待装车队列: ZTTrucks
    *.R_ID: 记录号
@@ -1126,6 +1141,7 @@ const
    *.T_PDate: 过磅时间
    *.T_IsPound: 需过磅(Y/N)
    *.T_HKBills: 合卡交货单列表
+   *.T_CusName:客户名
   -----------------------------------------------------------------------------}
 
   sSQL_NewAuditTruck = 'Create Table $Table(R_ID $Inc, A_ID varChar(50),' +
@@ -1325,7 +1341,8 @@ const
   sSQL_NewMaterails = 'Create Table $Table(R_ID $Inc, M_ID varChar(32),' +
        'M_Name varChar(80),M_PY varChar(80),M_Unit varChar(20),M_Price $Float,' +
        'M_PrePValue Char(1), M_PrePTime Integer, M_Memo varChar(50), ' +
-       'M_HasLs Char(1) Default ''N'', M_IsSale Char(1) Default ''N'')';
+       'M_HasLs Char(1) Default ''N'', M_IsSale Char(1) Default ''N'','+
+       'M_YS2Times char(1), M_HYSYS char(1))';
   {-----------------------------------------------------------------------------
    物料表: Materails
    *.M_ID: 编号
@@ -1337,6 +1354,8 @@ const
    *.M_Memo: 备注
    *.M_IsSale: 销售品种
    *.M_HasLs: 是否生成矿发流水
+   *.M_YS2Times 是否两次验收 Y:两次验收 N:一次验收
+   *.M_HYSYS    Y:化验室验收  N:物流部验收
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockParam = 'Create Table $Table(P_ID varChar(15), P_Stock varChar(30),' +
@@ -1601,6 +1620,18 @@ const
    *.T_DelMan,T_DelDate: 删除信息
   -----------------------------------------------------------------------------}
 
+  sSQL_NewAreaLimit = 'Create Table $Table(R_ID $Inc,L_Area varchar(20), '
+      +'L_StockNo varchar(40),L_Value $Float,L_Date DateTime,L_User varchar(20))';
+  {-----------------------------------------------------------------------------
+   限购表: AreaLimit
+   *.R_ID: 记录编号
+   *.L_StockNo:物料编号
+   *.L_Area:区域
+   *.L_Value:限载值
+   *.L_Date:时间
+   *.L_User:操作员
+  -----------------------------------------------------------------------------}
+
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
 function TruckStatusToStr(const nStatus: string): string;
@@ -1746,6 +1777,8 @@ begin
   AddSysTableItem(sTable_TransBaseBak, sSQL_NewTransBase);
   AddSysTableItem(sTable_Transfer, sSQL_NewTransfer);
   AddSysTableItem(sTable_TransferBak, sSQL_NewTransfer);
+
+  AddSysTableItem(sTable_AreaLimit, sSQL_NewAreaLimit);
 end;
 
 //Desc: 清理系统表

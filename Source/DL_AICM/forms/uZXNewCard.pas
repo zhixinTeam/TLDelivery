@@ -61,6 +61,7 @@ type
     dxLayout1Group2: TdxLayoutGroup;
     PrintHY: TcxCheckBox;
     ADOQuery1: TADOQuery;
+    Button1: TButton;
     procedure BtnExitClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
@@ -71,6 +72,7 @@ type
     procedure lvOrdersClick(Sender: TObject);
     procedure editWebOrderNoKeyPress(Sender: TObject; var Key: Char);
     procedure btnClearClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     FSzttceApi:TSzttceApi; //发卡机驱动
@@ -323,6 +325,8 @@ var
   nRepeat:Boolean;
   nWebOrderID, nType, nStockNo:string;
   nMsg,nStr:string;
+  nPriceNow, nPriceGP, nZXFD, nPriceZX: Double;
+  nPreFun, nSql, nAddOrDec : string;
 begin
   nOrderItem := FWebOrderItems[FWebOrderIndex];
   nWebOrderID := nOrderItem.FOrdernumber;
@@ -345,10 +349,6 @@ begin
   EditCus.Text    := '';
   EditCName.Text  := '';
 
-//  nStr := 'select Z_Customer,D_Price from %s a join %s b on a.Z_ID = b.D_ZID ' +
-//          'where Z_ID=''%s'' and D_StockNo=''%s'' ';
-//  nStr := Format(nStr,[sTable_ZhiKa,sTable_ZhiKaDtl,nOrderItem.FYunTianOrderId,nOrderItem.FGoodsID]);
-
   nStockNo := Copy(nOrderItem.FGoodsID,1,Length(nOrderItem.FGoodsID)-1);
   nType := Copy(nOrderItem.FGoodsID,Length(nOrderItem.FGoodsID),1);
 
@@ -369,30 +369,66 @@ begin
       nType := '002';
   end;
 
-  nStr := 'select accountCode,salePrice,accountName from sal.SAL_Contract_v where '+
-          ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s''';
+  nStr := 'select accountCode,salePrice,accountName,realProj from sal.SAL_Contract_v where '+
+          ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
   nStr := Format(nStr,[nOrderItem.FYunTianOrderId,nStockNo,nType]);
   FDM.QueryData(ADOQuery1, nStr, True);
-  //with fdm.QueryTemp(nStr,true) do
   with adoquery1 do
   begin
-    if RecordCount = 1 then
+    if RecordCount > 0 then
     begin
       EditCus.Text    := Fields[0].AsString;
-      EditPrice.Text  := Fields[1].AsString;
+      //EditPrice.Text  := Fields[1].AsString;
       EditCName.Text  := Fields[2].AsString;
+    end;
+
+    nPriceNow := FieldByName('salePrice').AsFloat;
+    nPreFun := FieldByName('realProj').AsString;
+
+    nSql := 'select *,GETDATE() as dtNow from SAL.SAL_ProdPrice_v '+
+          'where priceStat=''1'' and prodCode=''%s'' and packCode=''%s''';
+    nSql := Format(nSql,[nStockNo,nType]);
+  end;
+
+  with FDM.QueryTemp(nSql, True) do
+  begin
+    if recordcount < 1 then
+    begin
+      showmessage('没有可用的挂牌价.');
+      Exit;
+    end;
+
+    if (FieldByName('dtNow').AsDateTime >= FieldByName('enaBeginDate').AsDateTime)
+      and (FieldByName('dtNow').AsDateTime < FieldByName('enaEndDate').AsDateTime) then
+    begin
+      nPriceGP := FieldByName('prodPrice').AsFloat;
+      nAddOrDec := Copy(nPreFun,2,1);
+      nZXFD := StrToFloat(Copy(nPreFun,3,Length(nPreFun)-2));
+      if nAddOrDec = '-' then
+        nPriceZX := nPriceGP - nZXFD
+      else
+        nPriceZX := nPriceGP + nZXFD;
+    end
+    else
+    begin
+      showmessage('挂牌价过期.');
+      Exit;
     end;
   end;
 
-//  nStr := 'Select C_Name From %s Where C_ID=''%s'' ';
-//  nStr := Format(nStr, [sTable_Customer, EditCus.Text]);
-//  with fdm.QueryTemp(nStr) do
-//  begin
-//    if RecordCount>0 then
-//    begin
-//      EditCName.Text  := Fields[0].AsString;
-//    end;
-//  end;
+  //如果当前合同价不等于最终执行价，修改合同价格
+  if nPriceZX <> nPriceNow then
+  begin
+    nsql := 'update SAL.SAL_CTRItem set salePrice=''%s'' where contractCode=''%s'''+
+            ' and prodCode=''%s'' and packForm=''%s''';
+    nSql := Format(nSql,[FloatToStr(nPriceZX),nOrderItem.FYunTianOrderId, nStockNo,nType]);
+    try
+      fdm.ExecuteSQL(nSql,True);
+    except
+      ShowMessage('调整价格失败请新开单.');
+      Exit;
+    end;
+  end;
 
   //提单信息
   EditType.ItemIndex := 0;
@@ -400,6 +436,7 @@ begin
   EditSName.Text  := nOrderItem.FGoodsname;
   EditValue.Text := nOrderItem.FData;
   EditTruck.Text := nOrderItem.Ftracknumber;
+  EditPrice.Text  := FloatToStr(nPriceZX);
 
   BtnOK.Enabled := not nRepeat;
 end;
@@ -467,7 +504,7 @@ var
   nBillData:string;
   nBillID :string;
   nWebOrderID:string;
-  nNewCardNo:string;
+  nNewCardNo, nTruck:string;
   nidx:Integer;
   i:Integer;
   nRet: Boolean;
@@ -511,6 +548,14 @@ begin
     Exit;
   end;
 
+  nTruck := EditTruck.Text+'%';
+  if Pos('熟料',EditSName.Text) =0 then
+    if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
+    begin
+      ShowMessage(nTruck);
+      Exit;
+    end;
+
   //保存提货单
   nStocks := TStringList.Create;
   nList := TStringList.Create;
@@ -522,7 +567,8 @@ begin
     else
       nTmp.Values['Type'] := 'D';
     nTmp.Values['StockNO'] := EditStock.Text;
-    nTmp.Values['StockName'] := EditSName.Text;
+    //nTmp.Values['StockName'] := EditSName.Text;
+    nTmp.Values['StockName'] := copy(EditSName.Text,1,Length(EditSName.Text)-4);//EditSName.Text;
     nTmp.Values['Price'] := EditPrice.Text;
     nTmp.Values['Value'] := EditValue.Text;
 
@@ -636,6 +682,7 @@ begin
   if Key=Char(vk_return) then
   begin
     key := #0;
+    btnQuery.SetFocus;
     btnQuery.Click;
   end;
 end;
@@ -645,6 +692,20 @@ begin
   FAutoClose := gSysParam.FAutoClose_Mintue;
   editWebOrderNo.Clear;
   ActiveControl := editWebOrderNo;
+end;
+
+procedure TfFormNewCard.Button1Click(Sender: TObject);
+var
+  nTruck:string;
+begin
+  nTruck := editWebOrderNo.Text+'%';
+  if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
+  begin
+    ShowMessage(nTruck);
+    Exit;
+  end
+  else
+  ShowMessage('成功.');
 end;
 
 end.

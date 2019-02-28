@@ -13,7 +13,8 @@ uses
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrCodePrinter, ULibFun, USysConst, UFormWait, UFormInputbox,
   cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, StdCtrls,
-  ExtCtrls, cxLabel, cxGraphics, cxControls;
+  ExtCtrls, cxLabel, cxGraphics, cxControls, dxSkinsCore,
+  dxSkinsDefaultPainters;
 
 type
   TfFrameCounter = class(TFrame)
@@ -144,7 +145,7 @@ begin
   try
     Sleep(200);
     //for delay
-    
+
     {$IFDEF USE_MIT}
     if not PrintBillCode(FTunnel.FID, FBill, nHint) then
     begin
@@ -152,7 +153,7 @@ begin
       Application.ProcessMessages;
 
       ShowDlg(nHint, sWarn);
-      Exit;
+      //Exit;
     end;
     {$ELSE}
     if not gCodePrinterManager.PrintCode(FTunnel.FID, Trim(EditCode.Text), nHint) then

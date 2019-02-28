@@ -12,7 +12,8 @@ uses
   UDataModule, UFormBase, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxLayoutControl, cxCheckBox,
   cxLabel, StdCtrls, cxMaskEdit, cxDropDownEdit, cxMCListBox, cxMemo,
-  cxTextEdit;
+  cxTextEdit, dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters,
+  cxButtonEdit;
 
 type
   TfFormCustomer = class(TBaseForm)
@@ -75,6 +76,8 @@ type
     EditWX: TcxComboBox;
     dxLayoutControl1Item22: TdxLayoutItem;
     dxLayoutControl1Group14: TdxLayoutGroup;
+    editArea: TcxButtonEdit;
+    dxLayoutControl1Item23: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnAddClick(Sender: TObject);
@@ -83,6 +86,8 @@ type
     procedure BtnExitClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure editAreaPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
   private
     { Private declarations }
     FCustomerID: string;
@@ -104,7 +109,7 @@ implementation
 {$R *.dfm}
 uses
   IniFiles, ULibFun, UMgrControl, UFormCtrl, UAdjustForm, USysBusiness,
-  USysGrid, USysDB, USysConst;
+  USysGrid, USysDB, USysConst, UFormBaseInfo;
 
 var
   gForm: TfFormCustomer = nil;
@@ -426,6 +431,19 @@ begin
   except
     FDM.ADOConn.RollbackTrans;
     ShowMsg('数据保存失败', '未知原因');
+  end;
+end;
+
+procedure TfFormCustomer.editAreaPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+var nBool,nSelected: Boolean;
+begin
+  nBool := True;
+  nSelected := True;
+
+  with ShowBaseInfoEditForm(nBool, nSelected, '区域', '', sFlag_AreaItem) do
+  begin
+    if nSelected then TcxButtonEdit(Sender).Text := FText;
   end;
 end;
 

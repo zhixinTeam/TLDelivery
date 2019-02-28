@@ -67,6 +67,8 @@ type
     //获取客户名称
     function GetCustomerValidMoney(nCustomer: string): Double;
     //获取客户可用金
+    function GetCusMoneyWithOutCredit(nCustomer: string): Double;
+    //获取客户可用金不包含信用金额
     function GetCustomerValidMoneyFromK3(nCustomer: string): Double;
     //获取客户可用金(K3)
     function GetInOutValue(nBegin,nEnd,nType: string): string;
@@ -652,43 +654,20 @@ end;
 function TBusWorkerBusinessWebchat.GetOrderList(var nData: string): Boolean;
 var nStr, nType, nTypeCode: string;
     nNode: TXmlNode;
-    nValue,nMoney: Double;
+    nValue,nMoney, nMoneyTotal: Double;
     nDBWorker: PDBWorker;
 begin
   Result := False;
   BuildDefaultXML;
   nMoney := 0 ;
-
-  //{$IFDEF UseCustomertMoney}
-  //{$ENDIF}
-//  {$IFDEF UseERP_K3}
-//  nMoney := GetCustomerValidMoneyFromK3(FIn.FData);
-//  {$ENDIF}
-
-//  nStr := 'select D_ZID,' +                     //销售卡片编号
-//        '  D_Type,' +                           //类型(袋,散)
-//        '  D_StockNo,' +                        //水泥编号
-//        '  D_StockName,' +                      //水泥名称
-//        '  D_Price,' +                          //单价
-//        '  D_Value,' +                          //订单量
-//        '  Z_Man,' +                            //创建人
-//        '  Z_Date,' +                           //创建日期
-//        '  Z_Customer,' +                       //客户编号
-//        '  Z_Name,' +                           //客户名称
-//        '  Z_Lading,' +                         //提货方式
-//        '  Z_CID ' +                            //合同编号
-//        'from %s a join %s b on a.Z_ID = b.D_ZID ' +
-//        'where Z_Verified=''%s'' and (Z_InValid<>''%s'' or Z_InValid is null) '+
-//        'and Z_Customer=''%s''';
-//        //订单已审核 有效
-//  nStr := Format(nStr,[sTable_ZhiKa,sTable_ZhiKaDtl,sFlag_Yes,sFlag_Yes,
-//                       FIn.FData]);
-
+  
   nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
-          ' where (contractStat in (''Formal'' , ''Balance'')) and accountCode=''%s''';
+          ' where (contractStat in (''Formal'' , ''Balance'')) and accountCode=''%s'''+
+          ' and enableFlag=''Y''' +
+          ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
   nStr := Format(nstr,[FIn.FData]);
 
-  WriteLog('获取订单列表sql:'+nStr);
+  //WriteLog('获取订单列表sql:'+nStr);
   nDBWorker := nil;
   try
     with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp), FPacker.XMLBuilder do
@@ -708,18 +687,19 @@ begin
         Exit;
       end;
 
-      First;
-
       nNode := Root.NodeNew('head');
       with nNode do
       begin
         NodeNew('CusId').ValueAsString := FieldByName('accountCode').AsString;
         NodeNew('CusName').ValueAsString := GetCusName(FieldByName('accountName').AsString);
         {$IFDEF WxShowCusMoney}
-        NodeNew('CusMoney').ValueAsString := FloatToStr(nMoney);
+        nMoneyTotal := 0;
+        nMoneyTotal := GetCusMoneyWithOutCredit(FieldByName('contractCode').AsString);
+        NodeNew('CusMoney').ValueAsString := FloatToStr(nMoneyTotal);
         {$ENDIF}
       end;
 
+      First;
       nNode := Root.NodeNew('Items');
       while not Eof do
       begin
@@ -743,8 +723,6 @@ begin
           NodeNew('StockNo').ValueAsString    := FieldByName('prodCode').AsString + nTypeCode;
           NodeNew('StockName').ValueAsString  := FieldByName('prodName').AsString + nType;
 
-          //nValue := FieldByName('D_Value').AsFloat;
-  //        {$IFDEF UseCustomertMoney}
           try
             nValue := nMoney / FieldByName('salePrice').AsFloat;
             if nValue > FieldByName('leaveQty').AsFloat then
@@ -753,15 +731,7 @@ begin
           except
             nValue := 0;
           end;
-  //        {$ENDIF}
-  //        {$IFDEF UseERP_K3}
-  //        try
-  //          nValue := nMoney / FieldByName('D_Price').AsFloat;
-  //          nValue := Float2PInt(nValue, cPrecision, False) / cPrecision;
-  //        except
-  //          nValue := 0;
-  //        end;
-  //        {$ENDIF}
+
           NodeNew('MaxNumber').ValueAsString  := FloatToStr(nValue);
           NodeNew('SaleArea').ValueAsString   := '';
         end;
@@ -1405,17 +1375,9 @@ begin
   nProID := Trim(FIn.FData);
   BuildDefaultXML;
 
-//  nStr := 'Select *,(B_Value-B_SentValue-B_FreezeValue) As B_MaxValue From %s PB '
-//    +'left join %s PM on PM.M_ID = PB.B_StockNo ' 
-//    +'where ((B_Value-B_SentValue>0) or (B_Value=0)) And B_BStatus=''%s'' '
-//    +'and B_ProID=''%s''';
-//  nStr := Format(nStr , [sTable_OrderBase, sTable_Materails, sFlag_Yes, nProID]);
-
   nStr := 'select a.*,b.* from PUR.PUR_ContractMain a inner join PUR.PUR_ContractDetail b '+
           ' on a.billNum=b.billNum where billStateFlag =''C'' and supId=''%s''';
   nStr := Format(nStr,[FIn.FData]);
-
-  WriteLog('获取采购订单列表sql:'+nStr);
 
   nDBWorker := nil;
   try
@@ -1504,13 +1466,13 @@ end;
 //Desc: 获取指定客户的可用金额，传参：合同编号
 function TBusWorkerBusinessWebchat.GetCustomerValidMoney(nCustomer: string): Double;
 var
-  nStr: string;
+  nStr, nCusId: string;
   nDBWorker: PDBWorker;
-  nVal:Double;
+  nVal, nCredit, nFreezen:Double;
 begin
   Result := 0;
-  nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_ from '+
-          ' SAL.SAL_ContractRtn where contractCode=''$ZID''';
+  nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_,accountCode from '+
+          ' SAL.SAL_ContractRtn where contractCode=''$ZID'' group by accountCode';
   nStr := MacroValue(nStr, [ MI('$ZID', nCustomer)]);
   //writelog('获取用户可用金SQL：'+nStr);
   nDBWorker := nil;
@@ -1525,54 +1487,44 @@ begin
         Exit;
       end;
       nVal := Fields[0].AsFloat;
-
-      Result := Float2PInt(nVal, cPrecision, False) / cPrecision;
+      nCusId := Fields[1].AsString;
     end;
   finally
     gDBConnManager.ReleaseConnection(nDBWorker);
   end;
-end;
-{var nStr: string;
-    nUseCredit: Boolean;
-    nVal,nCredit: Double;
-begin
-  Result := 0 ;
-  nUseCredit := False;
 
-  nStr := 'Select MAX(C_End) From %s ' +
-          'Where C_CusID=''%s'' and C_Money>=0 and C_Verify=''%s''';
-  nStr := Format(nStr, [sTable_CusCredit, nCustomer, sFlag_Yes]);
-  WriteLog('信用SQL:'+nStr);
-  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-    nUseCredit := (Fields[0].AsDateTime > Str2Date('2000-01-01')) and
-                  (Fields[0].AsDateTime > Now());
-  //信用未过期
-
-  nStr := 'Select * From %s Where A_CID=''%s''';
-  nStr := Format(nStr, [sTable_CusAccount, nCustomer]);
-  WriteLog('用户账户SQL:'+nStr);
-  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-  begin
-    if RecordCount < 1 then
+  nDBWorker := nil;
+  try
+    nStr := 'select * from SAL.SAL_Contract where contractCode=''%s''' ;
+    nStr := Format(nStr,[nCustomer]);
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp) do
     begin
-      Exit;
+      if RecordCount > 0 then
+      begin
+        if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
+          nCredit := FieldByName('oweValue').AsFloat;
+      end;
     end;
-
-    nVal := FieldByName('A_InitMoney').AsFloat + FieldByName('A_InMoney').AsFloat -
-            FieldByName('A_OutMoney').AsFloat -
-            FieldByName('A_Compensation').AsFloat -
-            FieldByName('A_FreezeMoney').AsFloat;
-    //xxxxx
-    WriteLog('用户账户金额:'+FloatToStr(nVal));
-    nCredit := FieldByName('A_CreditLimit').AsFloat;
-    nCredit := Float2PInt(nCredit, cPrecision, False) / cPrecision;
-    WriteLog('用户账户信用:'+FloatToStr(nCredit));
-    if nUseCredit then
-      nVal := nVal + nCredit;
-    WriteLog('用户账户可用金:'+FloatToStr(nVal));
-    Result := Float2PInt(nVal, cPrecision, False) / cPrecision;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
   end;
-end;}
+
+  nDBWorker := nil;
+  try
+    nStr := 'select * from %s where A_CID=''%s''';
+    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+    with gDBConnManager.SQLQuery(nStr, nDBWorker) do
+    begin
+      if RecordCount > 0 then
+        nFreezen := fieldbyname('A_FreezeMoney').AsFloat;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  nVal := nVal + nCredit - nFreezen;
+  Result := nVal;  //Float2PInt(nVal, cPrecision, False) / cPrecision;
+end;
 
 //Date: 2018-01-05
 //Desc: 获取指定客户的可用金额
@@ -2238,6 +2190,53 @@ begin
   Result := True;
   FOut.FData := nData;
   FOut.FBase.FResult := True;
+end;
+
+function TBusWorkerBusinessWebchat.GetCusMoneyWithOutCredit(
+  nCustomer: string): Double;
+var
+  nStr, nCusId: string;
+  nDBWorker: PDBWorker;
+  nVal, nFreezen:Double;
+begin
+  Result := 0;
+  nStr := 'select isnull(sum(rtnSum), 0) as col_0_0_,accountCode from '+
+          ' SAL.SAL_ContractRtn where contractCode=''$ZID'' group by accountCode';
+  nStr := MacroValue(nStr, [ MI('$ZID', nCustomer)]);
+  //writelog('获取用户可用金SQL：'+nStr);
+  nDBWorker := nil;
+  try
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp) do
+    begin
+      if RecordCount < 1 then
+      begin
+        nStr := '编号为[ %s ]的合同不存在,或客户账户无效.';
+        nStr := Format(nStr, [nCustomer]);
+        WriteLog(nStr);
+        Exit;
+      end;
+      nVal := Fields[0].AsFloat;
+      nCusId := Fields[1].AsString;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  nDBWorker := nil;
+  try
+    nStr := 'select * from %s where A_CID=''%s''';
+    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+    with gDBConnManager.SQLQuery(nStr, nDBWorker) do
+    begin
+      if RecordCount > 0 then
+        nFreezen := fieldbyname('A_FreezeMoney').AsFloat;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  nVal := nVal - nFreezen;
+  Result := nVal;
 end;
 
 initialization

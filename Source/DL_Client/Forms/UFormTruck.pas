@@ -131,7 +131,7 @@ end;
 
 //Desc: 保存
 procedure TfFormTruck.BtnOKClick(Sender: TObject);
-var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent,nVipCus: string;
+var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent,nVipCus, nTruckP: string;
 begin
   nTruck := UpperCase(Trim(EditTruck.Text));
   if nTruck = '' then
@@ -141,12 +141,17 @@ begin
     Exit;
   end;
 
-  if not IsNumber(editPreValue.Text, True) then
+  if (CheckUserP.Checked) and (not IsNumber(editPreValue.Text, True)) then
   begin
     ActiveControl := editPreValue;
     ShowMsg('请输入有效的皮重数据', sHint);
     Exit;
   end;
+
+  if Trim(editPreValue.Text) = '' then
+    nTruckP := '0'
+  else
+    nTruckP := editPreValue.Text;
 
   if CheckValid.Checked then
        nV := sFlag_Yes
@@ -188,7 +193,7 @@ begin
           SF('T_VipCus', nVipCus),
           SF('T_PrePMan', gSysParam.FUserName),
           SF('T_PrePTime', sField_SQLServer_Now, sfVal),
-          SF('T_PrePValue', editPreValue.Text),
+          SF('T_PrePValue', nTruckP),
           SF('T_LastTime', sField_SQLServer_Now, sfVal)
           ], sTable_Truck, nStr, FTruckID = '');
   FDM.ExecuteSQL(nStr);

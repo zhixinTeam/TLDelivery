@@ -10,8 +10,13 @@ uses
   Windows, DB, Classes, Controls, SysUtils, UBusinessPacker, UBusinessWorker,
   UBusinessConst, ULibFun, UAdjustForm, UFormCtrl, UDataModule, UDataReport,
   UFormBase, cxMCListBox, UMgrPoundTunnels, UMgrCamera, USysConst, HKVNetSDK,
-  USysDB, USysLoger;
+  USysDB, USysLoger, IdHTTP, SuperObject;
 
+const
+  GPSUrl = 'http://116.255.136.110:8089/etmapi/custmonitor/api.action';
+  gGetPosition ='commonForm={"method":"getPosition","param":{"tername":"%s"}}';
+  gIFInArea = 'commonForm={"method":"calcArea","param":{"tername":"%s","markname":"%s","time":"%s"}}';
+  
 type
   TLadingStockItem = record
     FID: string;         //编号
@@ -196,6 +201,8 @@ function IsEleCardVaid(const nTruckNo: string): Boolean;
 function IfStockHasLs(const nStockNo: string): Boolean;
 //验证物料是否需要输入流水
 
+function GetGpsByTruck(var nTruck:string;nFactory,nTime:string):Boolean;
+
 function CallBusinessCommand(const nCmd: Integer; const nData,nExt: string;
   const nOut: PWorkerBusinessCommand; const nWarn: Boolean = True): Boolean;
 
@@ -206,6 +213,50 @@ uses
 procedure WriteLog(const nEvent: string);
 begin
   gSysLoger.AddLog(nEvent);
+end;
+
+function GetGpsByTruck(var nTruck:string; nFactory,nTime:string):Boolean;
+var
+  HttpClient: TIdHTTP;
+  nResList: TStringStream;
+  nGetUrl: TStrings;
+  nStr: string;
+  Jo:ISuperObject;
+  nCode:Integer;
+begin
+  Result := False;
+  nGetUrl := TStringList.Create;
+  nGetUrl.Text := UTF8Encode(Format(gIFInArea,[nTruck, nFactory, nTime]));
+  nResList := TStringStream.Create('');
+  HttpClient := TIdHttp.Create();
+  try
+    HttpClient.Post(GPSUrl,nGetUrl,nResList);
+    jo := so(UTF8Decode(nResList.DataString));
+    nStr := jo['flag'].AsString;
+    if nStr = 'true' then
+    begin
+      Result := true;
+      Exit;
+    end
+    else
+    begin
+      nCode := jo['code'].AsInteger;
+      case nCode of
+        1100001: nTruck := '未找到GPS设备.';
+        1100002: nTruck := '未获取车辆位置信息.';
+        1100003: nTruck := 'GPS设备已过期';
+        1100004: nTruck := '参数为空.';
+        1100005: nTruck := '参数格式化失败.';
+        1100006: nTruck := 'GPS系统错误.';
+        1100007: nTruck := '未找到区域信息.';
+        1100008: nTruck := '车辆在规定时间内未达到厂区.';
+        1100009: nTruck := '车辆不在区域范围内.';
+      end;
+    end;
+  finally
+    nResList.Free;
+    HttpClient.Free;
+  end;
 end;
 
 //------------------------------------------------------------------------------

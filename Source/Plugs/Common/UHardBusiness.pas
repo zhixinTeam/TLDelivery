@@ -946,9 +946,35 @@ begin
     end;
 
     nPTruck := nPLine.FTrucks[nIdx];
-    nPTruck.FStockName := nPLine.FName;
+    //nPTruck.FStockName := nPLine.FName;
     //同步物料名
     Result := True;
+
+    if (not nQueued) or (nIdx < 1) then Exit;
+    //不检查队列,或头车
+
+    //--------------------------------------------------------------------------
+    nInt := -1;
+    //init
+
+    for i:=nPline.FTrucks.Count-1 downto 0 do
+    if PTruckItem(nPLine.FTrucks[i]).FStarted then
+    begin
+      nInt := i;
+      Break;
+    end;
+
+    if nInt < 0 then Exit;
+    //没有在装车车辆,无需排队
+
+    if nIdx - nInt <> 1 then
+    begin
+      nHint := '车辆[ %s ]需要在[ %s ]排队等候.';
+      nHint := Format(nHint, [nPTruck.FTruck, nPLine.FName]);
+
+      Result := False;
+      Exit;
+    end;
   finally
     SyncLock.Leave;
   end;
@@ -1083,6 +1109,7 @@ var nStr: string;
     nPLine: PLineItem;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
+    nBool: Boolean;
 
     function IsJSRun: Boolean;
     begin
@@ -1127,8 +1154,21 @@ begin
     //重新定位车辆所在车道
     if IsJSRun then Exit;
   end;
+
+  if gTruckQueueManager.IsDaiForceQueue then
+  begin
+    nBool := True;
+    for nIdx:=Low(nTrucks) to High(nTrucks) do
+    begin
+      nBool := nTrucks[nIdx].FNextStatus = sFlag_TruckZT;
+      //未装车,检查排队顺序
+      if not nBool then Break;
+    end;
+  end
+  else
+    nBool := False;
   
-  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, False, nStr,
+  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, nBool, nStr,
          nPTruck, nPLine, sFlag_Dai) then
   begin
     WriteNearReaderLog(nStr);
@@ -1227,10 +1267,18 @@ begin
   //打开放灰
 
   nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
-  nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
-  nStr := nStr + nTruck.FStockName + StringOfChar(' ', 12 - Length(nTmp)) +
-          FloatToStr(nTruck.FValue);
-  //xxxxx  
+
+  if Pos('熟料',nTruck.FStockName) >0 then
+  begin
+    nStr := nStr + Copy(nTruck.FCusName,1,12);
+  end
+  else
+  begin
+    nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
+    nStr := nStr + nTruck.FStockName + StringOfChar(' ', 12 - Length(nTmp)) +
+            FloatToStr(nTruck.FValue);
+    //xxxxx
+  end;
 
   gERelayManager.ShowTxt(nTunnel, nStr);
   //显示内容
@@ -1245,6 +1293,7 @@ var nStr: string;
     nPLine: PLineItem;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
+    nBool: Boolean;
 begin
   {$IFDEF DEBUG}
   WriteNearReaderLog('MakeTruckLadingSan进入.');
@@ -1271,6 +1320,15 @@ begin
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   with nTrucks[nIdx] do
   begin
+    {$IFDEF AllowMultiM}
+    if FStatus = sFlag_TRuckBFM then
+    begin
+      FStatus := sFlag_TruckBFP;
+      FNextStatus := sFlag_TruckFH;
+    end;
+    //过重后允许返回(状态回溯至成皮重,防止过快出厂)
+    {$ENDIF}
+    
     if (FStatus = sFlag_TruckFH) or (FNextStatus = sFlag_TruckFH) then Continue;
     //未装或已装
 
@@ -1281,14 +1339,32 @@ begin
     Exit;
   end;
 
-  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, False, nStr,
+  if gTruckQueueManager.IsSanForceQueue then
+  begin
+    nBool := True;
+    for nIdx:=Low(nTrucks) to High(nTrucks) do
+    begin
+      nBool := nTrucks[nIdx].FNextStatus = sFlag_TruckFH;
+      //未装车,检查排队顺序
+      if not nBool then Break;
+    end;
+  end
+  else
+    nBool := False;
+
+  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, nBool, nStr,
          nPTruck, nPLine, sFlag_San) then
   begin
     WriteNearReaderLog(nStr);
     //loged
 
     nIdx := Length(nTrucks[0].FTruck);
-    nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请换库装车';
+
+    if nBool and (Pos('等候', nStr) > 0) then
+      nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请排队等候'
+    else
+      nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请换库装车';
+
     gERelayManager.ShowTxt(nTunnel, nStr);
     Exit;
   end; //检查通道

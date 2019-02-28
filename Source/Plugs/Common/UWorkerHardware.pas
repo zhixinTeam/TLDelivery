@@ -77,6 +77,8 @@ type
     //定制放灰调用小屏显示
     function LineClose(var nData: string): Boolean;
     //定制放灰
+    function ReaderCardNo(var nData: string): Boolean;
+    //读卡器有效卡号
   public
     constructor Create; override;
     destructor destroy; override;
@@ -257,6 +259,7 @@ begin
 
    cBC_ShowLedTxt           : Result := ShowLedText(nData);
    cBC_LineClose            : Result := LineClose(nData);
+   cBC_GetReaderCard        : Result := ReaderCardNo(nData);
    //xxxxxx
    else
     begin
@@ -764,6 +767,23 @@ begin
   else
     gERelayManager.LineClose(nTunnel);
   Result := True;
+end;
+
+//Date: 2019-02-25
+//Parm: 读头标识[FIn.FData];读头类型[FIn.FExtParam]
+//Desc: 读取指定读卡器上的有效卡号
+function THardwareCommander.ReaderCardNo(var nData: string): Boolean;
+begin
+  Result := True;
+  FOut.FData := '';
+  //default
+
+  if FIn.FExtParam = 'RFID102' then
+  begin
+    if Assigned(gHYReaderManager) then
+      FOut.FData := gHYReaderManager.GetLastCard(FIn.FData);
+    //xxxxx
+  end;
 end;
 
 initialization

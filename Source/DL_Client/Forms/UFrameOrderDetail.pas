@@ -14,7 +14,8 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, cxCheckBox;
+  ComCtrls, ToolWin, cxCheckBox, dxSkinsCore, dxSkinsDefaultPainters,
+  dxSkinscxPCPainter, dxLayoutcxEditAdapters, Dialogs;
 
 type
   TfFrameOrderDetail = class(TfFrameNormal)
@@ -308,6 +309,11 @@ begin
   inherited;
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
+    if SQLQuery.FieldByName('D_OutFact').AsString = '' then
+    begin
+      showmessage('车辆尚未,出厂不能打印采购单');
+      Exit;
+    end;
     nStr := SQLQuery.FieldByName('D_ID').AsString;
     PrintOrderReport(nStr, False);
   end;

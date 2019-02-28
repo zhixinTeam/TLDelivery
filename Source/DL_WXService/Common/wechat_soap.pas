@@ -53,12 +53,15 @@ end;
 
 function GetReviceWS(Addr: string; UseWSDL: Boolean; HTTPRIO: THTTPRIO): ReviceWS;
 const
-  defWSDL = 'http://www.hnzxtech.cn/wxplatform/ws/revicews?wsdl';
-  defURL  = 'http://www.hnzxtech.cn/wxplatform/ws/revicews';
+  //defWSDL = 'http://www.hnzxtech.cn/wxplatform/ws/revicews?wsdl';
+  //defURL  = 'http://www.hnzxtech.cn/wxplatform/ws/revicews';
   //正式地址
-//  defWSDL = 'http://hnzhixinkeji.cn/wxplatform/ws/revicews?wsdl';
-//  defURL  = 'http://hnzhixinkeji.cn/wxplatform/ws/revicews';
+  //defWSDL = 'http://hnzhixinkeji.cn/wxplatform/ws/revicews?wsdl';
+  //defURL  = 'http://hnzhixinkeji.cn/wxplatform/ws/revicews';
   //测试服务器地址
+
+  defWSDL = 'http://www.ylznwl.com/wxplatform/ws/revicews?wsdl';
+  defURL  = 'http://www.ylznwl.com/wxplatform/ws/revicews';
   defSvc  = 'ReviceWSImplService';
   defPrt  = 'ReviceWSImplPort';
 var

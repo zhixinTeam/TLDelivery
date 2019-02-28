@@ -415,7 +415,9 @@ end;
 //Parm: 用户名，密码；返回用户数据
 //Desc: 用户登录
 function TWorkerBusinessCommander.Login(var nData: string): Boolean;
-var nStr: string;
+var
+  nStr: string;
+  nID, nWLBId, nHysID:string;
 begin
   Result := False;
 
@@ -424,7 +426,7 @@ begin
   if FListA.Values['User']='' then Exit;
   //未传递用户名
 
-  nStr := 'Select U_Password From %s Where U_Name=''%s''';
+  nStr := 'Select U_Password,U_Group From %s Where U_Name=''%s''';
   nStr := Format(nStr, [sTable_User, FListA.Values['User']]);
   //card status
 
@@ -434,22 +436,36 @@ begin
 
     nStr := Fields[0].AsString;
     if nStr<>FListA.Values['Password'] then Exit;
-    {
-    if CallMe(cBC_ServerNow, '', '', @nOut) then
-         nStr := PackerEncodeStr(nOut.FData)
-    else nStr := IntToStr(Random(999999));
+    nID := Fields[1].AsString;
 
-    nInfo := FListA.Values['User'] + nStr;
-    //xxxxx
+    nStr := 'select * from %s where D_Name=''%s''';
+    nStr := Format(nStr,[sTable_SysDict,sFlag_HYSGroup]);
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    begin
+      if RecordCount<1 then Exit;
 
-    nStr := 'Insert into $EI(I_Group, I_ItemID, I_Item, I_Info) ' +
-            'Values(''$Group'', ''$ItemID'', ''$Item'', ''$Info'')';
-    nStr := MacroValue(nStr, [MI('$EI', sTable_ExtInfo),
-            MI('$Group', sFlag_UserLogItem), MI('$ItemID', FListA.Values['User']),
-            MI('$Item', PackerEncodeStr(FListA.Values['Password'])),
-            MI('$Info', nInfo)]);
-    gDBConnManager.WorkerExec(FDBConn, nStr);  }
+      nHysID := FieldByName('D_Value').AsString;
+    end;
 
+    nStr := 'select * from %s where D_Name=''%s''';
+    nStr := Format(nStr,[sTable_SysDict,sFlag_WLBGroup]);
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    begin
+      if RecordCount<1 then Exit;
+      
+      nWLBId := FieldByName('D_Value').AsString;
+    end;
+    if nID = nHysID then
+      FOut.FData := sFlag_HYSGroup
+    else
+    if nID = nWLBId then
+      FOut.FData := sFlag_WLBGroup
+    else
+    begin
+      FOut.FData := '没有验收权限.';
+      Exit;
+    end;
+    
     Result := True;
   end;
 end;
@@ -689,7 +705,7 @@ begin
     begin
       if RecordCount < 1 then
       begin
-        nData := '编号为[ %s ]的客户不存在,或客户账户无效.';
+        nData := '编号为[ %s ]的合同不存在,或合同无效.';
         nData := Format(nData, [FIn.FData]);
 
         Result := False;
@@ -707,6 +723,13 @@ begin
       begin
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
           nCredit := FieldByName('oweValue').AsFloat;
+      end;
+
+      if FieldByName('invalidDate').AsDateTime < Now then
+      begin
+        nData := '编号为['+FIn.FData+']合同已经过期';
+        Result := False;
+        Exit;
       end;
     end;
 
@@ -2687,7 +2710,7 @@ begin
   nSQL := 'select O_ID,O_Truck,O_SaleID,O_ProID,O_StockNo,O_StockPrc,O_Date,O_Man,O_BID,O_Value,' +
           ' D_ID, (D_MValue-D_PValue-isnull(D_KZValue,0)) as D_Value,D_InTime,D_PMan,D_MMan, ' +
           ' D_PValue, D_MValue, D_YSResult, D_KZValue,D_MDate,D_PDate, P_MStation,P_PStation, ' +
-          ' O_StockName, O_ProName, D_OutFact '+
+          ' O_StockName, O_ProName, D_OutFact,D_WlbYS '+
           ' From $OD od , $OO oo, $PL pl ' +
           ' where od.D_OID=oo.O_ID and od.D_ID=pl.P_Order and D_ID=''$IN''';
   nSQL := MacroValue(nSQL, [MI('$OD', sTable_OrderDtl) ,
@@ -2705,11 +2728,17 @@ begin
       Exit;
     end;
 
+    if FieldByName('D_WlbYS').AsString=sFlag_No then
+    begin          //物流部拒收
+      Result := True;
+      Exit;
+    end;
+
     if FieldByName('D_YSResult').AsString=sFlag_No then
     begin          //拒收
       Result := True;
       Exit;
-    end;  
+    end;
 
     nErpWorker := gDBConnManager.GetConnection(sFlag_CErp, FErrNum);
     if not Assigned(nErpWorker) then

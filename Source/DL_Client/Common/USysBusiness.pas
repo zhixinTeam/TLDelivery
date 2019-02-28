@@ -154,14 +154,14 @@ procedure LoadBillItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
 //载入单据信息到列表
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的交货单
 
 function GetTruckPoundItem(const nTruck: string;
  var nPoundData: TLadingBillItems): Boolean;
 //获取指定车辆的已称皮重信息
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems;const nLogin: Integer = -1): Boolean;
 //保存车辆过磅记录
 function ReadPoundCard(const nTunnel: string; var nReader: string): string;
 //读取指定磅站读头上的卡号
@@ -213,7 +213,7 @@ function GetPurchaseOrders(const nCard,nPost: string;
  var nBills: TLadingBillItems): Boolean;
 //获取指定岗位的采购单列表
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的采购单
 procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
@@ -333,7 +333,7 @@ function GetDuanDaoItems(const nCard,nPost: string;
   var nBills: TLadingBillItems): Boolean;
 //获取指定岗位的短倒明细列表
 function SaveDuanDaoItems(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem=nil): Boolean;
+ const nTunnel: PPTTunnelItem=nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的短倒明细
 function DeleteDDDetial(const nDID: string): Boolean;
 //删除短倒明细
@@ -341,6 +341,20 @@ function SetDDCard(const nBill,nTruck: string; nVerify: Boolean): Boolean;
 //为交货单办理磁卡
 function PrintDuanDaoReport(const nID: string; nAsk: Boolean): Boolean;
 //打印短倒单
+
+procedure CapturePictureEx(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
+//抓拍nTunnel的图像Ex
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+//初始化抓拍，与CapturePictureEx配套使用
+function FreeCapture(nLogin: Integer): Boolean;
+//释放抓拍
+
+function GetWlbYsStatus(const nStockNo,nOrderId: string): Boolean;
+//获取化验室验收状态
+
+function GetReaderCard(const nReader,nType: string): string;
+//获取指定读头的有效卡号
 
 implementation
 
@@ -1347,7 +1361,7 @@ end;
 //Parm: 称重数据
 //Desc: 保存nData称重数据
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1359,8 +1373,12 @@ begin
 
   nList := TStringList.Create;
   try
+    {$IFDEF CapturePictureEx}
+    CapturePictureEx(nTunnel, nLogin, nList);
+    {$ELSE}
     CapturePicture(nTunnel, nList);
     //capture file
+    {$ENDIF}
 
     for nIdx:=0 to nList.Count - 1 do
       SavePicture(nOut.FData, nData[0].FTruck,
@@ -1811,7 +1829,7 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1825,8 +1843,12 @@ begin
   begin
     nList := TStringList.Create;
     try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
       CapturePicture(nTunnel, nList);
       //capture file
+      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
@@ -1945,7 +1967,7 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1959,8 +1981,12 @@ begin
   begin
     nList := TStringList.Create;
     try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
       CapturePicture(nTunnel, nList);
       //capture file
+      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
@@ -2334,6 +2360,10 @@ begin
   nParam.FValue := gSysParam.FHintText;
   FDR.AddParamItem(nParam);
 
+  nParam.FName := 'BuDa';
+  nParam.FValue := '补';
+  FDR.AddParamItem(nParam);
+
   FDR.Dataset1.DataSet := FDM.SqlTemp;
   FDR.ShowReport;
   Result := FDR.PrintSuccess;
@@ -2382,6 +2412,10 @@ begin
 
   nParam.FName := 'Company';
   nParam.FValue := gSysParam.FHintText;
+  FDR.AddParamItem(nParam);
+
+  nParam.FName := 'BuDa';
+  nParam.FValue := '补';
   FDR.AddParamItem(nParam);
 
   FDR.Dataset1.DataSet := FDM.SqlTemp;
@@ -3325,7 +3359,7 @@ end;
 //Parm: 岗位;短倒单列表;磅站通道
 //Desc: 保存nPost岗位上的短倒单数据
 function SaveDuanDaoItems(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -3339,8 +3373,12 @@ begin
   begin
     nList := TStringList.Create;
     try
+      {$IFDEF CapturePictureEx}
+      CapturePictureEx(nTunnel, nLogin, nList);
+      {$ELSE}
       CapturePicture(nTunnel, nList);
       //capture file
+      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
@@ -3351,5 +3389,159 @@ begin
     end;
   end; 
 end;
+
+//Date: 2018-09-25
+//Parm: 通道;登陆ID;列表
+//Desc: 抓拍nTunnel的图像
+procedure CapturePictureEx(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
+const
+  cRetry = 2;
+  //重试次数
+var nStr: string;
+    nIdx,nInt: Integer;
+    nErr: Integer;
+    nPic: NET_DVR_JPEGPARA;
+    nInfo: TNET_DVR_DEVICEINFO;
+begin
+  nList.Clear;
+  if not Assigned(nTunnel.FCamera) then Exit;
+  //not camera
+  if nLogin <= -1 then Exit;
+
+  WriteLog(nTunneL.FID + '开始抓拍');
+  if not DirectoryExists(gSysParam.FPicPath) then
+    ForceDirectories(gSysParam.FPicPath);
+  //new dir
+
+  if gSysParam.FPicBase >= 100 then
+    gSysParam.FPicBase := 0;
+  //clear buffer
+
+  try
+
+    nPic.wPicSize := nTunnel.FCamera.FPicSize;
+    nPic.wPicQuality := nTunnel.FCamera.FPicQuality;
+
+    for nIdx:=Low(nTunnel.FCameraTunnels) to High(nTunnel.FCameraTunnels) do
+    begin
+      if nTunnel.FCameraTunnels[nIdx] = MaxByte then continue;
+      //invalid
+
+      for nInt:=1 to cRetry do
+      begin
+        nStr := MakePicName();
+        //file path
+
+        gCameraNetSDKMgr.NET_DVR_CaptureJPEGPicture(nLogin,
+                                   nTunnel.FCameraTunnels[nIdx],
+                                   nPic, nStr);
+        //capture pic
+
+        nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
+
+        if nErr = 0 then
+        begin
+          WriteLog('通道'+IntToStr(nTunnel.FCameraTunnels[nIdx])+'抓拍成功');
+          nList.Add(nStr);
+          Break;
+        end;
+
+        if nIdx = cRetry then
+        begin
+          nStr := '抓拍图像[ %s.%d ]失败,错误码: %d';
+          nStr := Format(nStr, [nTunnel.FCamera.FHost,
+                   nTunnel.FCameraTunnels[nIdx], nErr]);
+          WriteLog(nStr);
+        end;
+      end;
+    end;
+  except
+  end;
+end;
+
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+const
+  cRetry = 2;
+  //重试次数
+var nStr: string;
+    nIdx,nInt: Integer;
+    nErr: Integer;
+    nInfo: TNET_DVR_DEVICEINFO;
+begin
+  Result := False;
+  if not Assigned(nTunnel.FCamera) then Exit;
+  //not camera
+
+  try
+    nLogin := -1;
+    gCameraNetSDKMgr.NET_DVR_SetDevType(nTunnel.FCamera.FType);
+    //xxxxx
+
+    gCameraNetSDKMgr.NET_DVR_Init;
+    //xxxxx
+
+    for nIdx:=1 to cRetry do
+    begin
+      nLogin := gCameraNetSDKMgr.NET_DVR_Login(nTunnel.FCamera.FHost,
+                   nTunnel.FCamera.FPort,
+                   nTunnel.FCamera.FUser,
+                   nTunnel.FCamera.FPwd, nInfo);
+      //to login
+
+      nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
+      if nErr = 0 then break;
+
+      if nIdx = cRetry then
+      begin
+        nStr := '登录摄像机[ %s.%d ]失败,错误码: %d';
+        nStr := Format(nStr, [nTunnel.FCamera.FHost, nTunnel.FCamera.FPort, nErr]);
+        WriteLog(nStr);
+        if nLogin > -1 then
+         gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+        gCameraNetSDKMgr.NET_DVR_Cleanup();
+        Exit;
+      end;
+    end;
+    Result := True;
+  except
+
+  end;
+end;
+
+function FreeCapture(nLogin: Integer): Boolean;
+begin
+  Result := False;
+  try
+    if nLogin > -1 then
+     gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+    gCameraNetSDKMgr.NET_DVR_Cleanup();
+
+    Result := True;
+  except
+
+  end;
+end;
+
+//Date: 2019-01-30
+//Parm: 采购物料号;订单号
+//Desc: 获取采购物料物流部验收状态
+function GetWlbYsStatus(const nStockNo,nOrderId: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessPurchaseOrder(cBC_GetWlbYsStatus, nStockNo, nOrderId, @nOut);
+end;
+
+//Date: 2019-02-25
+//Parm: 读头;类型
+//Desc: 获取nReader上的有效卡号
+function GetReaderCard(const nReader,nType: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessHardware(cBC_GetReaderCard, nReader, nType, @nOut) then
+       Result := Trim(nOut.FData)
+  else Result := '';
+end;
+
 
 end.

@@ -1,6 +1,6 @@
 object fFormNewCard: TfFormNewCard
-  Left = 203
-  Top = 70
+  Left = 356
+  Top = 228
   BorderStyle = bsNone
   Caption = #29992#25143#33258#21161#21150#21345
   ClientHeight = 597
@@ -97,6 +97,16 @@ object fFormNewCard: TfFormNewCard
       TabOrder = 3
       OnClick = btnClearClick
     end
+    object Button1: TButton
+      Left = 56
+      Top = 56
+      Width = 75
+      Height = 25
+      Caption = #27979#35797'GPS'
+      TabOrder = 4
+      Visible = False
+      OnClick = Button1Click
+    end
   end
   object PanelBody: TPanel
     Left = 0
@@ -116,7 +126,7 @@ object fFormNewCard: TfFormNewCard
       TabStop = False
       object BtnOK: TButton
         Left = 580
-        Top = 285
+        Top = 269
         Width = 250
         Height = 41
         Caption = #30830#35748#26080#35823#24182#21150#21345
@@ -131,7 +141,7 @@ object fFormNewCard: TfFormNewCard
       end
       object BtnExit: TButton
         Left = 836
-        Top = 285
+        Top = 269
         Width = 92
         Height = 41
         Caption = #21462#28040
@@ -146,7 +156,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditValue: TcxTextEdit
         Left = 470
-        Top = 230
+        Top = 214
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -178,7 +188,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditCName: TcxTextEdit
         Left = 78
-        Top = 71
+        Top = 55
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -194,7 +204,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditStock: TcxTextEdit
         Left = 78
-        Top = 144
+        Top = 128
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -210,7 +220,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditSName: TcxTextEdit
         Left = 470
-        Top = 144
+        Top = 128
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -226,7 +236,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditTruck: TcxButtonEdit
         Left = 78
-        Top = 230
+        Top = 214
         ParentFont = False
         Properties.Buttons = <
           item
@@ -248,7 +258,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditType: TcxComboBox
         Left = 78
-        Top = 187
+        Top = 171
         ParentFont = False
         Properties.DropDownListStyle = lsEditFixedList
         Properties.ItemHeight = 18
@@ -272,7 +282,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditPrice: TcxButtonEdit
         Left = 470
-        Top = 187
+        Top = 171
         ParentFont = False
         Properties.Buttons = <
           item

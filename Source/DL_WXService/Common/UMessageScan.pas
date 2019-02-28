@@ -205,7 +205,7 @@ begin
         DoSaveOutFactMsg;
       end;
 
-      nStr:= 'select top 100 * from %s where WOM_SyncNum <= %d And WOM_deleted <> ''%s''';
+      nStr:= 'select top 500 * from %s where WOM_SyncNum <= %d And WOM_deleted <> ''%s''';
       nStr:= Format(nStr,[sTable_WebOrderMatch, gMessageScan.FSyncTime, sFlag_Yes]);
       with gDBConnManager.WorkerQuery(FDBConn, nStr) do
       begin
@@ -453,7 +453,7 @@ var nStr: string;
     nErr,nIdx: Integer;
     nOut: TWorkerWebChatData;
 begin
-  nStr:= 'select top 100 * from %s where WOM_StatusType =%d Order by R_ID desc';
+  nStr:= 'select top 500 * from %s where WOM_StatusType =%d Order by R_ID desc';
   nStr:= Format(nStr,[sTable_WebOrderMatch, c_WeChatStatusCreateCard]);
   //查询最近100条网上开单记录
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do

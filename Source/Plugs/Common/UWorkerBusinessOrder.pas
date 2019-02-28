@@ -39,6 +39,11 @@ type
     //获取岗位采购单
     function SavePostOrderItems(var nData: string): Boolean;
     //保存岗位采购单
+    function GetYSRules(var nData: string):Boolean;
+    function SaveWlbYS(var nData: string):Boolean;
+    //保存物流部验收状态
+    function GetWlbYsStatus(var nData: string):Boolean;
+    //获取化验室验收结果
   public
     constructor Create; override;
     destructor destroy; override;
@@ -113,6 +118,9 @@ begin
    cBC_GetPostOrders        : Result := GetPostOrderItems(nData);
    cBC_SavePostOrders       : Result := SavePostOrderItems(nData);
    cBC_GetGYOrderValue      : Result := GetGYOrderValue(nData);
+   cBC_SaveWlbYS            : Result := SaveWlbYS(nData);
+   cBC_GetWlbYsStatus       : Result := GetWlbYsStatus(nData);
+   cBC_GetYSRules           : Result := GetYSRules(nData);
    else
     begin
       Result := False;
@@ -1114,6 +1122,74 @@ begin
   finally
     gBusinessPackerManager.RelasePacker(nPacker);
     gBusinessWorkerManager.RelaseWorker(nWorker);
+  end;
+end;
+
+function TWorkerBusinessOrders.GetYSRules(var nData: string): Boolean;
+var
+  nStr:string;
+begin
+  Result := true;
+  nStr := 'select * from %s where M_ID=''%s''';
+  nStr := Format(nStr,[sTable_Materails,FIn.FData]);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if recordcount = 0 then
+    begin
+      Result := False;
+      nData := '不存在该[ %s ]物料品种.';
+      nData := Format(nData, [FIn.FData]);
+      Exit;
+    end;
+
+    FOut.FData := FieldByName('M_YS2Times').AsString;
+    FOut.FExtParam := FieldByName('M_HYSYS').AsString;
+  end;
+end;
+
+function TWorkerBusinessOrders.SaveWlbYS(var nData: string): Boolean;
+var
+  nPound: TLadingBillItems;
+  nSQL: string;
+begin
+  Result := False;
+  
+  AnalyseBillItems(FIn.FData, nPound);
+  with nPound[0] do
+  begin
+    try
+      nSQL := MakeSQLByStr([
+                SF('D_WlbYTime', sField_SQLServer_Now, sfVal),
+                SF('D_WlbYMan', FIn.FBase.FFrom.FUser),
+                SF('D_WlbYS', FYSValid)
+                ], sTable_OrderDtl, SF('D_ID', FID), False);
+      gDBConnManager.WorkerExec(FDBConn, nSQL);
+      Result := True;
+    except
+      raise;
+    end;
+  end;
+end;
+
+function TWorkerBusinessOrders.GetWlbYsStatus(var nData: string): Boolean;
+var
+  nStr: string;
+begin
+  Result := False;
+  nStr := 'select * from %s where M_ID=''%s''';
+  nStr := Format(nStr,[sTable_Materails,FIn.FData]);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if FieldByName('M_YS2Times').AsString = sFlag_Yes then
+    begin
+      nStr := 'select * from %s where D_ID=''%s''';
+      nStr := Format(nStr,[sTable_OrderDtl,FIn.FExtParam]);
+      with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+      begin
+        if FieldByName('D_WlbYS').AsString <> sFlag_Yes then
+          Result := True;
+      end;
+    end;
   end;
 end;
 

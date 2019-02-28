@@ -13,7 +13,8 @@ uses
   dxLayoutControl, cxGridLevel, cxClasses, cxControls, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   ComCtrls, ToolWin, cxTextEdit, cxMaskEdit, cxButtonEdit, UBitmapPanel,
-  cxSplitter, Menus, cxLookAndFeels, cxLookAndFeelPainters;
+  cxSplitter, Menus, cxLookAndFeels, cxLookAndFeelPainters, dxSkinsCore,
+  dxSkinsDefaultPainters, dxSkinscxPCPainter, dxLayoutcxEditAdapters;
 
 type
   TfFrameHYData = class(TfFrameNormal)
@@ -185,7 +186,7 @@ begin
     EditNO.Text := Trim(EditNO.Text);
     if EditNO.Text = '' then Exit;
 
-    FWhere := Format('H_SerialNo Like ''%%%s%%''', [EditNO.Text]);
+    FWhere := Format('H_SerialNo Like ''%%%s%%'' or H_Truck like ''%%%s%%''', [EditNO.Text,EditNO.Text]);
     InitFormData(FWhere);
   end else
 

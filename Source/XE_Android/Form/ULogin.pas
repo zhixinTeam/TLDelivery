@@ -53,6 +53,8 @@ begin
 end;
 
 procedure TfrmLogin.BtnLoginClick(Sender: TObject);
+var
+  nGroup:string;
 begin
   inherited;
   with gSysParam do
@@ -63,7 +65,9 @@ begin
     FOperator := Trim(EditUser.Text);
     FPassword := Trim(EditPsd.Text);
 
-    FHasLogin := Login;
+    FHasLogin := Login(nGroup);
+    FGroup := nGroup;
+
     if FHasLogin then MainForm.Show;
   end;
 end;
