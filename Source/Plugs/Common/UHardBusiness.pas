@@ -946,7 +946,7 @@ begin
     end;
 
     nPTruck := nPLine.FTrucks[nIdx];
-    //nPTruck.FStockName := nPLine.FName;
+    nPTruck.FStockName := nPLine.FName;
     //同步物料名
     Result := True;
 
@@ -1266,14 +1266,14 @@ begin
   gERelayManager.LineOpen(nTunnel);
   //打开放灰
 
-  nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
-
   if Pos('熟料',nTruck.FStockName) >0 then
   begin
+    nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
     nStr := nStr + Copy(nTruck.FCusName,1,12);
   end
   else
   begin
+    nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
     nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
     nStr := nStr + nTruck.FStockName + StringOfChar(' ', 12 - Length(nTmp)) +
             FloatToStr(nTruck.FValue);

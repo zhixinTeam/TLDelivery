@@ -248,6 +248,7 @@ type
 
     FGPSFactID: string;                              //GPS工厂标注名称
     FGPSValidTime: string;                           //GPS信号有效时间
+    FTTCEK720ID  : string;                           //对应发卡机
   end;
   //系统参数
 

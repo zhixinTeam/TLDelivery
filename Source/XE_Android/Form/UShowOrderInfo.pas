@@ -74,19 +74,29 @@ begin
     if FYSTime ='N' then
     begin
       if SavePurchaseOrders('X', gOrders)then
+      begin
+        ShowMessage('验收成功');
         MainForm.Show;
-    end;
+      end;
+    end
+    else
     if FYSTime ='Y' then
     begin
       if gsysparam.FGroup='WLBGroup' then //如果是化验室
       begin
         if SaveWlbYS('X', gOrders)then
+        begin
+          ShowMessage('验收成功');
           MainForm.Show;
+        end;
       end
       else
       begin
         if SavePurchaseOrders('X', gOrders)then
+        begin
+          ShowMessage('验收成功');
           MainForm.Show;
+        end;
       end;
     end;
 
@@ -180,7 +190,7 @@ begin
     EditKZValue.Text := FloatToStr(FKZValue);
     nStockNo := FStockNo;
   end;
-  if not GetYSRules(nStockNo, nYSTime, nYSBM) then
+  if not GetYSRules(nStockNo, nYSTime, nYSBM) then    //Y二次验收 ，Y化验室验收
   begin
     ShowMessage('获取验收规则和验收部门失败.');
     Exit;

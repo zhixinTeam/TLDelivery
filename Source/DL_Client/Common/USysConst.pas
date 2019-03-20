@@ -181,6 +181,7 @@ const
   cFI_FormTransDetail   = $0096;                     //短倒办理
   cFI_FormChangeState   = $0097;                     //修改过磅单状态
   cFI_FormCusLimit      = $0098;                     //客户提货限制
+  cFI_FormQryCard       = $0099;                     //查询磁卡信息
 
 
   {*Command*}
@@ -418,6 +419,7 @@ begin
   AddMenuModuleItem('MAIN_M10', cFI_FormTransBase, mtForm);
   AddMenuModuleItem('MAIN_M06', cFI_FrameTransBase);
   AddMenuModuleItem('MAIN_L11', cFI_FrameTransferDetailQuery);
+  AddMenuModuleItem('MAIN_L12', cFI_FormQryCard, mtForm);
 end;
 
 //Desc: 清理模块列表

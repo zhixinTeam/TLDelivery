@@ -12,7 +12,7 @@ uses
   cxContainer, cxEdit, cxLabel, Menus, StdCtrls, cxButtons, cxGroupBox,
   cxRadioGroup, cxTextEdit, cxCheckBox, ExtCtrls, dxLayoutcxEditAdapters,
   dxLayoutControl, cxDropDownEdit, cxMaskEdit, cxButtonEdit,
-  USysConst, cxListBox, ComCtrls,Uszttce_api,Contnrs,UFormCtrl,
+  USysConst, cxListBox, ComCtrls,Contnrs,UFormCtrl,    
   dxSkinsCore, dxSkinsDefaultPainters, UMgrSDTReader, DB, ADODB;
 
 type
@@ -61,7 +61,7 @@ type
     procedure editWebOrderNoKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
-    FSzttceApi:TSzttceApi; //发卡机驱动
+    //FSzttceApi:TSzttceApi; //发卡机驱动
     FAutoClose:Integer; //窗口自动关闭倒计时（分钟）
     FWebOrderIndex:Integer; //商城订单索引
     FWebOrderItems:array of stMallPurchaseItem; //商城订单数组
@@ -81,7 +81,7 @@ type
   public
     { Public declarations }
     procedure SetControlsClear;
-    property SzttceApi:TSzttceApi read FSzttceApi write FSzttceApi;
+    //property SzttceApi:TSzttceApi read FSzttceApi write FSzttceApi;
     procedure SyncCard(const nCard: TIdCardInfoStr;const nReader: TSDTReaderItem);
   end;
 
@@ -91,7 +91,7 @@ var
 implementation
 uses
   ULibFun,UBusinessPacker,USysLoger,UBusinessConst,UFormMain,USysBusiness,USysDB,
-  UAdjustForm,UFormBase,UDataReport,UDataModule,NativeXml,UMgrK720Reader,UFormWait,
+  UAdjustForm,UFormBase,UDataReport,UDataModule,NativeXml,UFormWait,UMgrTTCEDispenser,
   DateUtils;
 {$R *.dfm}
 
@@ -506,6 +506,33 @@ begin
   end;
   {$ENDIF}
 
+  for nIdx:=0 to 3 do
+  begin
+    nNewCardNo := gDispenserManager.GetCardNo(gSysParam.FTTCEK720ID, nHint, False);
+    if nNewCardNo <> '' then
+      Break;
+    Sleep(500);
+  end;
+  //连续三次读卡,成功则退出。
+
+  if nNewCardNo = '' then
+  begin
+    nHint := '卡箱异常,请查看是否有卡.';
+    ShowMsg(nHint, sWarn);
+    Exit;
+  end;
+
+  WriteLog('读取到卡片: ' + nNewCardNo);
+  //解析卡片
+  if not IsCardValid(nNewCardNo) then
+  begin
+    gDispenserManager.RecoveryCard(gSysParam.FTTCEK720ID, nHint);
+    nHint := '卡号' + nNewCardNo + '非法,回收中,请稍后重新取卡';
+    WriteLog(nHint);
+    ShowMsg(nHint, sWarn);
+    Exit;
+  end;
+
   nList := TStringList.Create;
   try
     nList.Values['SQID'] := EditID.Text;
@@ -546,11 +573,13 @@ begin
   ShowMsg('采购单保存成功', sHint);
 
     //发卡
-  if not FSzttceApi.IssueOneCard(nNewCardNo) then
+  if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
   begin
-    nHint := '出卡失败,请到开票窗口补办磁卡：[errorcode=%d,errormsg=%s]';
-    nHint := Format(nHint,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
-    ShowMsg(nHint,sHint);
+    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
+    nHint := Format(nHint, [nNewCardNo]);
+
+    WriteLog(nHint);
+    ShowMsg(nHint,sWarn);
   end
   else begin
     ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);

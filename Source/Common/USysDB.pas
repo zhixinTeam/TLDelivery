@@ -279,6 +279,7 @@ const
   sFlag_DaiForceQueue = 'DaiForceQueue';             //袋装强制排队
   sFlag_SanForceQueue = 'SanForceQueue';             //散装强制排队
   sFlag_AreaLimit     = 'AreaLimit';                 //客户发货日限额
+  sFlag_StopNewBill   = 'StopNewBill';               //暂停开卡
 
 
   {*数据表*}

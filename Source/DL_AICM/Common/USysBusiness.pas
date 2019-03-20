@@ -201,6 +201,8 @@ function IsEleCardVaid(const nTruckNo: string): Boolean;
 function IfStockHasLs(const nStockNo: string): Boolean;
 //验证物料是否需要输入流水
 
+function IsCardValid(const nCard: string): Boolean;
+
 function GetGpsByTruck(var nTruck:string;nFactory,nTime:string):Boolean;
 
 function CallBusinessCommand(const nCmd: Integer; const nData,nExt: string;
@@ -1743,6 +1745,27 @@ begin
     if recordcount>0 then
     begin
       if FieldByName('M_HasLs').AsString = sFlag_Yes then//启用
+      begin
+        Result := True;
+      end;
+    end;
+  end;
+end;
+
+function IsCardValid(const nCard: string): Boolean;
+var
+  nSql:string;
+begin
+  Result := False;
+
+  nSql := 'select C_Card2,C_Card3 from %s where C_Card = ''%s'' ';
+  nSql := Format(nSql,[sTable_Card,nCard]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if (Trim(Fields[0].AsString) <> '') or (Trim(Fields[1].AsString) <> '')then
       begin
         Result := True;
       end;

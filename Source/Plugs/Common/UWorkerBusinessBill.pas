@@ -478,8 +478,23 @@ var nIdx: Integer;
     nStatus, nNextStatus: string;
     {$ENDIF}
     nOut, nTmp: TWorkerBusinessCommand;
+    nArea: string;
+    nLimitValue, nLeaveValue: Double;
 begin
   Result := False;
+
+  nSQL := 'select D_Value from %s where D_Name=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_StopNewBill]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+      if FieldByName('D_Value').AsString = sFlag_Yes then
+      begin
+        nData := '目前处于暂停开卡状态，请等待管理员通知.';
+        Exit
+      end;
+  end;
+
   FListA.Text := PackerDecodeStr(FIn.FData);
   if not VerifyBeforSave(nData) then Exit;
 
@@ -517,6 +532,65 @@ begin
              '请减小提货量后再开单.';
     nData := Format(nData, [FListA.Values['ZhiKa'], nMoney, nVal]);
     Exit;
+  end;
+
+  //按客户日限额
+  nSQL :='select C_Area from %s where C_ID=''%s''';
+  nSQL := Format(nSQL,[sTable_Customer,FListA.Values['CusID']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+    nArea := Trim(FieldByName('C_Area').AsString);
+
+  nSQL := 'select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_AreaLimit, FListC.Values['StockNO']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+      if (FieldByName('D_Value').AsString = sFlag_Yes) and (nArea <> '') then  //启用发货限制,客户区域信息为空则不参与限提
+      begin
+        nSQL := 'select * from %s where L_Area=''%s'' and L_StockNo=''%s''';
+        nSQL := Format(nSQL,[sTable_AreaLimit,nArea,FListC.Values['StockNO']]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        begin
+          if recordcount > 0 then
+          begin
+            nLimitValue := FieldByName('L_Value').AsFloat;
+
+            nSQL := 'select sum(L_Value)as  L_Value from %s a left join %s b '+
+                    ' on a.L_CusID=b.C_ID where L_StockNo=''%s'''+
+                    ' and L_Date >= ''%s'' and L_Date < ''%s'' and C_Area=''%s''';
+
+            nSQL := Format(nSQL,[sTable_Bill,sTable_Customer,FListC.Values['StockNO'],
+                  Date2Str(Date,True)+' 00:00:00',Date2Str(Date+1,True)+' 00:00:00',nArea]);
+            with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+            begin
+              nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
+              if nLeaveValue <= 0 then
+              begin
+                nData := '区域限额:物料[ %s ]已超出[ %s ]区域日发货限量，无法开单';
+                nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],nArea]);
+                exit;
+              end;
+              {else
+              begin
+                if nLeaveValue < StrToFloat(FListC.Values['Value']) then
+                begin
+                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                           '当前剩余配额：[ %s ]吨';
+                  nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],
+                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+                  Exit;
+                end;
+              end;}
+            end;
+          end
+          else
+          begin      //如果没有记录则不允许提货
+            nData := '[ %s ] 区域没有对物料 [ %s ] 分配发货配额,禁止提货.';
+            nData := Format(nData,[nArea,FListC.Values['StockNo']+' - '+FListC.Values['StockName']]);
+            Exit;
+          end;
+        end;
+      end;
   end;
 
   //----------------------------------------------------------------------------

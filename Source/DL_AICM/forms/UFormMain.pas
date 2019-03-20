@@ -599,7 +599,7 @@ begin
     if not Assigned(fFormNewCard) then
     begin
       fFormNewCard := TfFormNewCard.Create(nil);
-      fFormNewCard.SzttceApi := FSzttceApi;
+      //fFormNewCard.SzttceApi := FSzttceApi;
       fFormNewCard.SetControlsClear;
     end;
     fFormNewCard.BringToFront;
@@ -614,7 +614,7 @@ begin
    if not Assigned(fFormNewPurchaseCard) then
     begin
       fFormNewPurchaseCard := TfFormNewPurchaseCard.Create(nil);
-      fFormNewPurchaseCard.SzttceApi := FSzttceApi;
+      //fFormNewPurchaseCard.SzttceApi := FSzttceApi;
       fFormNewPurchaseCard.SetControlsClear;
     end;
     fFormNewPurchaseCard.BringToFront;
