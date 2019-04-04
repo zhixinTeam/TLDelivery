@@ -88,5 +88,7 @@
   {$DEFINE WxShowCusMoney}
   //微信订单列表显示客户余额
   {$DEFINE CapturePictureEx}
-  //抓拍扩展  
+  //抓拍扩展 
+  {$DEFINE AllowMultiM}
+  //允许多次过毛重
 {$ENDIF}

@@ -528,9 +528,9 @@ begin
   begin
     nData := '纸卡[ %s ]上没有足够的金额,详情如下:' + #13#10#13#10 +
              '可用金额: %.2f' + #13#10 +
-             '开单金额: %.2f' + #13#10#13#10 +
+             //'开单金额: %.2f' + #13#10#13#10 +
              '请减小提货量后再开单.';
-    nData := Format(nData, [FListA.Values['ZhiKa'], nMoney, nVal]);
+    nData := Format(nData, [FListA.Values['ZhiKa'], nMoney]); //nVal
     Exit;
   end;
 
