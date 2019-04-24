@@ -175,7 +175,7 @@ begin
     EditMID.ItemIndex := nInt;
     EditMate.Text := gMateItems[nInt].FName;
   end;
-
+  CheckBox1.Enabled := gSysParam.FIsAdmin;
  { nStr := 'P_ID=Select P_ID,P_Name From %s';
   nStr := Format(nStr, [sTable_Provider]);
   FDM.FillStringsData(EditDC.Properties.Items, nStr, 1, '.');

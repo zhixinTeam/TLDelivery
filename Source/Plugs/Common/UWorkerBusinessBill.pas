@@ -590,6 +590,14 @@ begin
             Exit;
           end;
         end;
+      end
+      else
+      if (FieldByName('D_Value').AsString = sFlag_Yes) and (nArea = '') then
+      begin
+        nData := '当前处于调价中,限制提货,'+#13
+                  +'或因当前开启限提,当前客户未分配区域信息,限制提货.'+#13
+                  +'具体情况请咨询场内管理员.';
+        Exit;
       end;
   end;
 

@@ -104,6 +104,7 @@ begin
   inherited;
   FUseDate := True;
   InitDateRange(Name, FStart, FEnd);
+  ERP1.Enabled := gSysParam.FIsAdmin;
 end;
 
 procedure TfFrameBill.OnDestroyFrame;
@@ -463,8 +464,33 @@ begin
 end;
 
 procedure TfFrameBill.ERP1Click(Sender: TObject);
+var
+  nSQL, nID:string;
 begin
-  //
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nID :=  SQLQuery.FieldByName('L_ID').AsString;
+    if SQLQuery.FieldByName('L_SyncStatus').AsString = sflag_yes then
+    begin
+      ShowMessage('该提货单已经同步成功，无需重复同步.');
+      Exit;
+    end;
+
+    if not SyncBillToErp(nID) then
+    begin
+      ShowMessage('同步单据失败.');
+      exit;
+    end
+    else
+    begin
+      nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID =''%s''';
+      nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes,nID]);
+      FDM.ExecuteSQL(nSQL);
+
+      InitFormData(FWhere);
+      ShowMsg('同步单据成功.',sHint);
+    end;
+  end;
 end;
 
 initialization

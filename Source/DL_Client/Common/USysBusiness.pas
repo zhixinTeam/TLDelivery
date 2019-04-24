@@ -356,6 +356,8 @@ function GetWlbYsStatus(const nStockNo,nOrderId: string): Boolean;
 function GetReaderCard(const nReader,nType: string): string;
 //获取指定读头的有效卡号
 
+function SyncBillToErp(const nBillID:string):Boolean;
+
 implementation
 
 //Desc: 记录日志
@@ -3543,5 +3545,14 @@ begin
   else Result := '';
 end;
 
+
+//Date: 2019-04-12
+//Parm: 单号
+//Desc: 同步单据到erp
+function SyncBillToErp(const nBillID:string):Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  result := CallBusinessCommand(cBC_SyncStockBill, nBillID, '' , @nOut);
+end;
 
 end.

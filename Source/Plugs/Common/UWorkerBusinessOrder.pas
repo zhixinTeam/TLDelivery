@@ -1037,10 +1037,6 @@ begin
       FListA.Add(nSQL); //更新采购单
     end;
 
-    //{$IFDEF UseERP_K3}
-
-    //{$ENDIF}
-
     nSQL := 'Select O_CType,O_Card From %s Where O_ID=''%s''';
     nSQL := Format(nSQL, [sTable_Order, nPound[0].FZhiKa]);
 
@@ -1171,6 +1167,7 @@ begin
   end;
 end;
 
+//未验收则为TRUE
 function TWorkerBusinessOrders.GetWlbYsStatus(var nData: string): Boolean;
 var
   nStr: string;
@@ -1186,7 +1183,7 @@ begin
       nStr := Format(nStr,[sTable_OrderDtl,FIn.FExtParam]);
       with gDBConnManager.WorkerQuery(FDBConn, nStr) do
       begin
-        if FieldByName('D_WlbYS').AsString <> sFlag_Yes then
+        if Trim(FieldByName('D_WlbYS').AsString) = '' then
           Result := True;
       end;
     end;

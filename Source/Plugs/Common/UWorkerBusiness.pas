@@ -3028,7 +3028,7 @@ begin
         else
         if nStr = 'D' then //delete
         begin
-          nStr := 'Delete From %s Where C_ID=''%s''';
+          nStr := 'Delete From %s Where P_ID=''%s''';
           nStr := Format(nStr, [sTable_Provider, FieldByName('S_Record').AsString]);
           FListA.Add(nStr);
         end;

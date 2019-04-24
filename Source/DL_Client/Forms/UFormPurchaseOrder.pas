@@ -135,6 +135,7 @@ begin
   FCardData := TStringList.Create;
   AdjustCtrlData(Self);
   LoadFormConfig(Self);
+  EditCardType.Enabled := gSysParam.FIsAdmin;
   {$IFDEF KuangFa}
   dxLayout1Item6.Visible := True;
   dxLayout1Item7.Visible := True;

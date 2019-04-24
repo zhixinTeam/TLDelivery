@@ -527,12 +527,12 @@ begin
     Exit;
   end;
 
-  //{$IFDEF ForceEleCard}
+  {$IFDEF ForceEleCard}
   if not IsEleCardVaid(EditTruck.Text) then
   begin
     ShowMsg('车辆未办理电子标签或电子标签未启用！请联系管理员', sHint); Exit;
   end;
-  //{$ENDIF}
+  {$ENDIF}
 
   if not VerifyCtrl(EditValue,nHint) then
   begin
@@ -548,7 +548,7 @@ begin
   end;
 
   nTruck := EditTruck.Text+'%';
-  if (Pos('熟料',EditSName.Text) =0) or (Pos('石灰石',EditSName.Text) =0) then
+  if (Pos('熟料',EditSName.Text) =0) and (Pos('石灰石',EditSName.Text) =0) then
     if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
     begin
       ShowMessage(nTruck);

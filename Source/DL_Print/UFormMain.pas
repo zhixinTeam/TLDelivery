@@ -255,6 +255,7 @@ function PrintBillReport(const nBill: string; var nHint: string;
  const nPrinter: string = ''; const nMoney: string = '0'): Boolean;
 var nStr: string;
     nDS: TDataSet;
+    nIdx:Integer;
 begin
   nHint := '';
   Result := False;
@@ -284,7 +285,8 @@ begin
   else FDR.Report1.PrintOptions.Printer := nPrinter;
 
   FDR.Dataset1.DataSet := FDM.SQLQuery1;
-  FDR.PrintReport;
+  for nIdx := 0 to 1 do
+    FDR.PrintReport;
   Result := FDR.PrintSuccess;
 
   {$IFDEF PrintGLF}

@@ -833,7 +833,12 @@ begin
       rt900 :gHardwareHelper.SetReaderCard(nReader.FVReader, 'H' + nReader.FCard, False);
       rt02n :g02NReader.SetReaderCard(nReader.FVReader, 'H' + nReader.FCard);
     end;
-  end else g02NReader.ActiveELabel(nReader.FTunnel, nReader.FCard);
+  end else
+  begin
+    g02NReader.ActiveELabel(nReader.FTunnel, nReader.FCard);
+    WriteHardHelperLog('ActiveELabel('+nReader.FTunnel+', '+nReader.FCard+')');
+  end;
+
 end;
 
 procedure WhenBlueReaderCardArrived(nHost: TBlueReaderHost; nCard: TBlueReaderCard);
