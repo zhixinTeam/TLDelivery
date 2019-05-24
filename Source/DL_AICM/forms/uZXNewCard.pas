@@ -199,11 +199,13 @@ begin
       Writelog(nStr);
       Exit;
     end;
+    ShowWaitForm('等待服务器响应,请勿再次点击界面...');
     lvOrders.Items.Clear;
     if not DownloadOrder(nCardNo) then Exit;
     btnOK.Enabled := True;
   finally
     btnQuery.Enabled := True;
+    ShowWaitForm('',False);
   end;
 end;
 
@@ -464,10 +466,10 @@ begin
 
   if Sender = EditTruck then
   begin
-    Result := Length(EditTruck.Text) > 2;
+    Result := Length(EditTruck.Text) > 3;
     if not Result then
     begin
-      nHint := '车牌号长度应大于2位';
+      nHint := '车牌号长度应大于3位';
       Writelog(nHint);
       Exit;
     end;
@@ -530,7 +532,8 @@ begin
   {$IFDEF ForceEleCard}
   if not IsEleCardVaid(EditTruck.Text) then
   begin
-    ShowMsg('车辆未办理电子标签或电子标签未启用！请联系管理员', sHint); Exit;
+    ShowMsg('车辆未办理电子标签或电子标签未启用！请联系管理员', sHint);
+    Exit;
   end;
   {$ENDIF}
 
@@ -641,18 +644,35 @@ begin
   ShowMsg('提货单保存成功', sHint);
 
   //发卡
-  if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
+//  if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
+//  begin
+//    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
+//    nHint := Format(nHint, [nNewCardNo]);
+//
+//    WriteLog(nHint);
+//    ShowMsg(nHint,sWarn);
+//  end
+//  else begin
+//    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
+//    SaveBillCard(nBillID,nNewCardNo);
+//  end;
+
+  //发卡2019-05-20
+  if not SaveBillCard(nBillID,nNewCardNo) then
   begin
-    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
+    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联磁卡.';
     nHint := Format(nHint, [nNewCardNo]);
 
     WriteLog(nHint);
     ShowMsg(nHint,sWarn);
   end
   else begin
-    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
-    SaveBillCard(nBillID,nNewCardNo);
+    if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
+      ShowMessage('出卡失败,请联系管理员将磁卡取出.')
+    else
+      ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
   end;
+
   Result := True;
   if nPrint then
     PrintBillReport(nBillID, True);

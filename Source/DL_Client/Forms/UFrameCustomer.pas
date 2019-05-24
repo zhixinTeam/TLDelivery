@@ -98,8 +98,8 @@ begin
   //xxxxx
 
   if nWhere = '' then
-       Result := Result + ' Where C_XuNi<>''$Yes'''
-  else Result := Result + ' Where (' + nWhere + ')';
+       Result := Result + ' Where ISNULL(C_Valid,'''') <>''N'' and C_XuNi<>''$Yes'''
+  else Result := Result + ' Where ISNULL(C_Valid,'''') <>''N'' and (' + nWhere + ')';
 
   Result := MacroValue(Result, [MI('$Cus', sTable_Customer),
             MI('$Sale', sTable_Salesman), MI('$Yes', sFlag_Yes)]);

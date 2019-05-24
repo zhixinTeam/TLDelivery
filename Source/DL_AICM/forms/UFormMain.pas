@@ -166,15 +166,6 @@ begin
   except
   end;
 
-//  FSzttceApi := TSzttceApi.Create;
-//  if FSzttceApi.ErrorCode<>0 then
-//  begin
-//    nStr := '初始化自助发卡机失败，[ErrorCode=%d,ErrorMsg=%s]';
-//    nStr := Format(nStr,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
-//    ShowMsg(nStr,sHint);
-//  end;
-//  FSzttceApi.ParentWnd := Self.Handle;
-
   FHotKeyMgr := THotKeyManager.Create(Self);
   FHotKeyMgr.OnHotKeyPressed := DoHotKeyHotKeyPressed;
 

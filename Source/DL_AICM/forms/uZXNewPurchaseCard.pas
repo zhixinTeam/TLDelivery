@@ -170,10 +170,12 @@ begin
       Writelog(nStr);
       Exit;
     end;
+    ShowWaitForm('等待服务器响应,请勿再次点击界面...');
     lvOrders.Items.Clear;
     if not DownloadOrder(nCardNo) then Exit;
     btnOK.Enabled := True;
   finally
+    ShowWaitForm('',False);
     btnQuery.Enabled := True;
   end;
 end;

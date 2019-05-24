@@ -1718,14 +1718,8 @@ begin
   begin
     if recordcount>0 then
     begin
-      if FieldByName('T_CardUse').AsString = sFlag_Yes then//∆Ù”√
-      begin
-        if (FieldByName('T_Card').AsString = '') and (FieldByName('T_Card2').AsString = '') then
-        begin
-          Result := False;
-          Exit;
-        end;
-      end;
+      if (FieldByName('T_Card').AsString = '') and (FieldByName('T_Card2').AsString = '') then
+        Result := False;
     end;
   end;
 end;

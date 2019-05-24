@@ -91,4 +91,7 @@
   //抓拍扩展 
   {$DEFINE AllowMultiM}
   //允许多次过毛重
+  {$DEFINE PoundElabelControlEx}
+  {$DEFINE OrderNoMulCard}
+  //采购一车一单子
 {$ENDIF}

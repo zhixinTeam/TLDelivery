@@ -1436,8 +1436,8 @@ begin
   //默认允许
 
   nStr := 'Select Top 1 T_Card From %s ' +
-          'Where T_Truck=''%s'' And T_CardUse=''%s'' And T_Card Is not NULL';
-  nStr := Format(nStr, [sTable_Truck, nTruck, sFlag_Yes]);
+          'Where T_Truck=''%s'' And T_Card Is not NULL';
+  nStr := Format(nStr, [sTable_Truck, nTruck]);
   //选择该车提一条有电子标签的记录
 
   with FDM.QueryTemp(nStr) do

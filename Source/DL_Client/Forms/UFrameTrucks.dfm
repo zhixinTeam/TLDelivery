@@ -28,6 +28,8 @@ inherited fFrameTrucks: TfFrameTrucks
       Top = 93
       Hint = 'T.T_Truck'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 1
       Width = 125
     end
@@ -41,6 +43,9 @@ inherited fFrameTrucks: TfFrameTrucks
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditNamePropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 125
@@ -50,6 +55,8 @@ inherited fFrameTrucks: TfFrameTrucks
       Top = 93
       Hint = 'T.T_Owner'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 125
     end
@@ -58,30 +65,32 @@ inherited fFrameTrucks: TfFrameTrucks
       Top = 93
       Hint = 'T.T_PValue'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 125
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item2: TdxLayoutItem
-          Caption = #36710#29260#21495#30721':'
+          CaptionOptions.Text = #36710#29260#21495#30721':'
           Control = EditName
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #36710#29260#21495#30721':'
+          CaptionOptions.Text = #36710#29260#21495#30721':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item4: TdxLayoutItem
-          Caption = #36710#20027#22995#21517':'
+          CaptionOptions.Text = #36710#20027#22995#21517':'
           Control = cxTextEdit2
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item3: TdxLayoutItem
-          Caption = #26377#25928#30382#37325':'
+          CaptionOptions.Text = #26377#25928#30382#37325':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end

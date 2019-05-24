@@ -261,6 +261,7 @@ begin
   begin
     case Ord(nWStr[nIdx]) of
      Ord('-'): Continue;
+     Ord('/'): Continue;
      Ord('0')..Ord('9'): Continue;
      Ord('a')..Ord('z'): Continue;
     end;
@@ -302,7 +303,7 @@ var nIdx: Integer;
 begin
   Result := False;
   nTruck := FListA.Values['Truck'];
-  //if not VerifyTruckNO(nTruck, nData) then Exit;
+  if not VerifyTruckNO(nTruck, nData) then Exit;
 
   if not TWorkerBusinessCommander.CallMe(cBC_SyncCustomer, nStr, '', @nOut) then
   begin
@@ -2257,6 +2258,7 @@ begin
                      '※.需 补 交: %.2f元' + #13#10+#13#10 +
                      '请到财务室办理"补交货款"手续,然后再次称重.';
             nData := Format(nData, [FCusID, FCusName, m, FPrice * FValue, f]);
+            writelog(nData);
             Exit;
             {$ENDIF}
           end;
@@ -2629,6 +2631,25 @@ begin
     FListA.Add(nSQL); //清理装车队列
   end;
 
+  if FIn.FExtParam = sFlag_TruckOut then //同步数据
+  begin
+    nStr := CombinStr(FListB, ',', True);
+    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
+    begin
+      nData := nOut.FData;
+      WriteLog('同步单据'+nStr+'至erp失败,出厂失败.');
+      Exit;
+    end
+    else
+    begin
+      nStr := AdjustListStrFormat2(FListB, '''', True, ',', False);
+
+      nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID In (%s)';
+      nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes, nStr]);
+      FListA.Add(nSQL);
+    end;
+  end;
+
   //----------------------------------------------------------------------------
   FDBConn.FConn.BeginTrans;
   try
@@ -2641,24 +2662,6 @@ begin
   except
     FDBConn.FConn.RollbackTrans;
     raise;
-  end;
-  
-  if FIn.FExtParam = sFlag_TruckOut then //同步数据
-  begin
-    nStr := CombinStr(FListB, ',', True);
-    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
-    begin
-      nData := nOut.FData;
-      Exit;
-    end
-    else
-    begin
-      nStr := AdjustListStrFormat2(FListB, '''', True, ',', False);
-
-      nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID In (%s)';
-      nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes, nStr]);
-      gDBConnManager.WorkerExec(FDBConn, nSQL);
-    end;
   end;
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重

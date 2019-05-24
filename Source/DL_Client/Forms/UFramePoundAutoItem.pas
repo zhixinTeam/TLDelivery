@@ -79,12 +79,15 @@ type
     //磅站通道
     FLastGS,FLastBT,FLastBQ: Int64;
     //上次活动
+    FIsChkPoundStatus: Boolean;  //地磅状态
     FBillItems: TLadingBillItems;
     FUIData,FInnerData: TLadingBillItem;
     //称重数据
     FLastCardDone: Int64;
-    FLastCard, FCardTmp, FLastReader: string;
-    //上次卡号, 临时卡号, 读卡器编号
+    FLastCard, FCardTmp, FLastReader, FLastBusinessCard: string;
+    //上次卡号, 临时卡号, 读卡器编号, 上次执行刷卡动作业务卡
+    FELabelList: TStrings;
+    //电子标签列表
     FSampleIndex: Integer;
     FValueSamples: array of Double;
     //数据采样
@@ -120,6 +123,8 @@ type
     procedure LEDDisplay(const nContent: string);
     //LED显示
     function IfForceLable:Boolean;
+    //检查磅的重量
+    function ChkPoundStatus:Boolean;
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -157,6 +162,7 @@ begin
   FLEDContent := '';
   FEmptyPoundInit := 0;
   FLogin := -1;
+  FELabelList := TStringList.Create;
 end;
 
 procedure TfFrameAutoPoundItem.OnDestroyFrame;
@@ -166,6 +172,7 @@ begin
   {$IFDEF CapturePictureEx}
   FreeCapture(FLogin);
   {$ENDIF}
+  FELabelList.Free;
   inherited;
 end;
 
@@ -393,7 +400,7 @@ end;
 //Parm: 磁卡或交货单号
 //Desc: 读取nCard对应的交货单
 procedure TfFrameAutoPoundItem.LoadBillItems(const nCard: string);
-var nRet: Boolean;
+var nRet, nValidELabel: Boolean;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
     nStr,nHint, nVoice, nLabel: string;
@@ -516,6 +523,7 @@ begin
   end;
   //指定时间内车辆禁止过磅
 
+  {$IFDEF PoundElabelControlEx}
   if FVirPoundID <> '' then
   begin
     nLabel := GetTruckRealLabel(FUIData.FTruck);
@@ -527,7 +535,64 @@ begin
       PlayVoice(nStr);
       Exit;
     end;
-    
+
+    nHint := ReadPoundCardEx(nStr, FVirPoundID);
+
+    if (nHint <> '') and (FELabelList.IndexOf(nHint) < 0) then
+      FELabelList.Add(nHint);
+
+    nStr := '磅站[ %s.%s ]: 车辆[ %s.%s ]当前电子标签列表[ %s ]';
+    nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
+            FUIData.FTruck, nLabel, FELabelList.Text]);
+    WriteSysLog(nStr);
+
+    nValidELabel := False;
+    for nIdx := 0 to FELabelList.Count - 1 do
+    begin
+      if Pos(nLabel, FELabelList.Strings[nIdx]) > 0 then
+      begin
+        nValidELabel := True;
+        WriteSysLog('电子标签匹配无误.nLabel::'+nLabel+',nHint'+FELabelList.Strings[nIdx]);
+        Break;
+      end;
+    end;
+
+    if not nValidELabel then
+    begin     //if (nHint = '') or (Pos(nLabel, nHint) < 1) then
+      if nHint = '' then
+      begin
+        nStr := '未识别电子签,请移动车辆.';
+        PlayVoice(nStr);
+      end
+      else
+      if Pos(nLabel, nHint) < 1 then
+      begin
+        nStr := '电子标签不匹配,请重新绑定.';
+        PlayVoice(nStr);
+      end;
+
+      nStr := '磅站[ %s.%s ]: 车辆[ %s.%s ]电子标签不匹配[ %s ],禁止上磅';
+      nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
+              FUIData.FTruck, nLabel, nHint]);
+      WriteSysLog(nStr);
+      SetUIData(True);
+      Exit;
+    end;
+  end;
+  //判断车辆是否就位
+  {$ELSE}
+  if FVirPoundID <> '' then
+  begin
+    nLabel := GetTruckRealLabel(FUIData.FTruck);
+    //强制电子标签
+    if IfForceLable and (nLabel='') then
+    begin
+      nStr := '请办理电子标签.';
+      WriteSysLog(nStr);
+      PlayVoice(nStr);
+      Exit;
+    end;
+
     begin
       nHint := ReadPoundCardEx(nStr, FVirPoundID);
       if (nHint = nLabel) or (Pos(nLabel, nHint) > 0) then
@@ -549,6 +614,7 @@ begin
     end;
   end;
   //判断车辆是否就位
+  {$ENDIF}
 
   InitSamples;
   //初始化样本
@@ -600,7 +666,7 @@ end;
 //------------------------------------------------------------------------------
 //Desc: 由定时读取交货单
 procedure TfFrameAutoPoundItem.Timer_ReadCardTimer(Sender: TObject);
-var nStr,nCard: string;
+var nStr,nCard,nLabel: string;
     nLast, nDoneTmp: Int64;
 begin
   if gSysParam.FIsManual then Exit;
@@ -622,6 +688,18 @@ begin
     else nDoneTmp := FLastCardDone;
     //新卡时重置
 
+    if nCard <> FLastBusinessCard then//新卡时清空电子标签列表
+    begin
+      FLastBusinessCard := nCard;
+      FELabelList.Clear;
+    end
+    else
+    begin
+      nLabel := GetReaderCard(FLastReader, 'RFID102');//读取该电子标签卡号
+      if (nLabel <> '') and (FELabelList.IndexOf(nLabel) < 0) then
+      FELabelList.Add(nLabel);
+    end;
+
     {$IFDEF DEBUG}
     nStr := '磅站[ %s.%s ]: 读取到新卡号::: %s =>旧卡号::: %s';
     nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
@@ -638,6 +716,8 @@ begin
       WriteSysLog(nStr);
       Exit;
     end;
+
+    if Not ChkPoundStatus then Exit;
 
     FCardTmp := nCard;
     EditBill.Text := nCard;
@@ -912,7 +992,9 @@ begin
     nVal := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue);
     if nVal > gSysParam.FJsWc then
     begin
-      nStr := '采购拒收车辆皮毛重误差查出标准值,请联系管理员处理.';
+      nStr := '采购拒收车辆误差:'+floattostr(nVal)+',允许误差:'+floattostr(gSysParam.FJsWc)+
+              ',皮毛重误差超出标准值皮重:['+floattostr(FUIData.FPData.FValue)+
+              '],毛重:['+floattostr(FUIData.FMData.FValue)+'],请联系管理员处理.';
       WriteSysLog(nStr);
       PlayVoice(nStr);
       Exit;
@@ -971,6 +1053,8 @@ begin
   FLastBT := GetTickCount;
   EditValue.Text := Format('%.2f', [nValue]);
 
+  if FIsChkPoundStatus then Exit;
+  //不在检查状态中
   if not FIsWeighting then Exit;
   //不在称重中
   if gSysParam.FIsManual then Exit;
@@ -1277,6 +1361,52 @@ begin
   begin
     if FieldByName('D_Value').AsString = sflag_Yes then
       Result := True;
+  end;
+end;
+
+function TfFrameAutoPoundItem.ChkPoundStatus: Boolean;
+var nIdx:Integer;
+    nHint : string;
+begin
+  Result:= True;
+  try
+    try
+      FIsChkPoundStatus:= True;
+      if not FPoundTunnel.FUserInput then
+      if not gPoundTunnelManager.ActivePort(FPoundTunnel.FID,
+             OnPoundDataEvent, True) then
+      begin
+        nHint := '检查地磅：连接地磅表头失败，请联系管理员检查硬件连接';
+        WriteSysLog(nHint);
+        PlayVoice(nHint);
+        Result:= False;
+        Exit;
+      end;
+
+      for nIdx:= 0 to 5 do
+      begin
+        Sleep(500);
+        Application.ProcessMessages;
+        if StrToFloatDef(Trim(EditValue.Text), -1) > 0.12 then
+        begin
+          Result:= False;
+          nHint := '检查地磅：地磅称重重量 %s ,不能进行称重作业';
+          nhint := Format(nHint, [EditValue.Text]);
+          WriteSysLog(nHint);
+
+          PlayVoice('当前地磅不在称重状态,相关车辆及人员请下榜');
+          Break;
+        end;
+      end;
+    except  on E: Exception do
+      begin
+        WriteSysLog(Format('磅站 %s.%s : 检查地磅状态 %s', [FPoundTunnel.FID,
+                                                 FPoundTunnel.FName, E.Message]));
+      end;
+    end;
+  finally
+    FIsChkPoundStatus:= False;
+    SetUIData(True);
   end;
 end;
 

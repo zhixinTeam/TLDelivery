@@ -2574,13 +2574,13 @@ begin
                   SF('payTypeName',             nTmpDataSet.FieldByName('payTypeName').AsString),        //
                   SF('carCode',                 FieldByName('L_Truck').AsString),                        //
                   SF('enaBeginDate',            FieldByName('L_inTime').AsString),                       //
-                  SF('enaEndDate',              FieldByName('L_OutFact').AsString),//sField_SQLServer_Now, sfVal),
+                  SF('enaEndDate',              sField_SQLServer_Now, sfVal), //FieldByName('L_OutFact').AsString),
                   SF('pickDate',                FieldByName('L_LadeTime').AsString),                     //
                   SF('blncTypeCode',            nTmpDataSet.FieldByName('blncTypeCode').AsString),       //
                   SF('blncTypeName',            nTmpDataSet.FieldByName('blncTypeName').AsString),       //
                   SF('originalDate',            FieldByName('L_Date').AsString),                         //
                   SF('balFlag',                 'Y'),
-                  SF('balanceDate',             FieldByName('L_OutFact').AsString),//sField_SQLServer_Now, sfVal),
+                  SF('balanceDate',             sField_SQLServer_Now, sfVal),  //FieldByName('L_OutFact').AsString),//
                   SF('salOrgzCode',             '001'),
                   SF('remark',                  FieldByName('L_ID').AsString),                                                               //
                   SF('fillDate',                FieldByName('L_Date').AsString)                                                     //
@@ -2617,7 +2617,7 @@ begin
                   SF('rtnSum',                 -FieldByName('L_Value').AsFloat*FieldByName('L_Price').AsFloat, sfVal),
                   SF('accountCode',             FieldByName('L_CusID').AsString),
                   SF('accountName',             FieldByName('L_CusName').AsString),
-                  SF('inputDate',               FieldByName('L_OutFact').AsString),
+                  SF('inputDate',               sField_SQLServer_Now, sfVal),//FieldByName('L_OutFact').AsString),
                   SF('inputPsnName',            FieldByName('L_Man').AsString),
                   SF('remark',                  '销售提货'),
                   SF('feeType',                 'PICK'),
@@ -2886,7 +2886,7 @@ end;
 
 //同步客户到DL系统
 function TWorkerBusinessCommander.SyncRemoteCustomer(var nData: string): Boolean;
-var nStr: string;
+var nStr,nValid: string;
     nIdx: Integer;
     nDBWorker: PDBWorker;
 begin
@@ -2896,7 +2896,7 @@ begin
   nDBWorker := nil;
   try
     nStr := 'Select S_Table,S_Action,S_Record,S_Param1,S_Param2,' +
-            'accountCode,accountName From %s' +
+            'accountCode,accountName,flag From %s' +
             ' Left Join %s On accountCode=S_Record where S_Table=''C''';
 
     nStr := Format(nStr, [sTable_K3_SyncItem, sTable_K3_Customer]);
@@ -2910,6 +2910,10 @@ begin
       try
         nStr := FieldByName('S_Action').AsString;
         //action
+        if FieldByName('flag').AsString='COMMIT' then
+          nValid := sflag_yes
+        else
+          nValid := sFlag_No;
 
         if nStr = 'A' then //Add
         begin
@@ -2917,6 +2921,7 @@ begin
                   
           nStr := MakeSQLByStr([SF('C_ID', FieldByName('accountCode').AsString),
                   SF('C_Name', FieldByName('accountName').AsString),
+                  SF('C_Valid', nValid),
                   SF('C_PY', GetPinYinOfStr(FieldByName('accountName').AsString)),
                   SF('C_XuNi', sFlag_No)
                   ], sTable_Customer, '', True);
@@ -2936,6 +2941,7 @@ begin
           nStr := SF('C_ID', FieldByName('accountCode').AsString);
           nStr := MakeSQLByStr([
                   SF('C_Name', FieldByName('accountName').AsString),
+                  SF('C_Valid', nValid),
                   SF('C_PY', GetPinYinOfStr(FieldByName('accountName').AsString))
                   ], sTable_Customer, nStr, False);
                   

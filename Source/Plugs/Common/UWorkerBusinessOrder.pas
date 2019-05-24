@@ -318,7 +318,7 @@ end;
 //Date: 2015-8-5
 //Desc: ±£´æ²É¹ºµ¥
 function TWorkerBusinessOrders.SaveOrder(var nData: string): Boolean;
-var nStr: string;
+var nStr, nSQL: string;
     nIdx: Integer;
     nVal: Double;
     nOut: TWorkerBusinessCommand;

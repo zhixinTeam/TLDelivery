@@ -111,7 +111,7 @@ begin
     if not ActionComPort(False) then Exit;
     
     tmrReadCard.Enabled := True;
-    chkValue.Checked := FParam.FParamC = sFlag_Yes;
+    //chkValue.Checked := FParam.FParamC = sFlag_Yes;
 
     FParam.FCommand := cCmd_ModalResult;
     FParam.FParamA  := ShowModal;

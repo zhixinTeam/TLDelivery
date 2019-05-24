@@ -475,6 +475,12 @@ begin
       ShowMessage('该提货单已经同步成功，无需重复同步.');
       Exit;
     end;
+    if (SQLQuery.FieldByName('l_outfact').AsString = '')or
+      (SQLQuery.FieldByName('L_status').AsString <> sFlag_TruckOut) then
+    begin
+      ShowMessage('该提货单尚未出厂，不能同步.');
+      Exit;
+    end;
 
     if not SyncBillToErp(nID) then
     begin
