@@ -94,4 +94,6 @@
   {$DEFINE PoundElabelControlEx}
   {$DEFINE OrderNoMulCard}
   //采购一车一单子
+  {$DEFINE ASyncWriteData}
+  //异步写入数据
 {$ENDIF}

@@ -481,6 +481,9 @@ var nIdx: Integer;
     nOut, nTmp: TWorkerBusinessCommand;
     nArea: string;
     nLimitValue, nLeaveValue: Double;
+    {$IFDEF ASyncWriteData}
+    nItem: TDBASyncItem;
+    {$ENDIF}
 begin
   Result := False;
 
@@ -601,6 +604,11 @@ begin
         Exit;
       end;
   end;
+
+  {$IFDEF ASyncWriteData}
+  gDBConnManager.ASyncInitItem(@nItem, True);
+  nItem.FStartNow := False; //async start
+  {$ENDIF}
 
   //----------------------------------------------------------------------------
   FDBConn.FConn.BeginTrans;
@@ -724,7 +732,12 @@ begin
       nStr := 'Update %s Set B_HasUse=B_HasUse+%s Where B_Batcode=''%s''';
       nStr := Format(nStr, [sTable_StockBatcode, FListC.Values['Value'],
               FListC.Values['HYDan']]);
+
+      {$IFDEF ASyncWriteData}
+      gDBConnManager.ASyncAddItem(@nItem, nStr, FListC.Values['HYDan']);
+      {$ELSE}
       gDBConnManager.WorkerExec(FDBConn, nStr);
+      {$ENDIF}
       //更新批次号使用量
 
       if FListA.Values['Card'] = '' then
@@ -732,7 +745,12 @@ begin
         nStr := MakeSQLByStr([
                 SF('L_Status', sFlag_TruckNone)
                 ], sTable_Bill, SF('L_ID', nOut.FData), False);
+
+        {$IFDEF ASyncWriteData}
+        gDBConnManager.ASyncAddItem(@nItem, nStr, nOut.FData);
+        {$ELSE}
         gDBConnManager.WorkerExec(FDBConn, nStr);
+        {$ENDIF}
         //新生成交货单状态为未知
 
         if FListC.Values['IsPlan'] = sFlag_Yes then
@@ -915,6 +933,11 @@ begin
     raise;
   end;
   //{$ENDIF}
+
+  {$IFDEF ASyncWriteData}
+  gDBConnManager.ASyncApply(nItem.FSerialNo);
+  //start write
+  {$ENDIF}
 
   {$IFDEF MicroMsg}
   with FListC do
@@ -2514,10 +2537,6 @@ begin
       {$ENDIF}
     end;
 
-    //{$IFDEF UseERP_K3}
-
-    //{$ENDIF}
-
     nSQL := 'Update %s Set C_Status=''%s'' Where C_Card=''%s''';
     nSQL := Format(nSQL, [sTable_Card, sFlag_CardIdle, nBills[0].FCard]);
     FListA.Add(nSQL); //更新磁卡状态
@@ -2647,6 +2666,8 @@ begin
       nSQL := 'update %s set L_SyncStatus=''%s'' Where L_ID In (%s)';
       nSQL := Format(nSQL, [sTable_Bill, sFlag_Yes, nStr]);
       FListA.Add(nSQL);
+      
+      WriteLog('同步单据'+nStr+'至erp成功.');
     end;
   end;
 

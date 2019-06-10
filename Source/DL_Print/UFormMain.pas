@@ -487,8 +487,8 @@ begin
   nHint := '';
   Result := False;
 
-  nStr := ' Select * from %s where T_ID=''%s''';
-  nStr := Format(nStr, [sTable_Transfer,nOrder]);
+  nStr := ' Select * from %s a,%s b where a.T_ID=b.B_Tid and T_ID=''%s''';
+  nStr := Format(nStr, [sTable_Transfer,sTable_TransBase,nOrder]);
 
   nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
   if not Assigned(nDS) then Exit;
@@ -496,6 +496,13 @@ begin
   if nDS.RecordCount < 1 then
   begin
     nHint := '短倒单[ %s ] 已无效!!';
+    nHint := Format(nHint, [nOrder]);
+    Exit;
+  end;
+
+  if nDS.FieldByName('B_isnei').AsString = 'Y' then
+  begin
+    nHint := '短倒单[ %s ] 是内倒,不打单.';
     nHint := Format(nHint, [nOrder]);
     Exit;
   end;

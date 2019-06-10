@@ -509,7 +509,7 @@ begin
           MI('$CD', FIn.FData)]);
   //xxxxx }
 
-  nStr := 'Select a.*, b.T_Truck, IsNull(b.T_PrePUse, ''N'') PrePUse, IsNull(b.T_PValue, 0) PrePValue, '+
+  nStr := 'Select a.*, b.T_Truck, IsNull(b.T_PrePUse, ''N'') PrePUse, IsNull(b.T_PrePValue, 0) PrePValue, '+
                  'IsNull(b.T_PrePMan, '''') PrePMan, IsNull(b.T_PrePTime, GETDATE()) PrePTime  '+
           ' From $TransBase a  Left Join $Truck b On T_Truck=B_Truck ';
   nStr := nStr + 'Where B_Card=''$CD'' ';
@@ -550,6 +550,13 @@ begin
       FIsVIP      := FieldByName('B_IsUsed').AsString;
       FIsNei      := FieldByName('B_IsNei').AsString;  //是否内倒
 
+      with FPData do
+      begin
+        FDate   := FieldByName('B_PDate').AsDateTime;
+        FValue  := FieldByName('B_PValue').AsFloat;
+        FOperator := FieldByName('B_PMan').AsString;
+      end;
+
       if FIsVIP <> sFlag_Yes then
       begin
         FStatus     := sFlag_TruckNone;
@@ -585,13 +592,6 @@ begin
         end;
       end;
       //如果订单非占用状态
-
-      with FPData do
-      begin
-        FDate   := FieldByName('B_PDate').AsDateTime;
-        FValue  := FieldByName('B_PValue').AsFloat;
-        FOperator := FieldByName('B_PMan').AsString;
-      end;
 
       FMemo         := FieldByName('B_SrcAddr').AsString;
       FYSValid      := FieldByName('B_DestAddr').AsString;

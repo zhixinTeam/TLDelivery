@@ -2480,6 +2480,8 @@ begin
   nMemWorker := nil;
   nStr := AdjustListStrFormat(FIn.FData , '''' , True , ',' , True);
 
+
+
   nSQL := 'select S_Bill.*,P_PStation,P_MStation From $BL left join $PL ' +
           'on L_ID=P_Bill where L_ID In ($IN)';
   nSQL := MacroValue(nSQL, [MI('$BL', sTable_Bill), MI('$PL', sTable_PoundLog) , MI('$IN', nStr)]);
@@ -2518,6 +2520,19 @@ begin
     FListA.Clear;
     FListB.Clear;
     First;
+
+    nBill := FieldByName('L_ID').AsString;
+    nSQL := 'select * from SAL.SAL_PickBill where remark=''%s''';
+    nSQL := Format(nSQL,[nBill]);
+    with gDBConnManager.WorkerQuery(nErpWorker, nSQL) do
+    begin
+      if recordcount > 0 then
+      begin
+        Result := True;
+        WriteLog('单号'+nBill+'已推送,直接退出.');
+        Exit;
+      end;
+    end;
     
     while not Eof do
     begin

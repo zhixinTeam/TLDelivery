@@ -808,7 +808,13 @@ begin
     if FieldByName('T_VipCus').AsString = sflag_yes then
       nLoadLimit := 150
     else
-      nLoadLimit := 100;
+    begin
+      if Pos('熟料',FUIData.FStockName)> 0 then
+        nLoadLimit := 55
+      else
+        nLoadLimit := 60;
+    end;
+
   end;    
   if FUIData.FMData.FValue > nLoadLimit then
   begin
@@ -1394,7 +1400,7 @@ begin
           nhint := Format(nHint, [EditValue.Text]);
           WriteSysLog(nHint);
 
-          PlayVoice('当前地磅不在称重状态,相关车辆及人员请下榜');
+          PlayVoice('当前地磅不在称重状态,相关车辆及人员请下磅');
           Break;
         end;
       end;
