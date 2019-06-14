@@ -243,12 +243,19 @@ begin
     if Pos('袋' , FType) > 0 then
          nType := sFlag_Dai
     else nType := sFlag_San;
+    
     nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_OutFact is null';
     nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo+nType]);
     with FDM.QueryTemp(nStr) do
       nValue := Fields[0].AsFloat;
 
     FValue       := FieldByName('leaveQty').AsFloat - nValue;
+
+    if FValue < 0 then
+    begin
+      showmessage('ERP中订单数量不足,无法下单.');
+      Exit;
+    end;
     FStatus      := '';
   end;
   ModalResult := mrOk;

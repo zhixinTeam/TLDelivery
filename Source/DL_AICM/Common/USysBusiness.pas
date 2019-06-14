@@ -10,7 +10,7 @@ uses
   Windows, DB, Classes, Controls, SysUtils, UBusinessPacker, UBusinessWorker,
   UBusinessConst, ULibFun, UAdjustForm, UFormCtrl, UDataModule, UDataReport,
   UFormBase, cxMCListBox, UMgrPoundTunnels, UMgrCamera, USysConst, HKVNetSDK,
-  USysDB, USysLoger, IdHTTP, SuperObject;
+  USysDB, USysLoger, IdHTTP, SuperObject, DateUtils;
 
 const
   GPSUrl = 'http://116.255.136.110:8089/etmapi/custmonitor/api.action';
@@ -201,6 +201,13 @@ function IsEleCardVaid(const nTruckNo: string): Boolean;
 function IfStockHasLs(const nStockNo: string): Boolean;
 //验证物料是否需要输入流水
 
+function AddManualEventRecord(const nEID,nKey,nEvent:string;
+ const nFrom: string = sFlag_DepBangFang ;
+ const nSolution: string = sFlag_Solution_YN;
+ const nDepartmen: string = sFlag_DepDaTing;
+ const nReset: Boolean = False; const nMemo: string = ''): Boolean;
+//添加待处理事项记录
+
 function IsCardValid(const nCard: string): Boolean;
 
 function GetGpsByTruck(var nTruck:string;nFactory,nTime:string):Boolean;
@@ -222,15 +229,18 @@ var
   HttpClient: TIdHTTP;
   nResList: TStringStream;
   nGetUrl: TStrings;
-  nStr: string;
+  nStr, nCar: string;
   Jo:ISuperObject;
   nCode:Integer;
+  FBegin: TDateTime;
 begin
   Result := False;
+  nCar := nTruck;
   nGetUrl := TStringList.Create;
   nGetUrl.Text := UTF8Encode(Format(gIFInArea,[nTruck, nFactory, nTime]));
   nResList := TStringStream.Create('');
   HttpClient := TIdHttp.Create();
+  FBegin := Now;
   try
     HttpClient.Post(GPSUrl,nGetUrl,nResList);
     jo := so(UTF8Decode(nResList.DataString));
@@ -244,17 +254,18 @@ begin
     begin
       nCode := jo['code'].AsInteger;
       case nCode of
-        1100001: nTruck := '未找到GPS设备.';
-        1100002: nTruck := '未获取车辆位置信息.';
-        1100003: nTruck := 'GPS设备已过期';
-        1100004: nTruck := '参数为空.';
-        1100005: nTruck := '参数格式化失败.';
-        1100006: nTruck := 'GPS系统错误.';
-        1100007: nTruck := '未找到区域信息.';
-        1100008: nTruck := '车辆在规定时间内未达到厂区.';
-        1100009: nTruck := '车辆不在区域范围内.';
+        1100001: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':未找到GPS设备.';
+        1100002: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':未获取车辆位置信息.';
+        1100003: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':GPS设备已过期';
+        1100004: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':参数为空.';
+        1100005: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':参数格式化失败.';
+        1100006: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':GPS系统错误.';
+        1100007: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':未找到区域信息.';
+        1100008: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':车辆在规定时间内未达到厂区.';
+        1100009: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':车辆不在区域范围内.';
       end;
     end;
+    writelog('调用GPS接口,车辆:['+ncar+'] 耗时:'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
   finally
     nResList.Free;
     HttpClient.Free;
@@ -1765,6 +1776,54 @@ begin
       end;
     end;
   end;
+end;
+
+//Date: 2017-07-09
+//Parm: 参数描述
+//Desc: 添加异常事件处理
+function AddManualEventRecord(const nEID,nKey,nEvent:string;
+ const nFrom,nSolution,nDepartmen: string;
+ const nReset: Boolean; const nMemo: string): Boolean;
+var nStr: string;
+    nUpdate: Boolean;
+begin
+  Result := False;
+  if Trim(nSolution) = '' then
+  begin
+    WriteLog('请选择处理方案.');
+    Exit;
+  end;
+
+  nStr := 'Select * From %s Where E_ID=''%s''';
+  nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+  with FDM.QuerySQL(nStr) do
+  if RecordCount > 0 then
+  begin
+    nStr := '事件记录:[ %s ]已存在';
+    WriteLog(Format(nStr, [nEID]));
+
+    if not nReset then Exit;
+    nUpdate := True;
+  end else nUpdate := False;
+
+  nStr := SF('E_ID', nEID);
+  nStr := MakeSQLByStr([
+          SF('E_ID', nEID),
+          SF('E_Key', nKey),
+          SF('E_From', nFrom),
+          SF('E_Memo', nMemo),
+          SF('E_Result', 'Null', sfVal),
+
+          SF('E_Event', nEvent),
+          SF('E_Solution', nSolution),
+          SF('E_Departmen', nDepartmen),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, nStr, (not nUpdate));
+  //xxxxx
+
+  FDM.ExecuteSQL(nStr);
+  Result := True;
 end;
 
 end.

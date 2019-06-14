@@ -2496,8 +2496,8 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end;
 
-  nStr := 'Select * From %s Where O_ID=''%s''';
-  nStr := Format(nStr, [sTable_Order, nID]);
+  nStr := 'Select a.*,b.* From %s a,%s b Where O_ID=D_OID and O_ID=''%s''';
+  nStr := Format(nStr, [sTable_Order,sTable_OrderDtl, nID]);
 
   nDS := FDM.QueryTemp(nStr);
   if not Assigned(nDS) then Exit;

@@ -490,10 +490,13 @@ procedure TfFormNewCard.BtnOKClick(Sender: TObject);
 begin
   BtnOK.Enabled := False;
   try
-    if not SaveBillProxy then Exit;
+    if not SaveBillProxy then
+    begin
+      BtnOK.Enabled := True;
+      Exit;
+    end;
     Close;
-  finally
-    BtnOK.Enabled := True;
+  except
   end;
 end;
 
@@ -505,11 +508,12 @@ var
   nBillData:string;
   nBillID :string;
   nWebOrderID:string;
-  nNewCardNo, nTruck:string;
+  nNewCardNo, nTruck, nStr, nType:string;
   nidx:Integer;
   i:Integer;
   nRet: Boolean;
   nOrderItem:stMallOrderItem;
+  nValue: Double;
 begin
   Result := False;
   nOrderItem := FWebOrderItems[FWebOrderIndex];
@@ -549,11 +553,48 @@ begin
     ShowMsg('车辆存在未完成的提货单,无法开单,请联系管理员',sHint);
     Exit;
   end;
+  
+  //验证开单量
+  nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
+          ' where (contractStat in (''Formal'' , ''Balance'')) '+
+          ' and enableFlag=''Y'' and contractcode=''%s'' and prodCode=''%s'' ' +
+          ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
+  nStr := Format(nStr,[nOrderItem.FYunTianOrderId,EditStock.Text]);
+  FDM.QueryData(ADOQuery1, nStr, True);
+  with ADOQuery1 do
+  begin
+    if RecordCount = 0 then
+    begin
+      ShowMessage('合同不存在或已经失效.');
+      Exit;
+    end;
+    nValue := fieldbyname('leaveQty').AsFloat;
+  end;
 
+  if Pos('散',EditSName.Text) > 0 then
+    nType := 'S'
+  else
+    nType := 'D';
+
+  nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
+          'L_StockNo=''%s'' and L_OutFact is null';
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,EditStock.Text+nType]);
+  with fdm.QueryTemp(nStr) do
+    nValue := nValue - Fields[0].AsFloat;
+
+  if nValue < StrToFloat(EditValue.Text) then
+  begin
+    showmessage('ERP中订单数量不足,无法制卡.');
+    Exit;
+  end;
+
+  //验证GPS信息
   nTruck := EditTruck.Text+'%';
   if (Pos('熟料',EditSName.Text) =0) and (Pos('石灰石',EditSName.Text) =0) then
     if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
     begin
+      AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
+                          sFlag_Solution_OK, sFlag_DepDaTing, True);
       ShowMessage(nTruck);
       Exit;
     end;
@@ -596,6 +637,7 @@ begin
       nTmp.Values['Type'] := 'S'
     else
       nTmp.Values['Type'] := 'D';
+      
     nTmp.Values['StockNO'] := EditStock.Text;
     //nTmp.Values['StockName'] := EditSName.Text;
     nTmp.Values['StockName'] := copy(EditSName.Text,1,Length(EditSName.Text)-4);//EditSName.Text;
@@ -642,20 +684,6 @@ begin
   end;
 
   ShowMsg('提货单保存成功', sHint);
-
-  //发卡
-//  if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
-//  begin
-//    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
-//    nHint := Format(nHint, [nNewCardNo]);
-//
-//    WriteLog(nHint);
-//    ShowMsg(nHint,sWarn);
-//  end
-//  else begin
-//    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
-//    SaveBillCard(nBillID,nNewCardNo);
-//  end;
 
   //发卡2019-05-20
   if not SaveBillCard(nBillID,nNewCardNo) then

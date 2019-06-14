@@ -174,12 +174,6 @@ begin
     begin
       try
         FDM.ADOConn.BeginTrans;
-        nStr := 'Update %s Set T_Card=null,T_CardUse=''%s''  Where T_Card=''%s''';
-        nStr := Format(nStr, [sTable_Truck, {nRFIDCard,} nFlag,
-          nRFIDCard]);
-        //xxxxxx
-
-        FDM.ExecuteSQL(nStr);//将已经绑定该标签的电子签清除
 
         nStr := 'Update %s Set T_Card=''%s'',T_CardUse=''%s''  Where R_ID=%s';
         nStr := Format(nStr, [sTable_Truck, nRFIDCard, nFlag,

@@ -285,8 +285,8 @@ begin
   else FDR.Report1.PrintOptions.Printer := nPrinter;
 
   FDR.Dataset1.DataSet := FDM.SQLQuery1;
-  for nIdx := 0 to 1 do
-    FDR.PrintReport;
+  //for nIdx := 0 to 1 do   //¥Ú”°¡Ω¥Œ
+  FDR.PrintReport;
   Result := FDR.PrintSuccess;
 
   {$IFDEF PrintGLF}

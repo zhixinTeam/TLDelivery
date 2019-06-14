@@ -273,6 +273,12 @@ begin
     end;
   end;
 
+  if Pos('o',nTruck)>0 then
+  begin
+    nData := Format('车牌号[ %s ]无效,包含字母O.', [nTruck]);
+    Exit;
+  end;
+
   Result := True;
 end;
 
@@ -917,7 +923,6 @@ begin
     raise;
   end;
 
-  //{$IFDEF UseERP_K3}
   if FListA.Values['BuDan'] = sFlag_Yes then //补单
   try
     nSQL := AdjustListStrFormat(FOut.FData, '''', True, ',', False);
@@ -932,7 +937,6 @@ begin
     gDBConnManager.WorkerExec(FDBConn, nStr);
     raise;
   end;
-  //{$ENDIF}
 
   {$IFDEF ASyncWriteData}
   gDBConnManager.ASyncApply(nItem.FSerialNo);

@@ -870,6 +870,8 @@ begin
                 ], sTable_TransBase, SF('B_ID', FZhiKa), False);
         FListA.Add(nSQL);
       end;
+
+      FNextStatus := sFlag_TruckOut;
     end;
 
     nSQL := 'Select P_ID From %s Where P_Order=''%s'' And P_MValue Is Null';
