@@ -182,6 +182,7 @@ const
   cFI_FormChangeState   = $0097;                     //修改过磅单状态
   cFI_FormCusLimit      = $0098;                     //客户提货限制
   cFI_FormQryCard       = $0099;                     //查询磁卡信息
+  cFI_FrameOrderCheck   = $0100;                     //审核采购拒收单
 
 
   {*Command*}
@@ -412,6 +413,7 @@ begin
   AddMenuModuleItem('MAIN_M04', cFI_FrameOrder);
   AddMenuModuleItem('MAIN_M08', cFI_FrameOrderDetail);
   AddMenuModuleItem('MAIN_M09', cFI_FrameOrderBase);
+  AddMenuModuleItem('MAIN_M11', cFI_FrameOrderCheck);
 
   AddMenuModuleItem('MAIN_W01', cFI_FrameWXAccount);
   AddMenuModuleItem('MAIN_W02', cFI_FrameWXSendLog);

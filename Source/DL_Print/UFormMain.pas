@@ -487,7 +487,7 @@ begin
   nHint := '';
   Result := False;
 
-  nStr := ' Select * from %s a,%s b where a.T_ID=b.B_Tid and T_ID=''%s''';
+  nStr := ' Select * from %s a,%s b where a.T_PID=b.B_id and T_ID=''%s''';
   nStr := Format(nStr, [sTable_Transfer,sTable_TransBase,nOrder]);
 
   nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);

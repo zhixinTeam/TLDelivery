@@ -12,7 +12,7 @@ uses
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxMaskEdit, cxButtonEdit,
   cxTextEdit, dxLayoutControl, StdCtrls, cxDropDownEdit, cxLabel,
-  dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
+  dxSkinsCore, dxSkinsDefaultPainters, dxLayoutcxEditAdapters, cxCheckBox;
 
 type
   TfFormPurchaseOrder = class(TfFormNormal)
@@ -44,6 +44,8 @@ type
     dxLayout1Item6: TdxLayoutItem;
     EditKFLS: TcxTextEdit;
     dxLayout1Item7: TdxLayoutItem;
+    ckbOrderType: TcxCheckBox;
+    dxLayout1Item10: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -142,6 +144,11 @@ begin
   {$ELSE}
   dxLayout1Item6.Visible := False;
   dxLayout1Item7.Visible := False;
+  {$ENDIF}
+  {$IFDEF CGTH}
+    dxLayout1Item10.Visible := True;
+  {$ELSE}
+    dxLayout1Item10.Visible := False;
   {$ENDIF}
 end;
 
@@ -258,6 +265,21 @@ begin
     end;
   end;
   {$ENDIF}
+  if ckbOrderType.Checked then
+  begin
+    if not IsNumber(EditValue.Text, True) then
+    begin
+      EditValue.SetFocus;
+      ShowMsg('请填写有效的数量',sHint);
+      Exit;
+    end;
+    if StrToFloat(EditValue.Text) <= 0 then
+    begin
+      EditValue.SetFocus;
+      ShowMsg('采购退货的开单量是实际提货数量.',sHint);
+      Exit;
+    end;
+  end;
 
   with FListA do
   begin
@@ -285,6 +307,11 @@ begin
 
     Values['KFValue']       := Trim(EditKFValue.Text);
     Values['KFLS']          := Trim(EditKFLS.Text);
+
+    if ckbOrderType.Checked then
+      Values['OrderType']          := sFlag_TiHuo
+    else
+      Values['OrderType']          := sFlag_Provide;//采购退货
   end;
 
   nOrder := SaveOrder(PackerEncodeStr(FListA.Text));

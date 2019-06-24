@@ -170,7 +170,7 @@ begin
       Writelog(nStr);
       Exit;
     end;
-    ShowWaitForm('等待服务器响应,请勿再次点击界面...');
+    ShowWaitForm('正在连接云平台读取信息...');
     lvOrders.Items.Clear;
     if not DownloadOrder(nCardNo) then Exit;
     btnOK.Enabled := True;
@@ -580,7 +580,7 @@ begin
     //发卡
   if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
   begin
-    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
+    nHint := '卡号[ %s ]发卡失败,请到开票窗口重新关联.';
     nHint := Format(nHint, [nNewCardNo]);
 
     WriteLog(nHint);
@@ -591,7 +591,6 @@ begin
     SaveOrderCard(nOrder,nNewCardNo);
   end;
   Result := True;
-  if nRet then Close;
 end;
 
 function TfFormNewPurchaseCard.SaveWebOrderMatch(const nBillID,

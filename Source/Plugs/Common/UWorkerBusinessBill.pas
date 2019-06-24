@@ -544,6 +544,7 @@ begin
     Exit;
   end;
 
+  {$IFDEF QSTL}
   //按客户日限额
   nSQL :='select C_Area from %s where C_ID=''%s''';
   nSQL := Format(nSQL,[sTable_Customer,FListA.Values['CusID']]);
@@ -555,7 +556,8 @@ begin
   with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
   begin
     if recordcount > 0 then
-      if (FieldByName('D_Value').AsString = sFlag_Yes) and (nArea <> '') then  //启用发货限制,客户区域信息为空则不参与限提
+      //启用发货限制,客户区域信息为空则不能提货，不为空则根据区域限提
+      if (FieldByName('D_Value').AsString = sFlag_Yes) and (nArea <> '') then
       begin
         nSQL := 'select * from %s where L_Area=''%s'' and L_StockNo=''%s''';
         nSQL := Format(nSQL,[sTable_AreaLimit,nArea,FListC.Values['StockNO']]);
@@ -610,6 +612,98 @@ begin
         Exit;
       end;
   end;
+  {$ENDIF}
+
+  //豫鹤同力限量提货
+  {$IFDEF StockLimited}
+  //按物料品种日限额
+  nSQL := 'select * from %s where D_Name=''%s'' and D_Value=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict,'StockLimited',FListC.Values['StockNO']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if RecordCount >0  then
+    begin
+      nLimitValue := FieldByName('D_ParamA').AsFloat;
+      nSQL := 'Select sum(L_Value) as L_Value from %s where L_StockNo=''%s'''+
+              ' and L_Date >= ''%s'' and L_Date < ''%s''';
+      nSQL := Format(nSQL,[sTable_Bill,FListC.Values['StockNO'],
+            Date2Str(Date,True)+' 00:00:00',Date2Str(Date+1,True)+' 00:00:00']);
+      with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+      begin
+        nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
+        if nLeaveValue <= 0 then
+        begin
+          nData := '品种限额:物料[ %s ]已超出日发货限量，无法开单';
+          nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName']]);
+          exit;
+        end
+        else
+        begin
+          if nLeaveValue < StrToFloat(FListC.Values['Value']) then
+          begin
+            nData := '品种限额:物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                     '当前剩余配额：[ %s ]吨';
+            nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],
+                      FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+            Exit;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  //按客户日限额
+  nSQL := 'select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_CusLoadLimit, FListC.Values['StockNO']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+      if FieldByName('D_Value').AsString = sFlag_Yes then  //启用发货限制
+      begin
+        nSQL := 'select * from %s where L_CusNo=''%s'' and L_StockNo=''%s''';
+        nSQL := Format(nSQL,[sTable_CusLimit,FListA.Values['CusID'],FListC.Values['StockNO']]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        begin
+          if recordcount > 0 then
+          begin
+            nLimitValue := FieldByName('L_Value').AsFloat;
+            nSQL := 'Select sum(L_Value) as L_Value from %s where L_StockNo=''%s'''+
+                    ' and L_Date >= ''%s'' and L_Date < ''%s'' and L_CusId=''%s''';
+            nSQL := Format(nSQL,[sTable_Bill,FListC.Values['StockNO'],
+                  Date2Str(Date,True)+' 00:00:00',Date2Str(Date+1,True)+' 00:00:00',
+                  FListA.Values['CusID']]);
+            with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+            begin
+              nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
+              if nLeaveValue <= 0 then
+              begin
+                nData := '客户限额:物料[ %s ]已超出日发货限量，无法开单';
+                nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName']]);
+                exit;
+              end
+              else
+              begin
+                if nLeaveValue < StrToFloat(FListC.Values['Value']) then
+                begin
+                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                           '当前剩余配额：[ %s ]吨';
+                  nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],
+                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+                  Exit;
+                end;
+              end;
+            end;
+          end
+          else
+          begin      //如果没有记录则不允许提货
+            nstr := '用户 [ %s ] 对于 [ %s ]不限量.';
+            nstr := Format(nData,[FListA.Values['CusName'],FListC.Values['StockNO']]);
+            WriteLog(nStr);
+          end;
+        end;
+      end;
+  end;
+  {$ENDIF}
 
   {$IFDEF ASyncWriteData}
   gDBConnManager.ASyncInitItem(@nItem, True);
@@ -1991,11 +2085,12 @@ end;
 //Parm: 交货单[FIn.FData];岗位[FIn.FExtParam]
 //Desc: 保存指定岗位提交的交货单列表
 function TWorkerBusinessBills.SavePostBillItems(var nData: string): Boolean;
-var nStr,nSQL,nTmp,nFixMoney: string;
-    f,m,nVal,nMVal: Double;
+var nStr,nSQL,nTmp,nFixMoney, nStockNo, nType: string;
+    f,m,nVal,nMVal, nBillNum: Double;
     i,nIdx,nInt: Integer;
     nBills: TLadingBillItems;
     nOut: TWorkerBusinessCommand;
+    nCErpWorker: PDBWorker;
 begin
   Result := False;
   AnalyseBillItems(FIn.FData, nBills);
@@ -2243,6 +2338,60 @@ begin
       begin
         if FType = sFlag_San then //散装需交验资金额
         begin
+          //验证erp订单量是否够用
+          nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
+                  'L_StockNo=''%s'' and L_OutFact is null';
+          nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo]);
+          with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+            nBillNum := Fields[0].AsFloat;
+          //冻结量
+
+          nStockNo := Copy(FStockNo,1,Length(FStockNo)-1);
+          nType := Copy(FStockNo,Length(FStockNo),1);
+
+          if nType ='D' then
+          begin
+            if nStockNo = '0101010022' then
+              nType := '007'
+            else
+              nType := '001';
+          end
+          else
+          begin
+            if nStockNo = '0101010022' then
+              nType := '008'
+            else if nStockNo = '02010001' then
+              nType := '003'
+            else
+              nType := '002';
+          end;
+
+          nStr := 'select reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
+                  ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
+          nStr := Format(nStr,[FZhiKa,nStockNo,nType]);
+          nCErpWorker :=nil;
+          try
+            with gDBConnManager.SQLQuery(nStr, nCErpWorker, sFlag_CErp) do
+            begin
+              if recordcount = 0 then
+              begin
+                nData := '订单['+fzhika+'],品种['+nStockNo+'],类型['+nType+']已被冻结或停用';
+                WriteLog(nData);
+                Exit;
+              end;
+
+              nBillNum := fieldbyname('leaveQty').AsFloat - nBillNum + FValue - FMData.FValue + FPData.FValue;
+              if nBillNum < 0 then
+              begin
+                nData := '订单['+fzhika+'],品种['+nStockNo+'],类型['+nType+']订单量不足,无法出厂,请联系管理员加量.';
+                WriteLog(nData);
+                Exit;
+              end;
+            end;
+          finally
+            gDBConnManager.ReleaseConnection(nCErpWorker);
+          end;
+
           if not TWorkerBusinessCommander.CallMe(cBC_GetZhiKaMoney,
                  nBills[0].FZhiKa, '', @nOut) then
           begin

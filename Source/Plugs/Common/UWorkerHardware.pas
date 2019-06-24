@@ -10,7 +10,7 @@ interface
 uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   UBusinessConst, UMgrDBConn, UMgrParam, ZnMD5, ULibFun, UFormCtrl, USysLoger,
-  USysDB, UMITConst, UMgrRFID102;
+  USysDB, UMITConst, UMgrRFID102, UMgrRemoteSnap;
 
 type
   THardwareDBWorker = class(TBusinessWorkerBase)
@@ -79,6 +79,8 @@ type
     //定制放灰
     function ReaderCardNo(var nData: string): Boolean;
     //读卡器有效卡号
+    function RemoteSnap_DisPlay(var nData: string): Boolean;
+    //抓拍小屏显示
   public
     constructor Create; override;
     destructor destroy; override;
@@ -260,6 +262,7 @@ begin
    cBC_ShowLedTxt           : Result := ShowLedText(nData);
    cBC_LineClose            : Result := LineClose(nData);
    cBC_GetReaderCard        : Result := ReaderCardNo(nData);
+   cBC_RemoteSnapDisPlay    : Result := RemoteSnap_DisPlay(nData);
    //xxxxxx
    else
     begin
@@ -784,6 +787,27 @@ begin
       FOut.FData := gHYReaderManager.GetLastCard(FIn.FData);
     //xxxxx
   end;
+end;
+
+function THardwareCommander.RemoteSnap_DisPlay(var nData: string): Boolean;
+var nInt: Integer;
+begin
+  Result := True;
+  if not Assigned(gHKSnapHelper) then Exit;
+
+  FListA.Clear;
+  FListA.Text := PackerDecodeStr(FIn.FExtParam);
+
+  if FListA.Values['succ'] = sFlag_No then
+         nInt := 3
+  else nInt := 2;
+
+  gHKSnapHelper.Display(FIn.FData,FListA.Values['text'], nInt);
+
+  nData := Format('RemoteSnapDisPlay -> %s:%s:%s', [FIn.FData,
+                                                    FListA.Values['text'],
+                                                    FListA.Values['succ']]);
+  WriteLog(nData);
 end;
 
 initialization

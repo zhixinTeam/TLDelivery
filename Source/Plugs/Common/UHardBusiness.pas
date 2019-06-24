@@ -12,7 +12,8 @@ uses
   UBusinessWorker, UBusinessConst, UBusinessPacker, UMgrQueue,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,
-  UMgrLEDDisp, UMgrRFID102, UBlueReader, UMgrTTCEM100, UMgrSendCardNo;
+  UMgrLEDDisp, UMgrRFID102, UBlueReader, UMgrTTCEM100, UMgrSendCardNo,
+  UMgrRemoteSnap;
 
 procedure WhenReaderCardArrived(const nReader: THHReaderItem);
 procedure WhenHYReaderCardArrived(const nReader: PHYReaderItem);
@@ -30,6 +31,8 @@ function GetJSTruck(const nTruck,nBill: string): string;
 //获取计数器显示车牌
 procedure WhenSaveJS(const nTunnel: PMultiJSTunnel);
 //保存计数结果
+function VerifySnapTruck(const nTruck,nBill,nPos,nDept: string;var nResult: string): Boolean;
+//车牌识别
 
 implementation
 
@@ -347,9 +350,9 @@ end;
 //Date: 2012-4-22
 //Parm: 卡号
 //Desc: 对nCard放行进厂
-procedure MakeTruckIn(const nCard,nReader: string; const nDB: PDBWorker;
+procedure MakeTruckIn(const nCard,nReader,nPost,nDept: string; const nDB: PDBWorker;
                       const nReaderType: string = '');
-var nStr,nTruck,nCardType: string;
+var nStr,nTruck,nCardType,nSnapStr: string;
     nIdx,nInt: Integer;
     nPLine: PLineItem;
     nPTruck: PTruckItem;
@@ -415,6 +418,24 @@ begin
     WriteHardHelperLog(nStr, sPost_In);
     Exit;
   end;
+
+  {$IFDEF RemoteSnap}
+  if (nTrucks[0].FStatus = sFlag_TruckNone) then//已进厂不判断
+  if not VerifySnapTruck(nTrucks[0].FTruck,nTrucks[0].FID,nPost,nDept,nSnapStr) then
+  begin
+    nStr := nSnapStr+ '进厂车牌识别失败.';
+
+    gHKSnapHelper.Display(nPost, nSnapStr, 3);
+    //小屏显示
+
+    WriteHardHelperLog(nStr+'岗位:'+nPost);
+
+    Exit;
+  end;
+  nStr := nSnapStr + ' 请进厂';
+  gHKSnapHelper.Display(nPost, nStr, 2);
+    //小屏显示
+  {$ENDIF}
 
   if nTrucks[0].FStatus = sFlag_TruckIn then
   begin
@@ -584,9 +605,9 @@ end;
 //Date: 2012-4-22
 //Parm: 卡号;读头;打印机;化验单打印机
 //Desc: 对nCard放行出厂
-function MakeTruckOut(const nCard,nReader,nPrinter: string;
+function MakeTruckOut(const nCard,nReader,nPrinter,nPost,nDept: string;
  const nHYPrinter: string = '';const nReaderType: string = ''): Boolean;
-var nStr,nCardType: string;
+var nStr,nCardType,nSnapStr: string;
     nIdx: Integer;
     nRet: Boolean;
     nTrucks: TLadingBillItems;
@@ -638,9 +659,23 @@ begin
     Exit;
   end;
 
-//  if nCardType = sFlag_Provide then
-//        nRet := SaveLadingOrders(sFlag_TruckOut, nTrucks)
-//  else  nRet := SaveLadingBills(sFlag_TruckOut, nTrucks);
+  {$IFDEF RemoteSnap}
+  //if (nTrucks[0].FStatus = sFlag_TruckNone) then//已进厂不判断
+  if not VerifySnapTruck(nTrucks[0].FTruck,nTrucks[0].FID,nPost,nDept,nSnapStr) then
+  begin
+    nStr := nSnapStr+ '进厂车牌识别失败.';
+
+    gHKSnapHelper.Display(nPost, nSnapStr, 3);
+    //小屏显示
+
+    WriteHardHelperLog(nStr+'岗位:'+nPost);
+
+    Exit;
+  end;
+  nStr := nSnapStr + ' 请出厂';
+  gHKSnapHelper.Display(nPost, nStr, 2);
+    //小屏显示
+  {$ENDIF}
 
   if nCardType = sFlag_Provide then
     nRet := SaveLadingOrders(sFlag_TruckOut, nTrucks) else
@@ -783,7 +818,7 @@ begin
     try
       if nReader.FType = rtIn then
       begin
-        MakeTruckIn(nCard, nReader.FID, nDBConn, nReaderType);
+        MakeTruckIn(nCard, nReader.FID,nReader.FPost,nReader.FDept, nDBConn, nReaderType);
       end else
 
       if nReader.FType = rtOut then
@@ -791,7 +826,7 @@ begin
         if Assigned(nReader.FOptions) then
              nStr := nReader.FOptions.Values['HYPrinter']
         else nStr := '';
-        MakeTruckOut(nCard, nReader.FID, nReader.FPrinter, nStr, nReaderType);
+        MakeTruckOut(nCard, nReader.FID, nReader.FPrinter,nReader.FPost,nReader.FDept, nStr, nReaderType);
       end else
 
       if nReader.FType = rtGate then
@@ -869,7 +904,7 @@ begin
     if not nItem.FVirtual then Exit;
     if nItem.FVType = rtOutM100 then
     begin
-      nRetain := MakeTruckOut(nItem.FCard, nItem.FVReader, nItem.FVPrinter,
+      nRetain := MakeTruckOut(nItem.FCard, nItem.FVReader, nItem.FVPrinter,nitem.FPost,nitem.FDept,
                               nItem.FVHYPrinter);
       //xxxxx
     end else
@@ -1422,7 +1457,7 @@ begin
       if Assigned(nHost.FOptions) then
            nStr := nHost.FOptions.Values['HYPrinter']
       else nStr := '';
-      MakeTruckOut(nCard, '', nHost.FPrinter, nStr);
+      MakeTruckOut(nCard, '', nHost.FPrinter,'','', nStr);
     end else MakeTruckLadingDai(nCard, nHost.FTunnel);
   end else
 
@@ -1542,6 +1577,34 @@ begin
 
     nStr := PackerEncodeStr(nList.Text);
     CallHardwareCommand(cBC_SaveCountData, nStr, '', @nOut)
+  finally
+    nList.Free;
+  end;
+end;
+
+function VerifySnapTruck(const nTruck,nBill,nPos,nDept: string;var nResult: string): Boolean;
+var nList: TStrings;
+    nOut: TWorkerBusinessCommand;
+    nID,nDefDept: string;
+begin
+  nDefDept := '门岗';
+  if nBill = '' then
+    nID := nTruck + FormatDateTime('YYMMDD',Now)
+  else
+    nID := nBill;
+  nList := nil;
+  try
+    nList := TStringList.Create;
+    nList.Values['Truck'] := nTruck;
+    nList.Values['Bill'] := nID;
+    nList.Values['Pos'] := nPos;
+    if nDept = '' then
+      nList.Values['Dept'] := nDefDept
+    else
+      nList.Values['Dept'] := nDept;
+
+    Result := CallBusinessCommand(cBC_VerifySnapTruck, nList.Text, '', @nOut);
+    nResult := nOut.FData;
   finally
     nList.Free;
   end;

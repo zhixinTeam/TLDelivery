@@ -48,7 +48,7 @@
 
 //--------------------------------- 特定系统 -----------------------------------
 
-{$DEFINE QSTL}
+{$DEFINE YHTL}
 //特定系统
 
 //确山同力
@@ -94,4 +94,57 @@
   //采购一车一单子
   {$DEFINE ASyncWriteData}
   //异步写入数据
+{$ENDIF}
+
+//豫鹤同力
+{$IFDEF YHTL}
+  {$DEFINE COMMON}
+  {$DEFINE HYRFID201}
+  //华益读头
+  {$DEFINE MITTruckProber}
+  //车检由中间件控制
+  {$DEFINE MultiReplay}
+  //计数器应答模式
+  {$DEFINE PrintHYEach}
+  //随车开化验单
+  {.$DEFINE PrintHeGeZheng}
+  {$DEFINE PrintHuaYanDan}
+  //随车开单时打合格证、化验单
+  {$DEFINE BatchInHYOfBill}
+  //批次保存在化验单字段
+  {$DEFINE DaiStepWuCha}
+  //包装阶梯误差
+  {$DEFINE AutoProId}
+  //自动生成供应商编号
+  {$DEFINE PrintHY}
+  //出厂打印化验单
+  {$DEFINE BFLED}
+  //磅房小屏
+  {$DEFINE SyncRemote}
+  //远程同步
+  {$DEFINE MicroMsg}
+  //使用微信
+  {$DEFINE ProberShow}
+  //串口屏支持
+  {$DEFINE TTCEM100}
+  //自助收卡机  
+  {$DEFINE WxShowCusMoney}
+  //微信订单列表显示客户余额
+  {$DEFINE CapturePictureEx}
+  //抓拍扩展 
+  {$DEFINE AllowMultiM}
+  //允许多次过毛重
+  {$DEFINE PoundElabelControlEx}
+  {$DEFINE OrderNoMulCard}
+  //采购一车一单子
+  {$DEFINE ASyncWriteData}
+  //异步写入数据
+  {$DEFINE CGJSSP}
+  //采购拒收审核功能
+  {$DEFINE RemoteSnap}
+  //车牌识别
+  {$DEFINE CGTH}
+  //采购退货
+  {$DEFINE StockLimited}
+  //限制提货
 {$ENDIF}

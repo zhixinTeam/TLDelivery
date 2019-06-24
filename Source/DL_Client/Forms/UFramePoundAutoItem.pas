@@ -98,6 +98,7 @@ type
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
     //空磅计时,过磅保存后空磅
     FEmptyPoundIdleLong, FEmptyPoundIdleShort: Int64;
+    FPos, FDept: string; //岗位，部门
     procedure SetUIData(const nReset: Boolean; const nOnlyData: Boolean = False);
     //界面数据
     procedure SetImageStatus(const nImage: TImage; const nOff: Boolean);
@@ -272,6 +273,10 @@ begin
     FBarrierGate := Values['BarrierGate'] = sFlag_Yes;
     FEmptyPoundIdleLong := StrToInt64Def(Values['EmptyIdleLong'], 60);
     FEmptyPoundIdleShort:= StrToInt64Def(Values['EmptyIdleShort'], 5);
+    {$IFDEF RemoteSnap}
+      FDept := Values['Dept'];
+      FPos := Values['Pos'];
+    {$ENDIF}
   end;
 end;
 
@@ -415,12 +420,8 @@ begin
      nRet := GetDuanDaoItems(nCard, sFlag_TruckBFP, nBills) else
   if FCardUsed=sFlag_Sale then
      nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills) else nRet := False;
-//  if FCardUsed=sFlag_Provide then
-//       nRet := GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)
-//  else nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills);
 
-  if (not nRet) or (Length(nBills) < 1)
-  then
+  if (not nRet) or (Length(nBills) < 1) then
   begin
     nVoice := '读取磁卡信息失败,请联系管理员';
     PlayVoice(nVoice);
@@ -456,6 +457,54 @@ begin
       Break;
     end;
 
+    {$IFNDEF CGJSSP} //启用拒收审核
+    if (FCardUsed=sFlag_Provide) and (FNextStatus = sFlag_TruckBFM) and (FYSValid = sFlag_No) then
+    begin
+      nStr := 'select * from %s where D_ID=''%s''';
+      nStr := Format(nStr,[sTable_OrderDtl,FID]);
+      with fdm.QueryTemp(nStr) do
+      begin
+        if recordcount = 0 then
+        begin
+          nInt := 0;
+          nVoice := '采购单不存在,车辆 %s 不能过磅';
+          nVoice := Format(nVoice, [FTruck]);
+
+          nStr := '※.单号:[ %s ] 状态: 物流部未验收';
+          nstr := Format(nStr,[FID]);
+          nHint := nStr;
+          Break;
+        end;
+
+        if (FieldByName('D_BMCheck').AsString <> sFlag_Yes) and
+          (FieldByName('D_YSResult').AsString = sFlag_No) then
+        begin
+          nInt := 0;
+          nVoice := '采购拒收车辆部门经理未审批,车辆 %s 不能过磅';
+          nVoice := Format(nVoice, [FTruck]);
+
+          nStr := '※.单号:[ %s ] 状态: 采购拒收车辆部门经理未审批';
+          nstr := Format(nStr,[FID]);
+          nHint := nStr;
+          Break;
+        end;
+
+        if (FieldByName('D_LeaderCheck').AsString <> sFlag_Yes) and
+          (FieldByName('D_YSResult').AsString = sFlag_No) then
+        begin
+          nInt := 0;
+          nVoice := '采购拒收车辆总经理未审批,车辆 %s 不能过磅';
+          nVoice := Format(nVoice, [FTruck]);
+
+          nStr := '※.单号:[ %s ] 状态: 采购拒收车辆总经理未审批';
+          nstr := Format(nStr,[FID]);
+          nHint := nStr;
+          Break;
+        end;
+      end;
+    end;
+    {$ENDIF}
+
     if FSelected then
     begin
       Inc(nInt);
@@ -483,6 +532,27 @@ begin
     SetUIData(True);
     Exit;
   end;
+
+  {$IFDEF RemoteSnap}
+  if not VerifySnapTruck(FPoundTunnel.FID, nBills[0], nHint, FPos, FDept) then
+  begin
+    nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
+    nVoice := Format(nVoice, [nBills[0].FTruck]);
+    PlayVoice(nHint);
+    RemoteSnapDisPlay(FPos, nHint,sFlag_No);
+    WriteSysLog(nHint);
+    SetUIData(True);
+    Exit;
+  end
+  else
+  begin
+    if nHint <> '' then
+    begin
+      RemoteSnapDisPlay(FPos, nHint,sFlag_Yes);
+      WriteSysLog(nHint);
+    end;
+  end;
+  {$ENDIF}
 
   EditBill.Properties.Items.Clear;
   SetLength(FBillItems, nInt);
@@ -814,7 +884,8 @@ begin
       else
         nLoadLimit := 60;
     end;
-
+    nLoadLimit := 50;
+    //VIP失效，所有的都改为50吨
   end;    
   if FUIData.FMData.FValue > nLoadLimit then
   begin
@@ -1199,7 +1270,7 @@ begin
     nStr := '本次称重无效,请下磅后联系管理员处理.';
     PlayVoice(nStr);
     LEDDisplay(nStr);
-    WriteSysLog('车辆[ '+FUIData.FTruck+' ]称重无效,请核对订单所属单位资金是否充足.');
+    WriteSysLog('车辆[ '+FUIData.FTruck+' ]称重无效.');
   end;
 
   if FBarrierGate then

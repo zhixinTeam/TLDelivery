@@ -37,7 +37,8 @@ uses
   UMgrQueue, UMgrLEDCard, UMgrHardHelper, UMgrRemotePrint, U02NReader,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrTTCEM100,
-  UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo;
+  UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo,
+  UMgrRemoteSnap;
 
 class function THardwareWorker.ModuleInfo: TPlugModuleInfo;
 begin
@@ -123,6 +124,15 @@ begin
     {$IFDEF FixLoad}
     nStr := '定置装车';
     gSendCardNo.LoadConfig(nCfg + 'PLCController.xml');
+    {$ENDIF}
+
+    {$IFDEF RemoteSnap}
+    nStr := '海康威视远程抓拍';
+    if FileExists(nCfg + 'RemoteSnap.xml') then
+    begin
+      //gHKSnapHelper := THKSnapHelper.Create;
+      gHKSnapHelper.LoadConfig(nCfg + 'RemoteSnap.xml');
+    end;
     {$ENDIF}
   except
     on E:Exception do
@@ -231,6 +241,11 @@ begin
   gSendCardNo.StartPrinter;
   //sendcard
   {$ENDIF}
+
+  {$IFDEF RemoteSnap}
+  gHKSnapHelper.StartSnap;
+  //remote snap
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -290,6 +305,11 @@ begin
   if Assigned(gSendCardNo) then
   gSendCardNo.StopPrinter;
   //sendcard
+  {$ENDIF}
+
+  {$IFDEF RemoteSnap}
+  gHKSnapHelper.StopSnap;
+  //remote snap
   {$ENDIF}
 end;
 

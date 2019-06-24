@@ -199,7 +199,7 @@ begin
       Writelog(nStr);
       Exit;
     end;
-    ShowWaitForm('等待服务器响应,请勿再次点击界面...');
+    ShowWaitForm('正在连接云平台读取信息...');
     lvOrders.Items.Clear;
     if not DownloadOrder(nCardNo) then Exit;
     btnOK.Enabled := True;
@@ -326,7 +326,7 @@ var
   nRepeat:Boolean;
   nWebOrderID, nType, nStockNo:string;
   nMsg,nStr:string;
-  nPriceNow, nPriceGP, nZXFD, nPriceZX: Double;
+  nPriceNow, nPriceGP, nZXFD, nPriceZX, nValue: Double;
   nPreFun, nSql, nAddOrDec : string;
 begin
   nOrderItem := FWebOrderItems[FWebOrderIndex];
@@ -370,17 +370,44 @@ begin
       nType := '002';
   end;
 
-  nStr := 'select accountCode,salePrice,accountName,realProj from sal.SAL_Contract_v where '+
+  //根据erp订单量限制开单
+  nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
+          'L_StockNo=''%s'' and L_OutFact is null';
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,EditStock.Text+nType]);
+  with fdm.QueryTemp(nStr) do
+    nValue := Fields[0].AsFloat;
+  //冻结量
+
+
+  nStr := 'select accountCode,salePrice,accountName,realProj,reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
           ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
   nStr := Format(nStr,[nOrderItem.FYunTianOrderId,nStockNo,nType]);
   FDM.QueryData(ADOQuery1, nStr, True);
   with adoquery1 do
   begin
+    if recordcount = 0 then
+    begin
+      nStr := '订单['+nOrderItem.FYunTianOrderId+'],品种['+nStockNo+
+              '],类型['+nType+']在RRP中已关闭或者删除.';
+      ShowMessage(nStr);
+      writelog(nStr);
+      Exit;
+    end;
     if RecordCount > 0 then
     begin
       EditCus.Text    := Fields[0].AsString;
-      //EditPrice.Text  := Fields[1].AsString;
       EditCName.Text  := Fields[2].AsString;
+    end;
+
+    nValue := FieldByName('leaveQty').AsFloat - nValue;
+
+    if nValue < StrToFloat(nOrderItem.FData) then
+    begin
+      nStr := '订单['+nOrderItem.FYunTianOrderId+'],品种['+nStockNo+
+              '],类型['+nType+']RRP订单剩余量不够开单.';
+      ShowMessage(nStr);
+      writelog(nStr);
+      Exit;
     end;
 
     nPriceNow := FieldByName('salePrice').AsFloat;
@@ -553,40 +580,6 @@ begin
     ShowMsg('车辆存在未完成的提货单,无法开单,请联系管理员',sHint);
     Exit;
   end;
-  
-  //验证开单量
-  nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
-          ' where (contractStat in (''Formal'' , ''Balance'')) '+
-          ' and enableFlag=''Y'' and contractcode=''%s'' and prodCode=''%s'' ' +
-          ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
-  nStr := Format(nStr,[nOrderItem.FYunTianOrderId,EditStock.Text]);
-  FDM.QueryData(ADOQuery1, nStr, True);
-  with ADOQuery1 do
-  begin
-    if RecordCount = 0 then
-    begin
-      ShowMessage('合同不存在或已经失效.');
-      Exit;
-    end;
-    nValue := fieldbyname('leaveQty').AsFloat;
-  end;
-
-  if Pos('散',EditSName.Text) > 0 then
-    nType := 'S'
-  else
-    nType := 'D';
-
-  nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
-          'L_StockNo=''%s'' and L_OutFact is null';
-  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,EditStock.Text+nType]);
-  with fdm.QueryTemp(nStr) do
-    nValue := nValue - Fields[0].AsFloat;
-
-  if nValue < StrToFloat(EditValue.Text) then
-  begin
-    showmessage('ERP中订单数量不足,无法制卡.');
-    Exit;
-  end;
 
   //验证GPS信息
   nTruck := EditTruck.Text+'%';
@@ -705,8 +698,6 @@ begin
   if nPrint then
     PrintBillReport(nBillID, True);
   //print report
-
-  if nRet then Close;
 end;
 
 function TfFormNewCard.SaveWebOrderMatch(const nBillID,

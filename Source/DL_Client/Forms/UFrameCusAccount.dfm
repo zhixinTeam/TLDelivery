@@ -32,6 +32,8 @@ inherited fFrameCusAccount: TfFrameCusAccount
       Top = 93
       Hint = 'T.A_CID'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 2
       Width = 115
     end
@@ -40,6 +42,8 @@ inherited fFrameCusAccount: TfFrameCusAccount
       Top = 93
       Hint = 'T.C_Name'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
       Width = 150
     end
@@ -53,6 +57,9 @@ inherited fFrameCusAccount: TfFrameCusAccount
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 1
       OnKeyPress = OnCtrlKeyPress
       Width = 150
@@ -62,6 +69,8 @@ inherited fFrameCusAccount: TfFrameCusAccount
       Top = 93
       Hint = 'T.C_Bank'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 5
       Width = 100
     end
@@ -70,6 +79,8 @@ inherited fFrameCusAccount: TfFrameCusAccount
       Top = 93
       Hint = 'T.C_Account'
       ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
       Width = 175
     end
@@ -83,6 +94,9 @@ inherited fFrameCusAccount: TfFrameCusAccount
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditIDPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
       Width = 115
@@ -90,36 +104,35 @@ inherited fFrameCusAccount: TfFrameCusAccount
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item2: TdxLayoutItem
-          Caption = #23458#25143#32534#21495':'
+          CaptionOptions.Text = #23458#25143#32534#21495':'
           Control = EditID
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item8: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
       end
       inherited GroupDetail1: TdxLayoutGroup
         object dxLayout1Item5: TdxLayoutItem
-          Caption = #23458#25143#32534#21495':'
+          CaptionOptions.Text = #23458#25143#32534#21495':'
           Control = cxTextEdit3
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem
-          Caption = #23458#25143#21517#31216':'
+          CaptionOptions.Text = #23458#25143#21517#31216':'
           Control = cxTextEdit4
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #38134#34892#36134#25143':'
+          CaptionOptions.Text = #38134#34892#36134#25143':'
           Control = cxTextEdit1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem
-          AutoAligns = [aaVertical]
           AlignHorz = ahClient
-          Caption = #24320#25143#38134#34892':'
+          CaptionOptions.Text = #24320#25143#38134#34892':'
           Control = cxTextEdit5
           ControlOptions.ShowBorder = False
         end

@@ -76,6 +76,9 @@ type
     FKeepPeer: Boolean;        //保持模式
     FKeepLast: Int64;          //上次活动
     FClient : TIdTCPClient;    //通信链路
+
+    FPost:string;
+    FDept:string;
   end;
 
   TM100ReaderThreadType = (ttAll, ttActive);
@@ -382,6 +385,19 @@ begin
         FHost := NodeByName('ip').ValueAsString;
         FPort := NodeByName('port').ValueAsInteger;
         FEnable := NodeByName('enable').ValueAsString <> 'N';
+
+        nTmp := FindNode('Post');
+        if Assigned(nTmp) then
+          FPost := nTmp.ValueAsString
+        else FPost := 'Sout';
+
+        nTmp := FindNode('Dept');
+        if Assigned(nTmp) then
+          FDept := nTmp.ValueAsString
+        else FDept := '';
+
+        //FPost := NodeByName('post').ValueAsString;
+        //FDept := NodeByName('dept').ValueAsString;
 
         nTmp := FindNode('tunnel');
         if Assigned(nTmp) then

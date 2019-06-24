@@ -158,6 +158,18 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       TabOrder = 16
       Width = 121
     end
+    object ckbOrderType: TcxCheckBox [14]
+      Left = 11
+      Top = 333
+      Caption = #37319#36141#36864#36135
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      TabOrder = 17
+      Transparent = True
+      Width = 86
+    end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         object dxGroupLayout1Group2: TdxLayoutGroup
@@ -247,6 +259,14 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
             Control = EditKFLS
             ControlOptions.ShowBorder = False
           end
+        end
+      end
+      inherited dxLayout1Group1: TdxLayoutGroup
+        object dxLayout1Item10: TdxLayoutItem [0]
+          CaptionOptions.Text = 'cxCheckBox1'
+          CaptionOptions.Visible = False
+          Control = ckbOrderType
+          ControlOptions.ShowBorder = False
         end
       end
     end

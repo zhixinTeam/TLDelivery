@@ -125,6 +125,9 @@ const
   cBC_GetWlbYsStatus          = $1003;   //获取物流部验收结果
   cBC_GetReaderCard           = $1004;   //读卡器有效卡
 
+  cBC_VerifySnapTruck         = $1005;   //车牌比对
+  cBC_RemoteSnapDisPlay       = $1006;   //调用海康显示屏
+
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
   TWorkerQueryFieldData = record

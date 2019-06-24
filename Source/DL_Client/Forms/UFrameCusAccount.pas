@@ -15,7 +15,8 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, dxSkinsCore, dxSkinsDefaultPainters,
+  dxSkinscxPCPainter, dxLayoutcxEditAdapters;
 
 type
   TfFrameCusAccount = class(TfFrameNormal)
@@ -132,18 +133,21 @@ end;
 
 procedure TfFrameCusAccount.N4Click(Sender: TObject);
 var nStr: string;
-    nVal,nCredit: Double;
+    nVal,nFrozen: Double;
+    nRet:Boolean;
 begin
+  nRet := False;
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
     nStr := SQLQuery.FieldByName('A_CID').AsString;
-    nVal := GetCustomerValidMoney(nStr, False, @nCredit);
+    nVal := GetCustomerValidMoney(nStr, nRet, @nFrozen);
+    if (nVal = 0) and (nFrozen = 0) then Exit;
 
     nStr := '客户当前可用金额如下:' + #13#10#13#10 +
             '*.客户名称: %s ' + #13#10 +
-            '*.资金余额: %.2f 元' + #13#10 +
-            '*.信用金额: %.2f 元' + #13#10;
-    nStr := Format(nStr, [SQLQuery.FieldByName('C_Name').AsString, nVal, nCredit]);
+            '*.资金余额(含允欠金额): %.2f 元' + #13#10 +
+            '*.冻结金额: %.2f 元' + #13#10;
+    nStr := Format(nStr, [SQLQuery.FieldByName('C_Name').AsString, nVal, nFrozen]);
     ShowDlg(nStr, sHint);
   end;
 end;
