@@ -538,9 +538,9 @@ begin
   begin
     nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
     nVoice := Format(nVoice, [nBills[0].FTruck]);
-    PlayVoice(nHint);
-    RemoteSnapDisPlay(FPos, nHint,sFlag_No);
-    WriteSysLog(nHint);
+    PlayVoice(nVoice);
+    RemoteSnapDisPlay(FPos, nVoice,sFlag_No);
+    WriteSysLog(nVoice);
     SetUIData(True);
     Exit;
   end

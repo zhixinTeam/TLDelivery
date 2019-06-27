@@ -1,6 +1,6 @@
 object fFormMain: TfFormMain
-  Left = 544
-  Top = 184
+  Left = 396
+  Top = 67
   BorderStyle = bsNone
   Caption = #33258#21161#26597#35810
   ClientHeight = 674

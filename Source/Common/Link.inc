@@ -48,7 +48,7 @@
 
 //--------------------------------- 特定系统 -----------------------------------
 
-{$DEFINE YHTL}
+{$DEFINE QSTL}
 //特定系统
 
 //确山同力
@@ -94,6 +94,14 @@
   //采购一车一单子
   {$DEFINE ASyncWriteData}
   //异步写入数据
+  {$DEFINE SyncMemDate}
+  //出厂推送Mem数据
+  {$DEFINE DL_Count}
+  //启用计数器
+  {$DEFINE DL_CodePrint}
+  //启用喷码机
+  {$DEFINE DL_LEDPlay}
+  //启用LED大屏显示
 {$ENDIF}
 
 //豫鹤同力
@@ -105,10 +113,10 @@
   //车检由中间件控制
   {$DEFINE MultiReplay}
   //计数器应答模式
-  {$DEFINE PrintHYEach}
+  {.$DEFINE PrintHYEach}
   //随车开化验单
   {.$DEFINE PrintHeGeZheng}
-  {$DEFINE PrintHuaYanDan}
+  {.$DEFINE PrintHuaYanDan}
   //随车开单时打合格证、化验单
   {$DEFINE BatchInHYOfBill}
   //批次保存在化验单字段
@@ -116,7 +124,7 @@
   //包装阶梯误差
   {$DEFINE AutoProId}
   //自动生成供应商编号
-  {$DEFINE PrintHY}
+  {.$DEFINE PrintHY}
   //出厂打印化验单
   {$DEFINE BFLED}
   //磅房小屏
@@ -147,4 +155,6 @@
   //采购退货
   {$DEFINE StockLimited}
   //限制提货
+  {$DEFINE OutDoorLedPlay}
+  //出厂票箱LED屏  
 {$ENDIF}

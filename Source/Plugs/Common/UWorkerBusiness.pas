@@ -1424,7 +1424,7 @@ begin
         gDBConnManager.WorkerExec(nErpWorker, FListA[nIdx]);
       //xxxxx
       nErpWorker.FConn.CommitTrans;
-
+      {$IFDEF SyncMemDate}
       try
         for nIdx:=0 to FListB.Count - 1 do
           gDBConnManager.WorkerExec(nMemWorker, FListB[nIdx]);
@@ -1435,6 +1435,7 @@ begin
         //raise Exception.Create(nStr);
       end;
       //nMemWorker.FConn.CommitTrans;
+      {$ENDIF}
 
       Result := True;
     except
@@ -1614,7 +1615,7 @@ begin
         gDBConnManager.WorkerExec(nErpWorker, FListA[nIdx]);
       //xxxxx
       nErpWorker.FConn.CommitTrans;
-
+      {$IFDEF SyncMemDate}
       try
         for nIdx:=0 to FListB.Count - 1 do
           gDBConnManager.WorkerExec(nMemWorker, FListB[nIdx]);
@@ -1625,6 +1626,7 @@ begin
         //raise Exception.Create(nStr);
       end;
       //nMemWorker.FConn.CommitTrans;
+      {$ENDIF}
 
       Result := True;
     except

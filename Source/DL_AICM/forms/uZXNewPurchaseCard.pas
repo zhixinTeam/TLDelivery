@@ -454,7 +454,7 @@ var
   nWebOrderID:string;
   nList: TStrings;
   nOrderItem:stMallPurchaseItem;
-  nOrder:string;
+  nOrder, nMsg:string;
   nNewCardNo:string;
   nidx:Integer;
   i:Integer;
@@ -575,20 +575,35 @@ begin
     nList.Free;
   end;
 
-  ShowMsg('采购单保存成功', sHint);
+  //ShowMsg('采购单保存成功', sHint);
+  nRet := SaveOrderCard(nOrder,nNewCardNo);
 
-    //发卡
-  if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
+  if not nRet then
   begin
-    nHint := '卡号[ %s ]发卡失败,请到开票窗口重新关联.';
-    nHint := Format(nHint, [nNewCardNo]);
+    nMsg := '办理磁卡失败,请重试.';
+    ShowMsg(nMsg, sHint);
+    Exit;
+  end;
 
-    WriteLog(nHint);
-    ShowMsg(nHint,sWarn);
+  nRet := gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint);
+  //发卡
+
+  if nRet then
+  begin
+    nMsg := '采购单[ %s ]发卡成功,卡号[ %s ],请收好您的卡片';
+    nMsg := Format(nMsg, [nOrder, nNewCardNo]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
   end
   else begin
-    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
-    SaveOrderCard(nOrder,nNewCardNo);
+    gDispenserManager.RecoveryCard(gSysParam.FTTCEK720ID, nHint);
+
+    nMsg := '卡号[ %s ]出卡失败,请联系管理员将卡取出.';
+    nMsg := Format(nMsg, [nNewCardNo]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
   end;
   Result := True;
 end;

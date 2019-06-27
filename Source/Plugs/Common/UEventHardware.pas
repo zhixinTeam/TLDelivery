@@ -38,7 +38,7 @@ uses
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrTTCEM100,
   UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo,
-  UMgrRemoteSnap;
+  UMgrRemoteSnap, UMgrBXFontCard;
 
 class function THardwareWorker.ModuleInfo: TPlugModuleInfo;
 begin
@@ -60,9 +60,11 @@ begin
   nCfg := gPlugRunParam.FAppPath + 'Hardware\';
 
   try
+    {$IFDEF DL_LEDPlay}
     nStr := 'LED';
     gCardManager.TempDir := nCfg + 'Temp\';
     gCardManager.FileName := nCfg + 'LED.xml';
+    {$ENDIF}
 
     nStr := '远距读头';
     gHardwareHelper.LoadConfig(nCfg + '900MK.xml');
@@ -73,8 +75,10 @@ begin
     nStr := '近距读头';
     g02NReader.LoadConfig(nCfg + 'Readers.xml');
 
+    {$IFDEF DL_Count}
     nStr := '计数器';
     gMultiJSManager.LoadFile(nCfg + 'JSQ.xml');
+    {$ENDIF}
 
     nStr := '继电器';
     gERelayManager.LoadConfig(nCfg + 'ERelay.xml');
@@ -93,8 +97,10 @@ begin
       gNetVoiceHelper.LoadConfig(nCfg + 'NetVoice.xml');
     end;
 
+    {$IFDEF DL_CodePrint}
     nStr := '喷码机';
     gCodePrinterManager.LoadConfig(nCfg + 'CodePrinter.xml');
+    {$ENDIF}
 
     {$IFDEF HYRFID201}
     nStr := '华益RFID102';
@@ -134,6 +140,16 @@ begin
       gHKSnapHelper.LoadConfig(nCfg + 'RemoteSnap.xml');
     end;
     {$ENDIF}
+
+    {$IFDEF OutDoorLedPlay}
+    nStr := '出厂票箱LED显示';
+    if FileExists(nCfg + 'BXFontLED.xml') then
+    begin
+      if not Assigned(gBXFontCardManager) then
+        gBXFontCardManager := TBXFontCardManager.Create;
+      gBXFontCardManager.LoadConfig(nCfg + 'BXFontLED.xml');
+    end;
+    {$ENDIF}
   except
     on E:Exception do
     begin
@@ -167,15 +183,26 @@ begin
     g02NReader := T02NReader.Create;
   //近距读头
 
+  {$IFDEF DL_Count}
   if not Assigned(gMultiJSManager) then
     gMultiJSManager := TMultiJSManager.Create;
   //计数器
+  {$ENDIF}
 
   gHardShareData := WhenBusinessMITSharedDataIn;
   //hard monitor share
 
   {$IFDEF FixLoad}
   gSendCardNo := TReaderHelper.Create;
+  {$ENDIF}
+
+  {$IFDEF RemoteSnap}
+  gHKSnapHelper := THKSnapHelper.Create;
+  //remote snap
+  {$ENDIF}
+
+  {$IFDEF OutDoorLedPlay}
+  gBXFontCardManager := TBXFontCardManager.Create;
   {$ENDIF}
 end;
 
@@ -205,10 +232,13 @@ begin
   g02NReader.StartReader;
   //near reader
 
+  {$IFDEF DL_Count}
   gMultiJSManager.SaveDataProc := WhenSaveJS;
   gMultiJSManager.GetTruckProc := GetJSTruck;
   gMultiJSManager.StartJS;
   //counter
+  {$ENDIF}
+
   gERelayManager.ControlStart;
   //erelay
 
@@ -221,8 +251,10 @@ begin
     gNetVoiceHelper.StartVoice;
   //NetVoice
 
+  {$IFDEF DL_LEDPlay}
   gCardManager.StartSender;
   //led display
+  {$ENDIF}
 
   {$IFDEF MITTruckProber}
   gProberManager.StartProber;
@@ -246,6 +278,11 @@ begin
   gHKSnapHelper.StartSnap;
   //remote snap
   {$ENDIF}
+
+  {$IFDEF OutDoorLedPlay}
+  if Assigned(gBXFontCardManager) then
+    gBXFontCardManager.StartService;
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -260,8 +297,11 @@ begin
 
   gERelayManager.ControlStop;
   //erelay
+
+  {$IFDEF DL_Count}
   gMultiJSManager.StopJS;
   //counter
+  {$ENDIF}
 
   g02NReader.StopReader;
   g02NReader.OnCardIn := nil;
@@ -283,8 +323,10 @@ begin
   end;
   {$ENDIF}
 
+  {$IFDEF DL_LEDPlay}
   gCardManager.StopSender;
   //led
+  {$ENDIF}
 
   {$IFDEF MITTruckProber}
   gProberManager.StopProber;
@@ -310,6 +352,11 @@ begin
   {$IFDEF RemoteSnap}
   gHKSnapHelper.StopSnap;
   //remote snap
+  {$ENDIF}
+
+  {$IFDEF OutDoorLedPlay}
+  gBXFontCardManager.StopService;
+  //outDoor Led
   {$ENDIF}
 end;
 

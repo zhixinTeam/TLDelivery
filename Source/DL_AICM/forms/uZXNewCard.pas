@@ -535,9 +535,8 @@ var
   nBillData:string;
   nBillID :string;
   nWebOrderID:string;
-  nNewCardNo, nTruck, nStr, nType:string;
+  nNewCardNo, nTruck, nStr, nType, nMsg:string;
   nidx:Integer;
-  i:Integer;
   nRet: Boolean;
   nOrderItem:stMallOrderItem;
   nValue: Double;
@@ -676,24 +675,36 @@ begin
     nTmp.Free;
   end;
 
-  ShowMsg('提货单保存成功', sHint);
+  //ShowMsg('提货单保存成功', sHint);
+  nRet := SaveBillCard(nBillID, nNewCardNo);
 
-  //发卡2019-05-20
-  if not SaveBillCard(nBillID,nNewCardNo) then
+  if not nRet then
   begin
-    nHint := '卡号[ %s ]关联订单失败,请到开票窗口重新关联磁卡.';
-    nHint := Format(nHint, [nNewCardNo]);
-
-    WriteLog(nHint);
-    ShowMsg(nHint,sWarn);
-  end
-  else begin
-    if not gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint) then
-      ShowMessage('出卡失败,请联系管理员将磁卡取出.')
-    else
-      ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
+    nMsg := '办理磁卡失败,请重试.';
+    ShowMsg(nMsg, sHint);
+    Exit;
   end;
 
+  nRet := gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint);
+  //发卡
+
+  if nRet then
+  begin
+    nMsg := '提货单[ %s ]发卡成功,卡号[ %s ],请收好您的卡片';
+    nMsg := Format(nMsg, [nBillID, nNewCardNo]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
+  end
+  else begin
+    gDispenserManager.RecoveryCard(gSysParam.FTTCEK720ID, nHint);
+
+    nMsg := '卡号[ %s ]出卡失败,请联系工作人员将卡片取出.';
+    nMsg := Format(nMsg, [nNewCardNo]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
+  end;
   Result := True;
   if nPrint then
     PrintBillReport(nBillID, True);
@@ -750,6 +761,7 @@ begin
   if Key=Char(vk_return) then
   begin
     key := #0;
+    if btnQuery.CanFocus then
     btnQuery.SetFocus;
     btnQuery.Click;
   end;

@@ -13,7 +13,7 @@ uses
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,
   UMgrLEDDisp, UMgrRFID102, UBlueReader, UMgrTTCEM100, UMgrSendCardNo,
-  UMgrRemoteSnap;
+  UMgrRemoteSnap, UMgrBXFontCard;
 
 procedure WhenReaderCardArrived(const nReader: THHReaderItem);
 procedure WhenHYReaderCardArrived(const nReader: PHYReaderItem);
@@ -635,6 +635,10 @@ begin
     nStr := '读取磁卡[ %s ]订单信息失败.';
     nStr := Format(nStr, [nCard]);
 
+    {$IFDEF OutDoorLedPlay}
+    gBXFontCardManager.Display('系统提示',nStr,nPost);
+    {$ENDIF}
+
     WriteHardHelperLog(nStr, sPost_Out);
     Exit;
   end;
@@ -643,6 +647,10 @@ begin
   begin
     nStr := '磁卡[ %s ]没有需要出厂车辆.';
     nStr := Format(nStr, [nCard]);
+
+    {$IFDEF OutDoorLedPlay}
+    gBXFontCardManager.Display('系统提示',nStr,nPost);
+    {$ENDIF}
 
     WriteHardHelperLog(nStr, sPost_Out);
     Exit;
@@ -654,6 +662,10 @@ begin
     if FNextStatus = sFlag_TruckOut then Continue;
     nStr := '车辆[ %s ]下一状态为:[ %s ],无法出厂.';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
+
+    {$IFDEF OutDoorLedPlay}
+    gBXFontCardManager.Display('系统提示',nStr,nPost);
+    {$ENDIF}
 
     WriteHardHelperLog(nStr, sPost_Out);
     Exit;
@@ -667,6 +679,10 @@ begin
 
     gHKSnapHelper.Display(nPost, nSnapStr, 3);
     //小屏显示
+
+    {$IFDEF OutDoorLedPlay}
+    gBXFontCardManager.Display('系统提示',nStr,nPost);
+    {$ENDIF}
 
     WriteHardHelperLog(nStr+'岗位:'+nPost);
 
@@ -688,6 +704,10 @@ begin
   begin
     nStr := '车辆[ %s ]出厂放行失败.';
     nStr := Format(nStr, [nTrucks[0].FTruck]);
+
+    {$IFDEF OutDoorLedPlay}
+    gBXFontCardManager.Display('系统提示',nStr,nPost);
+    {$ENDIF}
 
     WriteHardHelperLog(nStr, sPost_Out);
     Exit;

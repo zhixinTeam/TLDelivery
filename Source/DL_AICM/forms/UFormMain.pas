@@ -11,7 +11,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, ExtCtrls, CPort, StdCtrls, Buttons,
-  UHotKeyManager,uReadCardThread, dxSkinsCore, dxSkinsDefaultPainters;
+  UHotKeyManager, dxSkinsCore, dxSkinsDefaultPainters;
 
 type
   TCardType = (ctTTCE,ctRFID);
@@ -41,7 +41,6 @@ type
     procedure ComPort1RxChar(Sender: TObject; Count: Integer);
     procedure TimerReadCardTimer(Sender: TObject);
     procedure LabelTruckDblClick(Sender: TObject);
-    procedure TimerInsertCardTimer(Sender: TObject);
     procedure imgPrintClick(Sender: TObject);
     procedure imgCardClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -60,7 +59,6 @@ type
 
     FHYDan,FStockName:string;
     FHyDanPrinterName,FDefaultPrinterName:string;
-    FReadCardThread:TReadCardThread;
     Fbegin:TDateTime;
     procedure ActionComPort(const nStop: Boolean);
     //串口处理
@@ -522,13 +520,6 @@ begin
   FDM.ADOConn.Connected := False;
 end;
 
-procedure TfFormMain.TimerInsertCardTimer(Sender: TObject);
-begin
-  FReadCardThread := TReadCardThread.Create(True);
-  FReadCardThread.FreeOnTerminate := True;
-  FReadCardThread.Resume;
-  WaitForSingleObject(FReadCardThread.Handle,INFINITE);
-end;
 
 procedure TfFormMain.DoHotKeyHotKeyPressed(HotKey: Cardinal; Index: Word);
 begin
@@ -674,13 +665,12 @@ begin
     Exit;
   end;
 
-  {try
+  try
     FTimeCounter := 10;
     TimerReadCard.Enabled := True;
 
     nStr := 'select * from %s where o_card=''%s''';
     nStr := Format(nStr, [sTable_Order, nCard]);
-    FBegin := Now;
     with FDM.QuerySQL(nStr) do
     begin
       if RecordCount < 1 then
@@ -693,9 +683,10 @@ begin
       LabelOrder.Caption := '采购订单: ' + FieldByName('o_bid').AsString;
       LabelTruck.Caption := '车牌号码: ' + FieldByName('o_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('o_StockName').AsString;
+      //LabelCus.Caption := '客户名称: ' + FieldByName('o_ProName').AsString;
       LabelTon.Caption := '提货数量: ';
     end;
-    WriteLog('TfFormMain.QueryPorderinfo(nCard='''+nCard+''')查询采购单['+nStr+']-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
+    WriteLog('TfFormMain.QueryPorderinfo(nCard='''+nCard+''')查询采购单['+nStr+'].');
     FLastQuery := GetTickCount;
     FLastCard := nCard;
   except
@@ -704,7 +695,7 @@ begin
       ShowMsg('查询失败', sHint);
       WriteLog(E.Message);
     end;
-  end;}
+  end;
 end;
 
 end.
