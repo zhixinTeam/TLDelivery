@@ -281,8 +281,14 @@ const
   sFlag_AreaLimit     = 'AreaLimit';                 //客户发货日限额
   sFlag_StopNewBill   = 'StopNewBill';               //暂停开卡
 
-  sFlag_TruckInNeedManu = 'TruckNeedManu';           //车牌识别需人工干预
-  sFlag_CusLoadLimit    = 'CusLoadLimit';            //客户发货日限额
+  sFlag_TruckInNeedManu  = 'TruckNeedManu';           //车牌识别需人工干预
+  sFlag_CusLoadLimit     = 'CusLoadLimit';            //客户发货日限额
+  sFlag_VipTruckLoadLimit= 'VipTruckLimit';           //VIP客户限载
+  sFlag_TruckLoadLimit   = 'TruckLimit';              //普通水泥客户限载
+  sFlag_SLTruckLoadLimit = 'SLTruckLimit';            //熟料客户发货日限额
+
+  sFlag_AutoPurchaseID= 'AutoPurchaseID';             //是否自动生成原材料编号
+  sFlag_Purchase      = 'Bus_Purchase';               //原材料编号
 
 
   {*数据表*}

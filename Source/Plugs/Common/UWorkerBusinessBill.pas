@@ -279,6 +279,12 @@ begin
     Exit;
   end;
 
+  if Pos('挂',nTruck)>0 then
+  begin
+    nData := Format('车牌号[ %s ]无效,包含汉字"挂".', [nTruck]);
+    Exit;
+  end;
+
   Result := True;
 end;
 
@@ -2085,7 +2091,7 @@ end;
 //Parm: 交货单[FIn.FData];岗位[FIn.FExtParam]
 //Desc: 保存指定岗位提交的交货单列表
 function TWorkerBusinessBills.SavePostBillItems(var nData: string): Boolean;
-var nStr,nSQL,nTmp,nFixMoney, nStockNo, nType: string;
+var nStr,nSQL,nTmp,nFixMoney, nStockNo, nType, nTimeTruckOut: string;
     f,m,nVal,nMVal, nBillNum: Double;
     i,nIdx,nInt: Integer;
     nBills: TLadingBillItems;
@@ -2638,6 +2644,7 @@ begin
   //----------------------------------------------------------------------------
   if FIn.FExtParam = sFlag_TruckOut then
   begin
+    nTimeTruckOut := FormatDateTime('yyyy-mm-dd HH:MM:SS',Now);
     FListB.Clear;
     for nIdx:=Low(nBills) to High(nBills) do
     with nBills[nIdx] do
@@ -2648,7 +2655,7 @@ begin
       nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
               SF('L_NextStatus', ''),
               SF('L_Card', ''),
-              SF('L_OutFact', sField_SQLServer_Now, sfVal),
+              SF('L_OutFact', nTimeTruckOut),
               SF('L_OutMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
       FListA.Add(nSQL); //更新交货单
@@ -2803,10 +2810,10 @@ begin
     FListA.Add(nSQL); //清理装车队列
   end;
 
-  if FIn.FExtParam = sFlag_TruckOut then //同步数据
+  if (FIn.FExtParam = sFlag_TruckOut) and (nBills[0].FYSValid <> sFlag_Yes) then //同步数据
   begin
     nStr := CombinStr(FListB, ',', True);
-    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, '', @nOut) then
+    if not TWorkerBusinessCommander.CallMe(cBC_SyncStockBill, nStr, nTimeTruckOut, @nOut) then
     begin
       nData := nOut.FData;
       WriteLog('同步单据'+nStr+'至erp失败,出厂失败.');

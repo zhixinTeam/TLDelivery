@@ -1221,8 +1221,6 @@ begin
   nMemWorker := nil;
   nStr := AdjustListStrFormat(FIn.FData , '''' , True , ',' , True);
 
-
-
   nSQL := 'select S_Bill.*,P_PStation,P_MStation From $BL left join $PL ' +
           'on L_ID=P_Bill where L_ID In ($IN)';
   nSQL := MacroValue(nSQL, [MI('$BL', sTable_Bill), MI('$PL', sTable_PoundLog) , MI('$IN', nStr)]);
@@ -1330,13 +1328,13 @@ begin
                   SF('payTypeName',             nTmpDataSet.FieldByName('payTypeName').AsString),        //
                   SF('carCode',                 FieldByName('L_Truck').AsString),                        //
                   SF('enaBeginDate',            FieldByName('L_inTime').AsString),                       //
-                  SF('enaEndDate',              sField_SQLServer_Now, sfVal), //FieldByName('L_OutFact').AsString),
+                  SF('enaEndDate',              FIn.FExtParam), //FieldByName('L_OutFact').AsString),
                   SF('pickDate',                FieldByName('L_LadeTime').AsString),                     //
                   SF('blncTypeCode',            nTmpDataSet.FieldByName('blncTypeCode').AsString),       //
                   SF('blncTypeName',            nTmpDataSet.FieldByName('blncTypeName').AsString),       //
                   SF('originalDate',            FieldByName('L_Date').AsString),                         //
                   SF('balFlag',                 'Y'),
-                  SF('balanceDate',             sField_SQLServer_Now, sfVal),  //FieldByName('L_OutFact').AsString),//
+                  SF('balanceDate',             FIn.FExtParam),  //FieldByName('L_OutFact').AsString),//
                   SF('salOrgzCode',             '001'),
                   SF('remark',                  FieldByName('L_ID').AsString),                                                               //
                   SF('fillDate',                FieldByName('L_Date').AsString)                                                     //
@@ -1373,7 +1371,7 @@ begin
                   SF('rtnSum',                 -FieldByName('L_Value').AsFloat*FieldByName('L_Price').AsFloat, sfVal),
                   SF('accountCode',             FieldByName('L_CusID').AsString),
                   SF('accountName',             FieldByName('L_CusName').AsString),
-                  SF('inputDate',               sField_SQLServer_Now, sfVal),//FieldByName('L_OutFact').AsString),
+                  SF('inputDate',               FIn.FExtParam),//FieldByName('L_OutFact').AsString),
                   SF('inputPsnName',            FieldByName('L_Man').AsString),
                   SF('remark',                  '销售提货'),
                   SF('feeType',                 'PICK'),
@@ -1457,6 +1455,7 @@ var
   nID, nIdx: Integer;
   nErpWorker, nMemWorker: PDBWorker;
   nTmpDataSet: TDataSet;
+  nValue: Double;
 begin
   Result := False;
   nErpWorker := nil;
@@ -1543,6 +1542,11 @@ begin
         end;
       end;
 
+      if FieldByName('O_OrderType').AsString = sFlag_TiHuo then
+        nValue := -FieldByName('D_Value').AsFloat
+      else
+        nValue := FieldByName('D_Value').AsFloat;
+
       nSQL := 'select * from PUR.PUR_ContractMain where billNum=''%s''';
       nSQL := Format(nSQL,[FieldByName('O_BID').AsString]);
       nTmpDataSet:= gDBConnManager.WorkerQuery(nErpWorker, nSQL);
@@ -1567,10 +1571,10 @@ begin
                     //SF('qstate',                FieldByName('').AsString),  //质检标致 1:已接收  2:已完成  A:未报检 0:已报检
                     //checkstate  T:退货   V:作废
                     SF('mstate',                '1'),  //计量标记 1：已完成，A：未报计量
-                    SF('mresult',               FieldByName('D_Value').AsFloat),
+                    SF('mresult',               nValue, sfVal),//FieldByName('D_Value').AsFloat),
                     SF('carFlag',               '1'),  //出厂标记  0:否  1:是
                     SF('editFlag',              '1'),
-                    SF('realQty',               FieldByName('D_Value').AsFloat),
+                    SF('realQty',               nvalue, sfval),//FieldByName('D_Value').AsFloat),
                     SF('unitName',              '吨'),
                     SF('grossWeight',           FieldByName('D_MValue').AsFloat),
                     SF('tareWeight',            FieldByName('D_PValue').AsFloat),

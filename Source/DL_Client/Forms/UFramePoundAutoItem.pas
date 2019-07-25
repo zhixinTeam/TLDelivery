@@ -871,22 +871,9 @@ begin
     end;
   end;
 
-  nStr := 'select T_VipCus from %s where T_Truck=''%s''';
-  nStr := Format(nStr,[sTable_Truck,FUIData.FTruck]);
-  with fdm.QueryTemp(nStr) do
-  begin
-    if FieldByName('T_VipCus').AsString = sflag_yes then
-      nLoadLimit := 150
-    else
-    begin
-      if Pos('熟料',FUIData.FStockName)> 0 then
-        nLoadLimit := 55
-      else
-        nLoadLimit := 60;
-    end;
-    nLoadLimit := 50;
-    //VIP失效，所有的都改为50吨
-  end;    
+  nLoadLimit := GetTruckLoadLimit(FUIData.FTruck, FUIData.FStockName);
+  //获取限载值
+      
   if FUIData.FMData.FValue > nLoadLimit then
   begin
     nStr := '超出最大限载重量，请返厂卸车';

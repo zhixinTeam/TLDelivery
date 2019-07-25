@@ -362,6 +362,8 @@ function VeriFySnapTruck(const nReader: string; nBill: TLadingBillItem;
                          var nMsg, nPos, nDept: string): Boolean;
 procedure RemoteSnapDisPlay(const nPost, nText, nSucc: string);
 
+function GetTruckLoadLimit(nTruck, nStockName:string):Double;
+
 implementation
 
 //Desc: 记录日志
@@ -3714,6 +3716,38 @@ begin
     CallBusinessHardware(cBC_RemoteSnapDisPlay, nPost, PackerEncodeStr(nList.Text), @nOut);
   finally
     nList.Free;
+  end;
+end;
+
+//获取限载值
+function GetTruckLoadLimit(nTruck,nStockName:string):Double;
+var
+  nStr:string;
+begin
+  Result := 50;
+  nStr := 'select T_VipCus from %s where T_Truck=''%s''';
+  nStr := Format(nStr,[sTable_Truck,nTruck]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if FieldByName('T_VipCus').AsString = sflag_yes then
+    begin
+      nStr := 'select * from %s where D_Name=''%s''';
+      nStr := Format(nStr,[sTable_SysDict,sFlag_VipTruckLoadLimit]);
+      with FDM.QueryTemp(nStr) do
+        if recordcount > 0 then
+          Result := FieldByName('D_Value').AsFloat;
+    end
+    else
+    begin
+      nStr := 'select * from %s where D_Name=''%s''';
+      if Pos('熟料',nStockName)> 0 then
+        nStr := Format(nStr,[sTable_SysDict,sFlag_SLTruckLoadLimit])
+      else
+        nStr := Format(nStr,[sTable_SysDict,sFlag_TruckLoadLimit]);
+      with FDM.QueryTemp(nStr) do
+        if recordcount > 0 then
+          Result := FieldByName('D_Value').AsFloat;
+    end;
   end;
 end;
 

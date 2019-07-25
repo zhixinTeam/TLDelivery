@@ -219,7 +219,6 @@ inherited fFormMaterails: TfFormMaterails
       Properties.Items.Strings = (
         #19968#27425#39564#25910
         #20004#27425#39564#25910)
-      Properties.OnChange = cxComboBox1PropertiesChange
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.HotTrack = False
