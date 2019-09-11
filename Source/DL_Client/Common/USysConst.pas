@@ -55,6 +55,9 @@ const
   cFI_FrameStockHuaYan  = $0045;                     //开化验单
   cFI_FrameStockHY_Each = $0046;                     //随车开单
   cFI_FrameBatch        = $0047;                     //批次管理
+  //cFI_FrameBatchNo      = $0048;                     //手动批次号
+  cFI_FrameBatchQuery   = $0048;                     //手动批次号
+  cFI_FormBatchEdit     = $0049;                     //手动批次
 
   cFI_FrameTruckQuery   = $0050;                     //车辆查询
   cFI_FrameCusAccountQuery = $0051;                  //客户账户
@@ -389,7 +392,7 @@ begin
   AddMenuModuleItem('MAIN_K05', cFI_FormStockHY_Each, mtForm);
   AddMenuModuleItem('MAIN_K06', cFI_FrameStockHY_Each);
   AddMenuModuleItem('MAIN_K07', cFI_FrameBatch);
-  AddMenuModuleItem('MAIN_K08', cFI_FormBatch, mtForm);
+  AddMenuModuleItem('MAIN_K08', cFI_FrameBatchQuery);
 
   AddMenuModuleItem('MAIN_L01', cFI_FrameTruckQuery);
   AddMenuModuleItem('MAIN_L02', cFI_FrameCusAccountQuery);

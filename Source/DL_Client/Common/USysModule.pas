@@ -46,7 +46,8 @@ uses
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo,
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormChangeState,
   UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail,UFormCusLimit,
-  UFormQryCard, UFrameZTQuery, UFrameOrderCheck ;
+  UFormQryCard, UFrameZTQuery, UFrameOrderCheck, UFrameBatchNo,
+  UFormBatcodeEdit,UFrameBatcodeQuery ;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

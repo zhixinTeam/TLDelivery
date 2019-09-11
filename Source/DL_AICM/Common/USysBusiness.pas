@@ -211,6 +211,7 @@ function AddManualEventRecord(const nEID,nKey,nEvent:string;
 function IsCardValid(const nCard: string): Boolean;
 
 function GetGpsByTruck(var nTruck:string;nFactory,nTime:string):Boolean;
+function GetGpsByTruck_New(var nTruck:string):Boolean;
 
 function CallBusinessCommand(const nCmd: Integer; const nData,nExt: string;
   const nOut: PWorkerBusinessCommand; const nWarn: Boolean = True): Boolean;
@@ -222,6 +223,58 @@ uses
 procedure WriteLog(const nEvent: string);
 begin
   gSysLoger.AddLog(nEvent);
+end;
+
+function GetGpsByTruck_New(var nTruck:string):Boolean;
+var
+  HttpClient: TIdHTTP;
+  nResList: TStringStream;
+  nStr, nAPIUrl:string;
+  Jo:ISuperObject;
+  nCode: Integer;
+  FBegin: TDateTime;
+begin
+  Result := False;
+  FBegin := Now;
+  nAPIUrl := 'http://39.98.224.105:8012/GetDateServices.asmx/GetDate?'+
+             'method=ValidationVehicleInfo&ApplyId=or5zxujw7lo&PlateNumber=%s';
+  nResList := TStringStream.Create('');
+  HttpClient := TIdHttp.Create();
+  nTruck := PackerEncodeStr(UTF8Encode(nTruck));
+  nAPIUrl :=Format(nAPIUrl,[nTruck]);
+
+  HttpClient.Request.Accept := 'text/javascript';
+  //HttpClient.Request.ContentType := 'application/json';
+  HttpClient.Request.CharSet := 'utf-8';
+  HttpClient.Request.ContentEncoding := 'utf-8';
+  nTruck := '';
+  try
+    HttpClient.Get(nAPIUrl,nResList);
+    jo := so(UTF8Decode(nResList.DataString));
+    nStr := Jo['success'].AsString;
+    nCode := Jo['errorCode'].AsInteger;
+    if nStr = 'true' then
+    begin
+      Result := true;
+      if nCode = 5 then
+        nTruck := 'GPS返回提示:5, 服务费即将到期.';
+      Exit;
+    end
+    else
+    begin
+      case nCode of
+        1: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':服务费到期.';
+        2: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':设备信号异常.';
+        3: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':车辆不在厂区附近';
+        4: nTruck := 'GPS返回错误码:'+IntToStr(nCode)+':请安装设备.';
+        518:nTruck:= 'GPS返回错误码:'+IntToStr(nCode)+':ApplyId错误.';
+      end;
+      writelog('调用GPS_New接口,车辆:['+nTruck+'] 耗时:'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
+    end;
+  finally
+    nResList.Free;
+    HttpClient.Free;
+  end;
 end;
 
 function GetGpsByTruck(var nTruck:string; nFactory,nTime:string):Boolean;
@@ -1706,7 +1759,7 @@ var nStr: string;
 begin
   Result := False;
 
-  nStr :='select D_ID from %s where D_Status <> ''%s'' and D_Truck =''%s'' ';
+  nStr :='select D_ID from %s where D_Status <> ''%s'' and D_Truck =''%s'' and D_OutFact=''''';
   nStr := Format(nStr, [sTable_OrderDtl, sFlag_TruckOut, nTruck]);
   with FDM.QueryTemp(nStr) do
   if RecordCount > 0 then

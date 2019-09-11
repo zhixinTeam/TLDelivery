@@ -376,6 +376,7 @@ begin
             {$ENDIF}
 
             SF('O_Truck', FListA.Values['Truck']),
+            SF('O_Memo',FListA.Values['thMemo']),
             SF('O_Man', FIn.FBase.FFrom.FUser),
             SF('O_OrderType', FListA.Values['OrderType']),
             SF('O_Date', sField_SQLServer_Now, sfVal)

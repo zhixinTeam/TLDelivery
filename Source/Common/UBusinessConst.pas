@@ -119,7 +119,9 @@ const
   cBC_WX_UpLoadAuditTruck     = $0521;   //微信：审核车辆结果上传
   cBC_WX_DownLoadPic          = $0522;   //微信：下载图片
   cBC_WX_get_shoporderbyTruck = $0523;   //微信：根据车牌号获取订单信息
-
+  cBC_WX_get_shoporderbyTruckClt = $0524;   //微信：根据车牌号获取订单信息  客户端用
+  cBC_WX_get_shoporderStatus  = $0525;   //微信：根据订单号获取订单状态
+  
   cBC_GetYSRules              = $1001;   //获取原材料验收规则
   cBC_SaveWlbYs               = $1002;   //保存物流部二次验收
   cBC_GetWlbYsStatus          = $1003;   //获取物流部验收结果
@@ -127,6 +129,8 @@ const
 
   cBC_VerifySnapTruck         = $1005;   //车牌比对
   cBC_RemoteSnapDisPlay       = $1006;   //调用海康显示屏
+  cBC_GetPoundReaderInfo      = $1007;   //获取磅站读卡器岗位、部门
+  cBC_SyncBillToGPS           = $1008;   //推动订单到GPS系统
 
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;

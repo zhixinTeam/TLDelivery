@@ -98,7 +98,7 @@ type
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
     //空磅计时,过磅保存后空磅
     FEmptyPoundIdleLong, FEmptyPoundIdleShort: Int64;
-    FPos, FDept: string; //岗位，部门
+
     procedure SetUIData(const nReset: Boolean; const nOnlyData: Boolean = False);
     //界面数据
     procedure SetImageStatus(const nImage: TImage; const nOff: Boolean);
@@ -273,10 +273,6 @@ begin
     FBarrierGate := Values['BarrierGate'] = sFlag_Yes;
     FEmptyPoundIdleLong := StrToInt64Def(Values['EmptyIdleLong'], 60);
     FEmptyPoundIdleShort:= StrToInt64Def(Values['EmptyIdleShort'], 5);
-    {$IFDEF RemoteSnap}
-      FDept := Values['Dept'];
-      FPos := Values['Pos'];
-    {$ENDIF}
   end;
 end;
 
@@ -408,7 +404,7 @@ procedure TfFrameAutoPoundItem.LoadBillItems(const nCard: string);
 var nRet, nValidELabel: Boolean;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
-    nStr,nHint, nVoice, nLabel: string;
+    nStr,nHint, nVoice, nLabel, nPos: string;
 begin
   nStr := Format('读取到卡号[ %s ],开始执行业务.', [nCard]);
   WriteLog(nStr);
@@ -534,12 +530,12 @@ begin
   end;
 
   {$IFDEF RemoteSnap}
-  if not VerifySnapTruck(FPoundTunnel.FID, nBills[0], nHint, FPos, FDept) then
+  if not VerifySnapTruck(FLastReader, nBills[0], nHint, nPos) then
   begin
     nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
     nVoice := Format(nVoice, [nBills[0].FTruck]);
     PlayVoice(nVoice);
-    RemoteSnapDisPlay(FPos, nVoice,sFlag_No);
+    RemoteSnapDisPlay(nPos, nVoice,sFlag_No);
     WriteSysLog(nVoice);
     SetUIData(True);
     Exit;
@@ -548,7 +544,7 @@ begin
   begin
     if nHint <> '' then
     begin
-      RemoteSnapDisPlay(FPos, nHint,sFlag_Yes);
+      RemoteSnapDisPlay(nPos, nHint,sFlag_Yes);
       WriteSysLog(nHint);
     end;
   end;

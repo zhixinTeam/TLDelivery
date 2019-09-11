@@ -44,7 +44,7 @@ inherited fFormBill: TfFormBill
     end
     object EditValue: TcxTextEdit [3]
       Left = 289
-      Top = 363
+      Top = 338
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
@@ -54,7 +54,7 @@ inherited fFormBill: TfFormBill
     end
     object EditTruck: TcxTextEdit [4]
       Left = 289
-      Top = 338
+      Top = 313
       ParentFont = False
       Properties.MaxLength = 15
       Style.BorderColor = clWindowFrame
@@ -65,7 +65,7 @@ inherited fFormBill: TfFormBill
     end
     object EditLading: TcxComboBox [5]
       Left = 81
-      Top = 363
+      Top = 338
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.ItemHeight = 18
@@ -83,7 +83,7 @@ inherited fFormBill: TfFormBill
     end
     object EditType: TcxComboBox [6]
       Left = 81
-      Top = 338
+      Top = 313
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.ItemHeight = 18
@@ -124,7 +124,7 @@ inherited fFormBill: TfFormBill
     end
     object cxLabel1: TcxLabel [9]
       Left = 23
-      Top = 388
+      Top = 363
       AutoSize = False
       ParentFont = False
       Properties.LineOptions.Alignment = cxllaBottom
@@ -145,6 +145,18 @@ inherited fFormBill: TfFormBill
       Style.PopupBorderStyle = epbsSingle
       TabOrder = 13
       Width = 145
+    end
+    object editTrans: TcxComboBox [11]
+      Left = 81
+      Top = 376
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      Style.ButtonStyle = btsHotFlat
+      Style.PopupBorderStyle = epbsSingle
+      TabOrder = 14
+      Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -206,6 +218,11 @@ inherited fFormBill: TfFormBill
           CaptionOptions.Text = 'cxLabel1'
           CaptionOptions.Visible = False
           Control = cxLabel1
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item5: TdxLayoutItem
+          CaptionOptions.Text = #36816#36755#20844#21496':'
+          Control = editTrans
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item15: TdxLayoutItem

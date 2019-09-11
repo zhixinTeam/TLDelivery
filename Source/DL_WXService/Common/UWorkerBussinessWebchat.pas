@@ -664,10 +664,13 @@ begin
   nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
           ' where (contractStat in (''Formal'' , ''Balance'')) and accountCode=''%s'''+
           ' and enableFlag=''Y''' +
+          {$IFDEF YHTL}
+          ' and reqQty-pickQty>5 '+
+          {$ENDIF}
           ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
   nStr := Format(nstr,[FIn.FData]);
 
-  //WriteLog('获取订单列表sql:'+nStr);
+  WriteLog('获取订单列表sql:'+nStr);
   nDBWorker := nil;
   try
     with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_CErp), FPacker.XMLBuilder do
@@ -707,6 +710,7 @@ begin
         //获取合同可用金
         with nNode.NodeNew('Item') do
         begin
+          {$IFDEF QSTL}
           if FieldByName('packForm').AsString = '001' then
           begin
             nType := '袋装';
@@ -717,10 +721,18 @@ begin
             nType := '散装';
             nTypeCode := sFlag_San;
           end;
+          {$ELSE}
+          nType := '散装';
+          nTypeCode := sFlag_San;
+          {$ENDIF}
 
           NodeNew('SetDate').ValueAsString    := FieldByName('signDate').AsString;
           NodeNew('BillNumber').ValueAsString := FieldByName('contractCode').AsString;
+          {$IFDEF QSTL}
           NodeNew('StockNo').ValueAsString    := FieldByName('prodCode').AsString + nTypeCode;
+          {$ELSE}
+          NodeNew('StockNo').ValueAsString    := FieldByName('prodCode').AsString +'-'+ FieldByName('itemCode').AsString + nTypeCode;
+          {$ENDIF}
           NodeNew('StockName').ValueAsString  := FieldByName('prodName').AsString + nType;
 
           try
@@ -1501,7 +1513,11 @@ begin
     begin
       if RecordCount > 0 then
       begin
+        {$IFDEF QSTL}
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
+        {$ELSE}
+        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
+        {$ENDIF}
           nCredit := FieldByName('oweValue').AsFloat;
       end;
     end;

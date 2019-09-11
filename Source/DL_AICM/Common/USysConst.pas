@@ -274,6 +274,15 @@ type
     FData:string;
     Ftracknumber:string;
     FYunTianOrderId:string;//云天系统订单号
+    FItemCode:string;
+    FfactoryName:string;   //工厂名称
+    FdriverId:string;      //司机编号
+    FdrvName:string;       //司机名称
+    FdrvPhone:string;      //司机号码
+    ForderDetailType:string; //订单类别：1：普通订单；2：同客户合单；3：非同客户拼单
+    FType:string;   //销售或采购
+    FXHSpot:string; //卸货地点
+    FPrice:string;//单价  拼单用
   end;
   //网上商城订单明细
 
@@ -288,6 +297,13 @@ type
     Ftracknumber:string; //车牌号
     Fpurchasecontract_no:string;//合同编号
     FOrder_ls:string; //商城ID
+    FfactoryName:string;   //工厂名称
+    FdriverId:string;      //司机编号
+    FdrvName:string;       //司机名称
+    FdrvPhone:string;      //司机号码
+    FType:string;          //采购，销售
+    FCusID:string;
+    FCusName:string;
   end;
   //网上商城供货单明细
 

@@ -3,7 +3,7 @@ object fFormNewCard: TfFormNewCard
   Top = 129
   BorderStyle = bsNone
   Caption = #29992#25143#33258#21161#21150#21345
-  ClientHeight = 597
+  ClientHeight = 630
   ClientWidth = 938
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -107,12 +107,22 @@ object fFormNewCard: TfFormNewCard
       Visible = False
       OnClick = Button1Click
     end
+    object Button2: TButton
+      Left = 152
+      Top = 56
+      Width = 89
+      Height = 25
+      Caption = #27979#35797'GPS_New'
+      TabOrder = 5
+      Visible = False
+      OnClick = Button2Click
+    end
   end
   object PanelBody: TPanel
     Left = 0
     Top = 209
     Width = 938
-    Height = 388
+    Height = 421
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -120,13 +130,13 @@ object fFormNewCard: TfFormNewCard
       Left = 0
       Top = 0
       Width = 938
-      Height = 388
+      Height = 421
       Align = alClient
       TabOrder = 0
       TabStop = False
       object BtnOK: TButton
         Left = 580
-        Top = 269
+        Top = 312
         Width = 250
         Height = 41
         Caption = #30830#35748#26080#35823#24182#21150#21345
@@ -136,12 +146,12 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 8
+        TabOrder = 9
         OnClick = BtnOKClick
       end
       object BtnExit: TButton
         Left = 836
-        Top = 269
+        Top = 312
         Width = 92
         Height = 41
         Caption = #21462#28040
@@ -151,7 +161,7 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 9
+        TabOrder = 10
         OnClick = BtnExitClick
       end
       object EditValue: TcxTextEdit
@@ -168,7 +178,7 @@ object fFormNewCard: TfFormNewCard
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 7
-        Width = 120
+        Width = 347
       end
       object EditCus: TcxTextEdit
         Left = 78
@@ -232,7 +242,7 @@ object fFormNewCard: TfFormNewCard
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 3
-        Width = 336
+        Width = 347
       end
       object EditTruck: TcxButtonEdit
         Left = 78
@@ -300,6 +310,25 @@ object fFormNewCard: TfFormNewCard
         Style.IsFontAssigned = True
         TabOrder = 5
         Width = 353
+      end
+      object editTrans: TcxComboBox
+        Left = 78
+        Top = 257
+        ParentFont = False
+        Properties.DropDownListStyle = lsFixedList
+        Style.BorderColor = clWindowFrame
+        Style.BorderStyle = ebs3D
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -24
+        Style.Font.Name = 'MS Sans Serif'
+        Style.Font.Style = []
+        Style.HotTrack = False
+        Style.ButtonStyle = bts3D
+        Style.PopupBorderStyle = epbsFrame3D
+        Style.IsFontAssigned = True
+        TabOrder = 8
+        Width = 121
       end
       object dxLayoutGroup1: TdxLayoutGroup
         AlignHorz = ahParentManaged
@@ -388,6 +417,11 @@ object fFormNewCard: TfFormNewCard
               end
             end
           end
+          object dxLayout1Item1: TdxLayoutItem
+            CaptionOptions.Text = #36816#36755#20844#21496':'
+            Control = editTrans
+            ControlOptions.ShowBorder = False
+          end
         end
         object dxLayoutGroup3: TdxLayoutGroup
           AlignHorz = ahClient
@@ -451,8 +485,8 @@ object fFormNewCard: TfFormNewCard
     end
   end
   object PrintHY: TcxCheckBox
-    Left = 10
-    Top = 491
+    Left = 26
+    Top = 539
     Caption = #20986#21378#25171#21360#21270#39564#21333
     ParentFont = False
     State = cbsChecked
@@ -476,7 +510,7 @@ object fFormNewCard: TfFormNewCard
   end
   object ADOQuery1: TADOQuery
     Parameters = <>
-    Left = 424
+    Left = 472
     Top = 497
   end
 end

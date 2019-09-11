@@ -168,6 +168,9 @@ const
   sFlag_ManualD       = 'D';                         //空车出厂
   sFlag_ManualE       = 'E';                         //车牌识别
 
+  sFlag_CaiTui        = 'T';                         //采购退货
+  sFlag_CaiGou        = 'D';                         //采购单标记
+
   sFlag_FactoryID     = 'FactoryID';                 //工厂编号
   sFlag_SysParam      = 'SysParam';                  //系统参数
   sFlag_EnableBakdb   = 'Uses_BackDB';               //备用库
@@ -187,6 +190,8 @@ const
   sFlag_WXFactory     = 'WXFactoryID';               //微信标识
   sFlag_WXServiceMIT  = 'WXServiceMIT';              //微信工厂服务
   sFlag_WXSrvRemote   = 'WXServiceRemote';           //微信远程服务
+  sFlag_Rq_WXUrl      = 'WXRqUrl';                   //请求微信网址
+  sFlag_Rq_WXPicUrl   = 'WXRqPicUrl';                //请求微信图片地址
 
   sFlag_PDaiWuChaZ    = 'PoundDaiWuChaZ';            //袋装正误差
   sFlag_PDaiWuChaF    = 'PoundDaiWuChaF';            //袋装负误差
@@ -289,7 +294,7 @@ const
 
   sFlag_AutoPurchaseID= 'AutoPurchaseID';             //是否自动生成原材料编号
   sFlag_Purchase      = 'Bus_Purchase';               //原材料编号
-
+  sFlag_PriceLimit    = 'PriceLimit';                 //最低限价
 
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组
@@ -329,6 +334,8 @@ const
   sTable_StockRecord  = 'S_StockRecord';             //检验记录
   sTable_StockHuaYan  = 'S_StockHuaYan';             //开化验单
   sTable_StockBatcode = 'S_Batcode';                 //批次号
+  sTable_BatchNo      = 'S_BatchNo';                 //手动批次号
+  sTable_BatcodeDoc   = 'S_BatcodeDoc';              //批次号
 
   sTable_Truck        = 'S_Truck';                   //车辆表
   sTable_ZTLines      = 'S_ZTLines';                 //装车道
@@ -820,7 +827,8 @@ const
        'L_EmptyOut char(1) not null default(''N''),' +
        'L_Man varChar(32), L_Date DateTime,' +
        'L_DelMan varChar(32), L_DelDate DateTime, L_Memo varChar(320),'+
-       'L_SyncStatus char(1) default(''N''))';
+       'L_SyncStatus char(1) default(''N''),L_TransCode varchar(30),'+
+       'L_TransName varchar(80))';
   {-----------------------------------------------------------------------------
    交货单表: Bill
    *.R_ID: 编号
@@ -860,6 +868,7 @@ const
    *.L_DelDate: 交货单删除时间
    *.L_Memo: 动作备注
    *.L_SyncStatus:同步状态 默认N未同步
+   *.L_TransCode,L_TransName:运输公司
   -----------------------------------------------------------------------------}
 
   sSQL_NewBillHK = 'Create Table $Table(R_ID $Inc, H_Bill varChar(20),' +
@@ -1435,7 +1444,8 @@ const
        'R_3DYa4 varChar(20), R_3DYa5 varChar(20), R_3DYa6 varChar(20),' +
        'R_28Ya1 varChar(20), R_28Ya2 varChar(20), R_28Ya3 varChar(20),' +
        'R_28Ya4 varChar(20), R_28Ya5 varChar(20), R_28Ya6 varChar(20),' +
-       'R_Date DateTime, R_Man varChar(32))';
+       'R_Date DateTime, R_Man varChar(32),R_SrxGe varchar(20),'+
+       'R_FXNei varchar(20),R_FXWai varchar(20))';
   {-----------------------------------------------------------------------------
    检验记录:StockRecord
    *.R_ID:记录编号
@@ -1481,6 +1491,9 @@ const
    *.R_28Ya6:28抗压强度6
    *.R_Date:取样日期
    *.R_Man:录入人
+   *.R_SrxGe:水溶性铬
+   *.R_FXNei:放射性内照指数
+   *.R_FXWai:放射性外照指数
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockHuaYan = 'Create Table $Table(H_ID $Inc, H_No varChar(15),' +
@@ -1528,6 +1541,13 @@ const
    *.B_HasUse: 已使用
    *.B_Batcode: 当前批次号
   -----------------------------------------------------------------------------}
+
+  sSQL_NewBatchNo ='Create Table $Table(R_ID $Inc, B_Stock varChar(32),' +
+       'B_Name varChar(80),B_NO varChar(20),B_Status char(1),'+
+       'B_HasUse $Float Default 0,B_Date Datetime,B_User varchar(20)';
+  {-----------------------------------------------------------------------------
+   手动批次编码表: BatchNo
+   -----------------------------------------------------------------------------}
 
   sSQL_NewK3SalePlan = 'Create Table $Table(R_ID $Inc, S_InterID Integer,' +
        'S_EntryID Integer, S_Truck varChar(15), S_Date DateTime)';
@@ -1676,6 +1696,38 @@ const
    *.L_User:操作员
   -----------------------------------------------------------------------------}
 
+sSQL_NewBatcodeDoc = 'Create Table $Table(R_ID $Inc, D_ID varChar(32),' +
+       'D_Stock varChar(32),D_Name varChar(80), D_Brand varChar(32), ' +
+       'D_Type Char(1), D_Plan $Float, D_Sent $Float Default 0, ' +
+       'D_Rund $Float, D_Init $Float, D_Warn $Float, D_ValidDays Integer,' +
+       'D_CusID varChar(20), D_CusName varChar(80),' +
+       'D_Man varChar(32), D_Date DateTime, ' +
+       'D_DelMan varChar(32), D_DelDate DateTime, ' +
+       'D_UseDate DateTime, D_LastDate DateTime, D_Valid char(1))';
+  {-----------------------------------------------------------------------------
+   批次编码表: Batcode
+   *.R_ID: 编号
+   *.D_ID: 批次号
+   *.D_Stock: 物料号
+   *.D_Name: 物料名
+   *.D_Brand: 水泥品牌
+   *.D_Type: 提货类型(H、火车;S、船运;C、普通)
+   *.D_Plan: 计划总量
+   *.D_Sent: 已发量
+   *.D_Rund: 退货量
+   *.D_Init: 初始量
+   *.D_Warn: 预警量
+   *.D_ValidDays: 有效天数
+   *.D_Man:  操作人
+   *.D_Date: 生成时间
+   *.D_DelMan: 删除人
+   *.D_DelDate: 删除时间
+   *.D_UseDate: 启用时间
+   *.D_LastDate: 终止时间
+   *.D_Valid: 是否启用(N、封存;Y、启用；D、删除)
+  -----------------------------------------------------------------------------}
+
+
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
 function TruckStatusToStr(const nStatus: string): string;
@@ -1804,6 +1856,7 @@ begin
   AddSysTableItem(sTable_StockRecord, sSQL_NewStockRecord);
   AddSysTableItem(sTable_StockHuaYan, sSQL_NewStockHuaYan);
   AddSysTableItem(sTable_StockBatcode, sSQL_NewStockBatcode);
+  AddSysTableItem(sTable_BatchNo, sSQL_NewBatchNo);
 
   AddSysTableItem(sTable_Order, sSQL_NewOrder);
   AddSysTableItem(sTable_OrderBak, sSQL_NewOrder);
@@ -1826,6 +1879,8 @@ begin
 
   AddSysTableItem(sTable_SnapTruck,sSQL_SnapTruck);    // 车牌识别记录
   AddSysTableItem(sTable_CusLimit, sSQL_NewCusLimit);  //限提设置
+
+  AddSysTableItem(sTable_BatcodeDoc, sSQL_NewBatcodeDoc);
 end;
 
 //Desc: 清理系统表

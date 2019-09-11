@@ -422,6 +422,7 @@ begin
   //保存车牌号
   FListB.Text := PackerDecodeStr(PackerDecodeStr(FListA.Values['Bills']));
 
+  {$IFDEF QSTL}
   nStr := FListB.Values['StockNO'];
   nStockNo := Copy(nStr,1,Length(nStr)-1);
   nType := Copy(nStr,Length(nStr),1);
@@ -447,6 +448,12 @@ begin
   nStr := 'select * from sal.SAL_Contract_v where '+
           ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
   nStr := Format(nStr,[FListA.Values['ZhiKa'],nStockNo,nType]);
+  {$ELSE}
+  nCErpWorker := nil;
+  nStr := 'select * from sal.SAL_Contract_v where '+
+          ' contractCode=''%s'' and itemcode=''%s'' and enableFlag=''Y''';
+  nStr := Format(nStr,[FListA.Values['ZhiKa'],FListA.Values['OrderNo']]);
+  {$ENDIF}
 
   try
     with gDBConnManager.SQLQuery(nStr, nCErpWorker, sFlag_CErp),FListA do
@@ -467,7 +474,7 @@ begin
       Values['CusID'] := FieldByName('accountCode').AsString;
       Values['CusName'] := FieldByName('accountName').AsString;
       Values['CusPY'] := GetPinYinOfStr(FieldByName('accountName').AsString);
-      Values['OrderNo'] := FieldByName('itemCode').AsString;
+      //Values['OrderNo'] := FieldByName('itemCode').AsString;
       //Values['Area'] := FieldByName('C_Area').AsString;
       //Values['SaleID'] := FieldByName('Z_SaleMan').AsString;
       //Values['SaleMan'] := FieldByName('S_Name').AsString;
@@ -588,17 +595,6 @@ begin
                 nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],nArea]);
                 exit;
               end;
-              {else
-              begin
-                if nLeaveValue < StrToFloat(FListC.Values['Value']) then
-                begin
-                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
-                           '当前剩余配额：[ %s ]吨';
-                  nData := Format(nData,[FListC.Values['StockNO']+'-'+FListC.Values['StockName'],
-                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
-                  Exit;
-                end;
-              end;}
             end;
           end
           else
@@ -701,7 +697,7 @@ begin
             end;
           end
           else
-          begin      //如果没有记录则不允许提货
+          begin      //如果没有记录则允许提货
             nstr := '用户 [ %s ] 对于 [ %s ]不限量.';
             nstr := Format(nData,[FListA.Values['CusName'],FListC.Values['StockNO']]);
             WriteLog(nStr);
@@ -818,6 +814,9 @@ begin
               SF('L_Seal', FListC.Values['Seal']),
               SF('L_HYDan', FListC.Values['HYDan']),
               SF('L_Man', FIn.FBase.FFrom.FUser),
+              SF('L_TransCode', FListA.Values['TransCode']),
+              SF('L_TransName', FListA.Values['TransName']),
+
               SF('L_Date', sField_SQLServer_Now, sfVal)
               ], sTable_Bill,SF('L_ID', nOut.FData),FListA.Values['Card']='');
       gDBConnManager.WorkerExec(FDBConn, nStr);
@@ -835,10 +834,15 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
       //更新磅单基本信息
 
+      {$IFDEF YHTL}
+      nStr := 'Update %s Set D_Sent=D_Sent+%s Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_BatcodeDoc, FListC.Values['Value'],
+              FListC.Values['HYDan']]);
+      {$ELSE}
       nStr := 'Update %s Set B_HasUse=B_HasUse+%s Where B_Batcode=''%s''';
       nStr := Format(nStr, [sTable_StockBatcode, FListC.Values['Value'],
               FListC.Values['HYDan']]);
-
+      {$ENDIF}
       {$IFDEF ASyncWriteData}
       gDBConnManager.ASyncAddItem(@nItem, nStr, FListC.Values['HYDan']);
       {$ELSE}
@@ -1469,9 +1473,13 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
       //释放限提金额
     end;
-
+    {$IFDEF YHTL}
+    nStr := 'Update %s Set D_Sent=D_Sent-%.2f Where D_ID=''%s''';
+    nStr := Format(nStr, [sTable_BatcodeDoc, nVal, nHY]);
+    {$ELSE}
     nStr := 'Update %s Set B_HasUse=B_HasUse-%.2f Where B_Batcode=''%s''';
     nStr := Format(nStr, [sTable_StockBatcode, nVal, nHY]);
+    {$ENDIF}
     gDBConnManager.WorkerExec(FDBConn, nStr);
     //释放使用的批次号
 
@@ -2352,6 +2360,7 @@ begin
             nBillNum := Fields[0].AsFloat;
           //冻结量
 
+          {$IFDEF QSTL}
           nStockNo := Copy(FStockNo,1,Length(FStockNo)-1);
           nType := Copy(FStockNo,Length(FStockNo),1);
 
@@ -2375,6 +2384,16 @@ begin
           nStr := 'select reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
                   ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
           nStr := Format(nStr,[FZhiKa,nStockNo,nType]);
+          {$ELSE}
+          nStr := 'select * from %s where L_ID=''%s''';
+          nStr := Format(nStr,[sTable_Bill,FID]);
+          with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+            nTmp := fieldbyname('L_Order').AsString;
+
+          nStr := 'select reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
+                  ' contractCode=''%s'' and itemcode=''%s'' and enableFlag=''Y''';
+          nStr := Format(nStr,[FZhiKa,nTmp]);
+          {$ENDIF}
           nCErpWorker :=nil;
           try
             with gDBConnManager.SQLQuery(nStr, nCErpWorker, sFlag_CErp) do
@@ -2474,10 +2493,16 @@ begin
           with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
           if RecordCount > 0 then
           begin
+            {$IFDEF YHTL}
+            nSQL := 'Update %s Set D_Sent=D_Sent+(%.2f - %.2f) Where D_ID=''%s''';
+            nSQL := Format(nSQL, [sTable_BatcodeDoc, FValue, nVal,
+                    Fields[0].AsString]);
+            {$ELSE}
             nSQL := 'Update %s Set B_HasUse=B_HasUse+(%.2f - %.2f) ' +
                     'Where B_Batcode=''%s''';
             nSQL := Format(nSQL, [sTable_StockBatcode, FValue, nVal,
                     Fields[0].AsString]);
+            {$ENDIF}
             FListA.Add(nSQL);
           end;
           //更新批次号使用量
@@ -2512,8 +2537,13 @@ begin
         FListA.Add(nSQL);
         //释放冻结金
 
+        {$IFDEF YHTL}
+        nSQL := 'Update %s Set D_Sent=D_Sent-%.2f Where D_ID=''%s''';
+        nSQL := Format(nSQL, [sTable_BatcodeDoc, FValue, FHYDan]);
+        {$ELSE}
         nSQL := 'Update %s Set B_HasUse=B_HasUse-%.2f Where B_Batcode=''%s''';
         nSQL := Format(nSQL, [sTable_StockBatcode, FValue, FHYDan]);
+        {$ENDIF}
         FListA.Add(nSQL);
         //释放使用的批次号
       end;
@@ -2829,6 +2859,14 @@ begin
       
       WriteLog('同步单据'+nStr+'至erp成功.');
     end;
+
+    nStr := CombinStr(FListB, ',', True);
+    if (nBills[0].FStockNo<> '02010001S') and (nBills[0].FStockNo<> '02030001S') then
+    if not TWorkerBusinessCommander.CallMe(cBC_SyncBillToGPS, nStr, nTimeTruckOut, @nOut) then
+    begin
+      nData := nOut.FData;
+      WriteLog('同步单据'+nStr+'至erp失败,出厂失败.');
+    end
   end;
 
   //----------------------------------------------------------------------------

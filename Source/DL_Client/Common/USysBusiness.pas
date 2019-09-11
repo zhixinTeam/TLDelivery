@@ -358,8 +358,12 @@ function GetReaderCard(const nReader,nType: string): string;
 
 function SyncBillToErp(const nBillID:string):Boolean;
 
+function SyncBillToGPS(const nBillID:string):Boolean;
+
+function ReadPoundReaderInfo(const nReader: string; var nDept: string): string;
+//读取nReader岗位、部门
 function VeriFySnapTruck(const nReader: string; nBill: TLadingBillItem;
-                         var nMsg, nPos, nDept: string): Boolean;
+                         var nMsg, nPos: string): Boolean;
 procedure RemoteSnapDisPlay(const nPost, nText, nSucc: string);
 
 function GetTruckLoadLimit(nTruck, nStockName:string):Double;
@@ -3551,6 +3555,22 @@ begin
   else Result := '';
 end;
 
+//Date: 2018-08-03
+//Parm: 读卡器ID
+//Desc: 读取nReader岗位、部门
+function ReadPoundReaderInfo(const nReader: string; var nDept: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := '';
+  nDept:= '';
+  //卡号
+
+  if CallBusinessHardware(cBC_GetPoundReaderInfo, nReader, '', @nOut)  then
+  begin
+    Result := Trim(nOut.FData);
+    nDept:= Trim(nOut.FExtParam);
+  end;
+end;
 
 //Date: 2019-04-12
 //Parm: 单号
@@ -3561,23 +3581,42 @@ begin
   result := CallBusinessCommand(cBC_SyncStockBill, nBillID, '' , @nOut);
 end;
 
+//Date: 2019-04-12
+//Parm: 单号
+//Desc: 同步单据到erp
+function SyncBillToGPS(const nBillID:string):Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  result := CallBusinessCommand(cBC_SyncBillToGPS, nBillID, '' , @nOut);
+end;
+
 
 function VerifySnapTruck(const nReader: string; nBill: TLadingBillItem;
-                         var nMsg, nPos, nDept: string): Boolean;
-var nStr: string;
+                         var nMsg, nPos: string): Boolean;
+var nStr, nDept: string;
     nNeedManu, nUpdate: Boolean;
     nSnapTruck, nTruck, nEvent, nPicName: string;
 begin
   Result := False;
+  nPos := '';
   nNeedManu := False;
   nSnapTruck := '';
-
+  nDept := '';
   nTruck := nBill.Ftruck;
 
+//  if not nBill.FSnapTruck then
+//  begin
+//    Result := True;
+//    nMsg := '读卡器[ %s ]车辆[ %s ]无需进行抓拍识别.';
+//    nMsg := Format(nMsg, [nReader, nTruck]);
+//    Exit;
+//  end;
+
+  nPos := ReadPoundReaderInfo(nReader,nDept);
   if nPos = '' then
   begin
     Result := True;
-    nMsg := '磅站[ %s ]绑定岗位为空,无法进行抓拍识别.';
+    nMsg := '读卡器[ %s ]绑定岗位为空,无法进行抓拍识别.';
     nMsg := Format(nMsg, [nReader]);
     Exit;
   end;
@@ -3601,8 +3640,8 @@ begin
       begin
         nMsg := '磅站[ %s ]绑定岗位[ %s ]干预规则:人工干预已关闭.';
         nMsg := Format(nMsg, [nReader, nPos]);
-        Result := True;
-        Exit;
+        //Result := True;
+        //Exit;
       end;
     end
     else

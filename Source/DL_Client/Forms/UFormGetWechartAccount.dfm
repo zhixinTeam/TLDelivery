@@ -71,6 +71,9 @@ inherited fFormGetWechartAccount: TfFormGetWechartAccount
         end>
       Properties.OnButtonClick = EditNamePropertiesButtonClick
       Properties.OnChange = EditNamePropertiesChange
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyDown = EditNameKeyDown
       OnKeyPress = EditNameKeyPress
@@ -78,9 +81,9 @@ inherited fFormGetWechartAccount: TfFormGetWechartAccount
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
-        Caption = #26597#35810#26465#20214
+        CaptionOptions.Text = #26597#35810#26465#20214
         object dxLayout1Item6: TdxLayoutItem
-          Caption = #35831#36755#20837#30331#24405#36134#21495'/'#25163#26426#21495#30721':'
+          CaptionOptions.Text = #35831#36755#20837#30331#24405#36134#21495'/'#25163#26426#21495#30721':'
           Control = EditName
           ControlOptions.ShowBorder = False
         end

@@ -13,7 +13,7 @@ uses
   cxLookAndFeelPainters, ComCtrls, cxContainer, cxEdit, cxCheckBox,
   cxMaskEdit, cxDropDownEdit, cxTextEdit, cxListView, cxMCListBox,
   dxLayoutControl, StdCtrls, cxMemo, cxLabel, cxCalendar, dxSkinsCore,
-  dxSkinsDefaultPainters, dxLayoutcxEditAdapters;
+  dxSkinsDefaultPainters, dxLayoutcxEditAdapters, DB, ADODB;
 
 type
   TfFormBill = class(TfFormNormal)
@@ -39,6 +39,8 @@ type
     dxLayout1Item15: TdxLayoutItem;
     dxLayout1Group6: TdxLayoutGroup;
     dxLayout1Group4: TdxLayoutGroup;
+    editTrans: TcxComboBox;
+    dxLayout1Item5: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -53,6 +55,7 @@ type
     //载入数据
   public
     { Public declarations }
+    FTransList: TStrings;
     class function CreateForm(const nPopedom: string = '';
       const nParam: Pointer = nil): TWinControl; override;
     class function FormID: integer; override;
@@ -64,7 +67,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ULibFun, DB, IniFiles, UMgrControl, UFormBase, UDataModule, UAdjustForm,
+  ULibFun, IniFiles, UMgrControl, UFormBase, UDataModule, UAdjustForm,
   UBusinessConst, USysPopedom, USysBusiness, USysDB, USysGrid, USysConst,
   UBusinessPacker, UFormWait;
 
@@ -140,9 +143,6 @@ begin
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
     nStr := nIni.ReadString(Name, 'FQLabel', '');
-//    if nStr <> '' then
-//      dxLayout1Item5.Caption := nStr;
-//    //xxxxx
 
     PrintHY.Checked := False;
     //随车开单
@@ -168,6 +168,19 @@ begin
 //  chkMaxMValue.OnClick(nil);
 
   AdjustCtrlData(Self);
+
+  FTransList := TStringList.Create;
+  nStr := 'select * from MDM.MDM_Account where flag=''COMMIT'' and acctypecode like ''%TRA%''';
+  with FDM.QueryTemp(nStr, True) do
+  begin
+    First;
+    while not Eof do
+    begin
+      FTransList.Add(FieldByName('accountcode').AsString);
+      editTrans.Properties.Items.Add(FieldByName('accountname').AsString);
+      Next;
+    end;
+  end;
 end;
 
 procedure TfFormBill.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -385,6 +398,12 @@ begin
 
       Values['CusID'] := gBillItem.FCusID;
       Values['CusName'] := gBillItem.FCusName;
+
+      if editTrans.ItemIndex <> -1 then
+      begin
+        Values['TransCode'] := FTransList.strings[editTrans.ItemIndex];
+        Values['TransName'] := editTrans.Text;
+      end;
     end;
 
     BtnOK.Enabled := False;

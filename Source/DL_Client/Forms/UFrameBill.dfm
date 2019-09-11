@@ -289,5 +289,9 @@ inherited fFrameBill: TfFrameBill
       Caption = #21516#27493#21333#25454#33267'ERP'
       OnClick = ERP1Click
     end
+    object GPS1: TMenuItem
+      Caption = #21516#27493'GPS'
+      OnClick = GPS1Click
+    end
   end
 end

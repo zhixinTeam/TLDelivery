@@ -102,6 +102,8 @@
   //启用喷码机
   {$DEFINE DL_LEDPlay}
   //启用LED大屏显示
+  {$DEFINE DoubleCheck}
+  //二次验收
 {$ENDIF}
 
 //豫鹤同力
@@ -156,5 +158,13 @@
   {$DEFINE StockLimited}
   //限制提货
   {$DEFINE OutDoorLedPlay}
-  //出厂票箱LED屏  
+  //出厂票箱LED屏
+  {$DEFINE DoubleCheck}
+  //二次验收  
+  {$DEFINE SaveHyDanEvent}
+  //保存化验单事件
+  {$DEFINE UseWXServiceEx}
+  //微信二期
+  {$DEFINE SyncMemDate}
+  //出厂推送Mem数据
 {$ENDIF}

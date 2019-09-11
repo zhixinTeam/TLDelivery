@@ -88,7 +88,7 @@ end;
 
 procedure TfFormCusLimit.FormCreate(Sender: TObject);
 var
-  nSql:string;
+  nSql, nStr:string;
   nIni: TIniFile;
 begin
   inherited;
@@ -102,7 +102,7 @@ begin
   end;
 
   FStockList := TStringList.Create;
-  nSql := 'Select D_Value,D_ParamB From %s Where D_Name=''%s''';
+  nSql := 'Select D_Value,D_ParamB,D_Memo From %s Where D_Name=''%s''';
   nSql := Format(nSql,[sTable_SysDict,sFlag_StockItem]);
   with FDM.QueryTemp(nSql) do
   begin
@@ -110,7 +110,7 @@ begin
     while not Eof do
     begin
       FStockList.Add(FieldByName('D_ParamB').AsString);
-      cbbStockNo.Properties.Items.Add(FieldByName('D_Value').AsString);
+      cbbStockNo.Properties.Items.Add(FieldByName('D_Value').AsString+' '+FieldByName('D_Memo').AsString);
       Next;
     end;
   end;

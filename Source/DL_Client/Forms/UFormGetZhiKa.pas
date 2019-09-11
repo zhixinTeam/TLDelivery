@@ -3,7 +3,7 @@
   描述: 开提货单
 *******************************************************************************}
 unit UFormGetZhiKa;
-
+{$I Link.Inc}
 interface
 
 uses
@@ -114,9 +114,25 @@ end;
 //------------------------------------------------------------------------------
 procedure TfFormGetZhiKa.InitFormData(const nCusName: string);
 var nStr: string;
+  nPrice:Double;
 begin
+  {$IFDEF YHTL}
+  nStr := 'Select * from %s where D_Name=''%s''';
+  nStr := Format(nStr,[sTable_SysDict,sFlag_PriceLimit]);
+  with FDM.QueryTemp(nStr) do
+  begin
+    if recordcount=0 then
+      nPrice := 0
+    else
+      nPrice := fieldbyname('D_Value').AsFloat;
+  end;
+  {$ENDIF}
+
   nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v '+
           ' where (contractStat in (''Formal'' , ''Balance'')) '+
+          {$IFDEF YHTL}
+          ' and salePrice>='+floattostr(nPrice)+
+          {$ENDIF}
           ' and enableFlag=''Y''' +
           ' and prodCode not in (select code from mdm.MDM_Item where state=''DELETE'')';
   if nCusName <> '' then
@@ -171,8 +187,8 @@ begin
     Exit;
   end;
 
-
   //验证价格是否是最新的
+  {$IFDEF QSTL}
   with ADOQuery1 do
   begin
     nPriceNow := FieldByName('salePrice').AsFloat;
@@ -225,6 +241,9 @@ begin
       Exit;
     end;
   end;
+  {$ELSE}
+  nPriceZX := ADOQuery1.FieldByName('salePrice').AsFloat;
+  {$ENDIF}
 
   with ADOQuery1,FBillItem^ do
   begin

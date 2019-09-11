@@ -81,6 +81,8 @@ type
     //读卡器有效卡号
     function RemoteSnap_DisPlay(var nData: string): Boolean;
     //抓拍小屏显示
+    function PoundReaderInfo(var nData: string): Boolean;
+    //读取磅站读卡器岗位、部门
   public
     constructor Create; override;
     destructor destroy; override;
@@ -263,6 +265,7 @@ begin
    cBC_LineClose            : Result := LineClose(nData);
    cBC_GetReaderCard        : Result := ReaderCardNo(nData);
    cBC_RemoteSnapDisPlay    : Result := RemoteSnap_DisPlay(nData);
+   cBC_GetPoundReaderInfo   : Result := PoundReaderInfo(nData);
    //xxxxxx
    else
     begin
@@ -808,6 +811,18 @@ begin
                                                     FListA.Values['text'],
                                                     FListA.Values['succ']]);
   WriteLog(nData);
+end;
+
+//Date: 2018-08-03
+//Parm: 读卡器ID[FIn.FData];
+//Desc: 获取指定磅站读卡器上的岗位、部门
+function THardwareCommander.PoundReaderInfo(var nData: string): Boolean;
+var nStr, nPoundID: string;
+    nIdx: Integer;
+begin
+  Result := True;
+
+  FOut.FData := gHardwareHelper.GetReaderInfo(FIn.FData, FOut.FExtParam);
 end;
 
 initialization

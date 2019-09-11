@@ -62,6 +62,9 @@ type
     PrintHY: TcxCheckBox;
     ADOQuery1: TADOQuery;
     Button1: TButton;
+    Button2: TButton;
+    editTrans: TcxComboBox;
+    dxLayout1Item1: TdxLayoutItem;
     procedure BtnExitClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
@@ -73,6 +76,7 @@ type
     procedure editWebOrderNoKeyPress(Sender: TObject; var Key: Char);
     procedure btnClearClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
   private
     { Private declarations }
     FAutoClose:Integer; //窗口自动关闭倒计时（分钟）
@@ -80,6 +84,7 @@ type
     FWebOrderItems:array of stMallOrderItem; //商城订单数组
     FCardData:TStrings; //云天系统返回的大票号信息
     Fbegin:TDateTime;
+    FTransList :TStrings;
     procedure InitListView;
     procedure SetControlsReadOnly;
     function DownloadOrder(const nCard:string):Boolean;
@@ -133,6 +138,7 @@ procedure TfFormNewCard.FormClose(Sender: TObject;
 begin
   FCardData.Free;
   Action:=  caFree;
+  FTransList.Free;
   fFormNewCard := nil;
 end;
 
@@ -212,7 +218,7 @@ end;
 function TfFormNewCard.DownloadOrder(const nCard: string): Boolean;
 var
   nXmlStr,nData:string;
-  nListA,nListB:TStringList;
+  nListA,nListB,nListC:TStringList;
   i:Integer;
   nWebOrderCount:Integer;
 begin
@@ -232,6 +238,49 @@ begin
   Writelog('TfFormNewCard.DownloadOrder(nCard='''+nCard+''') 查询商城订单-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
   //解析网城订单信息
   Writelog('get_shoporderbyno res:'+nData);
+  {$IFDEF UseWXServiceEx}
+    nListA := TStringList.Create;
+    nListB := TStringList.Create;
+    nListC := TStringList.Create;
+    try
+      nListA.Text := PackerDecodeStr(nData);
+
+      nListB.Text := PackerDecodeStr(nListA.Values['details']);
+      nWebOrderCount := nListB.Count;
+      SetLength(FWebOrderItems,nWebOrderCount);
+      for i := 0 to nWebOrderCount-1 do
+      begin
+        nListC.Text := PackerDecodeStr(nListB[i]);
+
+        FWebOrderItems[i].FOrder_id     := nListA.Values['orderId'];
+        FWebOrderItems[i].FOrdernumber  := nListA.Values['orderNo'];
+        FWebOrderItems[i].Ftracknumber  := nListA.Values['licensePlate'];
+        FWebOrderItems[i].FfactoryName  := nListA.Values['factoryName'];
+        FWebOrderItems[i].FdriverId     := nListA.Values['driverId'];
+        FWebOrderItems[i].FdrvName      := nListA.Values['drvName'];
+        FWebOrderItems[i].FdrvPhone     := nListA.Values['FdrvPhone'];
+        FWebOrderItems[i].FType         := nListA.Values['type'];
+        FWebOrderItems[i].FXHSpot       := nListA.Values['orderRemark'];
+        FWebOrderItems[i].FPrice        := '';
+        with nListC do
+        begin
+          FWebOrderItems[i].FCusID          := Values['clientNo'];
+          FWebOrderItems[i].FCusName        := Values['clientName'];
+          FWebOrderItems[i].FGoodsID        := Values['materielNo'];
+          FWebOrderItems[i].FGoodstype      := Values['orderDetailType'];
+          FWebOrderItems[i].FGoodsname      := Values['materielName'];
+          FWebOrderItems[i].FData           := Values['quantity'];
+          FWebOrderItems[i].ForderDetailType:= Values['orderDetailType'];
+          FWebOrderItems[i].FYunTianOrderId := Values['contractNo']; 
+          AddListViewItem(FWebOrderItems[i]);
+        end;
+      end;
+    finally
+      nListC.Free;
+      nListB.Free;
+      nListA.Free;
+    end;
+  {$ELSE}
   nListA := TStringList.Create;
   nListB := TStringList.Create;
   try
@@ -244,7 +293,11 @@ begin
       nListB.Text := PackerDecodeStr(nListA.Strings[i]);
       FWebOrderItems[i].FOrder_id := nListB.Values['order_id'];
       FWebOrderItems[i].FOrdernumber := nListB.Values['ordernumber'];
+      {$IFDEF YHTL}
       FWebOrderItems[i].FGoodsID := nListB.Values['goodsID'];
+      {$ELSE}
+      FWebOrderItems[i].FGoodsID := nListB.Values['goodsID'];
+      {$ENDIF}
       FWebOrderItems[i].FGoodstype := nListB.Values['goodstype'];
       FWebOrderItems[i].FGoodsname := nListB.Values['goodsname'];
       FWebOrderItems[i].FData := nListB.Values['data'];
@@ -256,6 +309,7 @@ begin
     nListB.Free;
     nListA.Free;
   end;
+  {$ENDIF}
   LoadSingleOrder;
 end;
 
@@ -309,6 +363,8 @@ begin
 end;
 
 procedure TfFormNewCard.FormCreate(Sender: TObject);
+var
+  nStr: string;
 begin
   editWebOrderNo.Properties.MaxLength := gSysParam.FWebOrderLength;
   FCardData := TStringList.Create;
@@ -318,12 +374,28 @@ begin
   end;
   InitListView;
   gSysParam.FUserID := 'AICM';
+  
+  FTransList := TStringList.Create;
+  nStr := 'select * from MDM.MDM_Account where flag=''COMMIT'' and acctypecode like ''%TRA%''';
+  with FDM.QueryTemp(nStr, True) do
+  begin
+    First;
+    while not Eof do
+    begin
+      FTransList.Add(FieldByName('accountcode').AsString);
+      editTrans.Properties.Items.Add(FieldByName('accountname').AsString);
+      Next;
+    end;
+  end;
+  {$IFNDEF YHTL}
+  dxLayout1Item1.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFormNewCard.LoadSingleOrder;
 var
   nOrderItem:stMallOrderItem;
-  nRepeat:Boolean;
+  nRepeat, nIsSale:Boolean;
   nWebOrderID, nType, nStockNo:string;
   nMsg,nStr:string;
   nPriceNow, nPriceGP, nZXFD, nPriceZX, nValue: Double;
@@ -344,12 +416,26 @@ begin
   end;
   writelog('TfFormNewCard.LoadSingleOrder 检查商城订单是否重复使用-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
 
-  //填充界面信息
+  {$IFDEF UseWXServiceEx}
+  if Pos('销售',nOrderItem.FType) > 0 then
+    nIsSale := True
+  else
+    nIsSale := False;
 
+  if not nIsSale then
+  begin
+    nMsg := '此订单不是销售订单！';
+    ShowMsg(nMsg,sHint);
+    Writelog(nMsg);
+    Exit;
+  end;
+  {$ENDIF}
+
+  //填充界面信息
   //基本信息
   EditCus.Text    := '';
   EditCName.Text  := '';
-
+  {$IFDEF QSTL}
   nStockNo := Copy(nOrderItem.FGoodsID,1,Length(nOrderItem.FGoodsID)-1);
   nType := Copy(nOrderItem.FGoodsID,Length(nOrderItem.FGoodsID),1);
 
@@ -373,11 +459,10 @@ begin
   //根据erp订单量限制开单
   nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
           'L_StockNo=''%s'' and L_OutFact is null';
-  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,EditStock.Text+nType]);
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,nOrderItem.FGoodsID]);
   with fdm.QueryTemp(nStr) do
     nValue := Fields[0].AsFloat;
   //冻结量
-
 
   nStr := 'select accountCode,salePrice,accountName,realProj,reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
           ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
@@ -457,6 +542,51 @@ begin
       Exit;
     end;
   end;
+  {$ELSE}
+  nStockNo := Copy(nOrderItem.FGoodsID,1,Pos('-',nOrderItem.FGoodsID)-1);
+  nType :=  Copy(nOrderItem.FGoodsID,Pos('-',nOrderItem.FGoodsID)+1,Length(nOrderItem.FGoodsID)-Pos('-',nOrderItem.FGoodsID)-1);
+
+  nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_OutFact is null';
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,nStockNo+sFlag_San]);
+  with FDM.QueryTemp(nStr) do
+    nValue := Fields[0].AsFloat;
+
+  nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v where '+
+          ' contractCode=''%s'' and itemcode=''%s'' and enableFlag=''Y''';
+  nStr := Format(nStr,[nOrderItem.FYunTianOrderId,nType]);
+  with FDM.QueryTemp(nStr, True) do
+  begin
+    if RecordCount < 1 then
+    begin
+      ShowMessage('订单[ '+ nOrderItem.FYunTianOrderId +' ]已丢失.');
+      Exit;
+    end;
+
+    if RecordCount > 0 then
+    begin                                      
+      EditCus.Text    := fieldbyname('accountCode').AsString;
+      EditCName.Text  := fieldbyname('accountName').AsString;
+    end;
+
+    if (FieldByName('contractStat').AsString <> 'Formal') and (FieldByName('contractStat').AsString <> 'Balance') then
+    begin
+      ShowMessage('订单[ '+nOrderItem.FYunTianOrderId+' ]已被管理员作废.');
+      Exit;
+    end;
+    nPriceZX := FieldByName('salePrice').AsFloat;
+
+    if FieldByName('salePrice').AsFloat- nValue - StrToFloat(nOrderItem.FData) < 0 then
+    begin
+      showmessage('ERP中订单数量不足,无法下单.');
+      Exit;
+    end;
+
+    nOrderItem.FGoodsID := nStockNo+sFlag_San;
+    FWebOrderItems[FWebOrderIndex].FGoodsID := nStockNo+sFlag_San;
+    FWebOrderItems[FWebOrderIndex].FItemCode := nType;
+  end;
+
+  {$ENDIF}
 
   //提单信息
   EditType.ItemIndex := 0;
@@ -465,7 +595,6 @@ begin
   EditValue.Text := nOrderItem.FData;
   EditTruck.Text := nOrderItem.Ftracknumber;
   EditPrice.Text  := FloatToStr(nPriceZX);
-
   BtnOK.Enabled := not nRepeat;
 end;
 
@@ -579,19 +708,38 @@ begin
     ShowMsg('车辆存在未完成的提货单,无法开单,请联系管理员',sHint);
     Exit;
   end;
+  {$IFDEF YHTL}
+  if (EditCus.Text = '000072') and (editTrans.ItemIndex=-1) then
+  begin
+    editTrans.SetFocus;
+    ShowMsg('请选择运输公司.',sHint);
+    exit;
+  end;
+  {$ENDIF}
 
   //验证GPS信息
-  nTruck := EditTruck.Text+'%';
+  {$IFDEF QSTL}
+  nTruck := EditTruck.Text +'%';
   if (Pos('熟料',EditSName.Text) =0) and (Pos('石灰石',EditSName.Text) =0) then
     if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
     begin
-      AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
-                          sFlag_Solution_OK, sFlag_DepDaTing, True);
-      ShowMessage(nTruck);
-      Exit;
+      nTruck := EditTruck.Text;
+      if not GetGpsByTruck_New(nTruck) then
+      begin
+        AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
+                        sFlag_Solution_OK, sFlag_DepDaTing, True);
+        ShowMessage(nTruck);
+        Exit;
+      end
+      else
+      begin
+        if nTruck <> '' then
+          ShowMessage(nTruck);
+      end;
     end;
+  {$ENDIF}
 
-  for nIdx:=0 to 3 do
+  for nIdx:=0 to 6 do
   begin
     nNewCardNo := gDispenserManager.GetCardNo(gSysParam.FTTCEK720ID, nHint, False);
     if nNewCardNo <> '' then
@@ -618,21 +766,24 @@ begin
     Exit;
   end;
 
-
   //保存提货单
   nStocks := TStringList.Create;
   nList := TStringList.Create;
   nTmp := TStringList.Create;
   try
     LoadSysDictItem(sFlag_PrintBill, nStocks);
+    {$IFDEF QSTL}
     if Pos('散',EditSName.Text) > 0 then
       nTmp.Values['Type'] := 'S'
     else
       nTmp.Values['Type'] := 'D';
-      
+    nTmp.Values['StockName'] := copy(EditSName.Text,1,Length(EditSName.Text)-4);
+    {$ELSE}
+    nTmp.Values['Type'] := 'S';
+    nTmp.Values['StockName'] := EditSName.Text;
+    {$ENDIF}
     nTmp.Values['StockNO'] := EditStock.Text;
-    //nTmp.Values['StockName'] := EditSName.Text;
-    nTmp.Values['StockName'] := copy(EditSName.Text,1,Length(EditSName.Text)-4);//EditSName.Text;
+    //EditSName.Text;
     nTmp.Values['Price'] := EditPrice.Text;
     nTmp.Values['Value'] := EditValue.Text;
 
@@ -647,6 +798,7 @@ begin
     begin
       Values['Bills'] := PackerEncodeStr(nList.Text);
       Values['ZhiKa'] := nOrderItem.FYunTianOrderId;
+      Values['OrderNo'] := nOrderItem.FItemCode;
       Values['Truck'] := EditTruck.Text;
       Values['Lading'] := sFlag_TiHuo;
       Values['Memo']  := EmptyStr;
@@ -654,6 +806,13 @@ begin
       Values['Seal'] := '';
       Values['HYDan'] := '';
       Values['WebOrderID'] := nWebOrderID;
+      {$IFDEF YHTL}
+      if editTrans.ItemIndex <> -1 then
+      begin
+        Values['TransCode'] := FTransList.strings[editTrans.ItemIndex];
+        Values['TransName'] := editTrans.Text;
+      end;
+      {$ENDIF}
     end;
     nBillData := PackerEncodeStr(nList.Text);
     FBegin := Now;
@@ -786,6 +945,32 @@ begin
   end
   else
   ShowMessage('成功.');
+end;
+
+procedure TfFormNewCard.Button2Click(Sender: TObject);
+var
+  nTruck:string;
+begin
+//  nTruck := editWebOrderNo.Text;
+//  if not GetGpsByTruck_New(nTruck) then
+//  begin
+//    ShowMessage(nTruck);
+//    Exit;
+//  end
+//  else
+//  ShowMessage('成功.');
+
+  nTruck := editWebOrderNo.Text;
+  if not GetGpsByTruck_New(nTruck) then
+  begin
+    ShowMessage(nTruck);
+    Exit;
+  end
+  else
+  begin
+    if nTruck <> '' then
+      ShowMessage(nTruck);
+  end;
 end;
 
 end.

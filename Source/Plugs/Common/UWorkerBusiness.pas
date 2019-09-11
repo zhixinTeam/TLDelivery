@@ -10,7 +10,7 @@ interface
 uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   UBusinessConst, UMgrDBConn, UMgrParam, ZnMD5, ULibFun, UFormCtrl, UBase64,
-  USysLoger, USysDB, UMITConst;
+  USysLoger, USysDB, UMITConst, DateUtils, IdHTTP, SuperObject;
 
 type
   TBusWorkerQueryField = class(TBusinessWorkerBase)
@@ -91,6 +91,8 @@ type
     //获取品种批次号
     function SyncRemoteStockBill(var nData: string): Boolean;
     //同步交货单到ERP
+    function SyncBillToGPS(var nData: string): Boolean;
+    //同步交货单到GPS系统
     function SyncRemoteStockOrder(var nData: string): Boolean;
     //同步采购单到ERP
     function SyncRemoteCustomer(var nData: string): Boolean;
@@ -326,30 +328,32 @@ begin
   end;
 
   case FIn.FCommand of
-   cBC_GetCardUsed         : Result := GetCardUsed(nData);
-   cBC_ServerNow           : Result := GetServerNow(nData);
-   cBC_GetSerialNO         : Result := GetSerailID(nData);
-   cBC_IsSystemExpired     : Result := IsSystemExpired(nData);
-   cBC_GetCustomerMoney    : Result := GetCustomerValidMoney(nData);
-   cBC_GetZhiKaMoney       : Result := GetZhiKaValidMoney(nData);
-   cBC_CustomerHasMoney    : Result := CustomerHasMoney(nData);
-   cBC_SaveTruckInfo       : Result := SaveTruck(nData);
-   cBC_UpdateTruckInfo     : Result := UpdateTruck(nData);
-   cBC_GetTruckPoundData   : Result := GetTruckPoundData(nData);
-   cBC_SaveTruckPoundData  : Result := SaveTruckPoundData(nData);
-   cBC_UserLogin           : Result := Login(nData);
-   cBC_UserLogOut          : Result := LogOut(nData);
-   cBC_GetStockBatcode     : Result := GetStockBatcode(nData);
+    cBC_GetCardUsed         : Result := GetCardUsed(nData);
+    cBC_ServerNow           : Result := GetServerNow(nData);
+    cBC_GetSerialNO         : Result := GetSerailID(nData);
+    cBC_IsSystemExpired     : Result := IsSystemExpired(nData);
+    cBC_GetCustomerMoney    : Result := GetCustomerValidMoney(nData);
+    cBC_GetZhiKaMoney       : Result := GetZhiKaValidMoney(nData);
+    cBC_CustomerHasMoney    : Result := CustomerHasMoney(nData);
+    cBC_SaveTruckInfo       : Result := SaveTruck(nData);
+    cBC_UpdateTruckInfo     : Result := UpdateTruck(nData);
+    cBC_GetTruckPoundData   : Result := GetTruckPoundData(nData);
+    cBC_SaveTruckPoundData  : Result := SaveTruckPoundData(nData);
+    cBC_UserLogin           : Result := Login(nData);
+    cBC_UserLogOut          : Result := LogOut(nData);
+    cBC_GetStockBatcode     : Result := GetStockBatcode(nData);
 
-   //同步交货单，采购单，客户，供应商
-   cBC_SyncStockBill       : Result := SyncRemoteStockBill(nData);
-   cBC_SyncStockOrder      : Result := SyncRemoteStockOrder(nData);
-   cBC_SyncCustomer        : Result := SyncRemoteCustomer(nData);
-   cBC_SyncProvider        : Result := SyncRemoteProviders(nData);
+    //同步交货单，采购单，客户，供应商
+    cBC_SyncStockBill       : Result := SyncRemoteStockBill(nData);
+    cBC_SyncStockOrder      : Result := SyncRemoteStockOrder(nData);
+    cBC_SyncCustomer        : Result := SyncRemoteCustomer(nData);
+    cBC_SyncProvider        : Result := SyncRemoteProviders(nData);
 
-   cBC_GetCardLength       : Result := GetCardLength(nData);     //获取卡是否是长期卡
-   cBC_VerifySnapTruck     : Result := VerifySnapTruck(nData);
-   else
+    cBC_GetCardLength       : Result := GetCardLength(nData);     //获取卡是否是长期卡
+    cBC_VerifySnapTruck     : Result := VerifySnapTruck(nData);
+
+    cBC_SyncBillToGPS       :  Result := SyncBillToGPS(nData);
+  else
     begin
       Result := False;
       nData := '无效的业务代码(Invalid Command).';
@@ -702,7 +706,11 @@ begin
     begin
       if RecordCount > 0 then
       begin
+        {$IFDEF QSTL}
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
+        {$ELSE}
+        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
+        {$ENDIF}
           nCredit := FieldByName('oweValue').AsFloat;
       end;
 
@@ -989,7 +997,7 @@ end;
 //Parm: 物料编号[FIn.FData];预扣减量[FIn.ExtParam];
 //Desc: 按规则生成指定品种的批次编号
 function TWorkerBusinessCommander.GetStockBatcode(var nData: string): Boolean;
-var nStr,nP: string;
+var nStr,nP, nBatchNew,nSelect: string;
     nNew: Boolean;
     nInt,nInc: Integer;
     nVal,nPer: Double;
@@ -1036,6 +1044,14 @@ var nStr,nP: string;
                 ], sTable_StockBatcode, SF('B_Stock', FIn.FData), False);
       gDBConnManager.WorkerExec(FDBConn, nStr);
     end;
+    //Desc: 封存记录
+    procedure OutuseCode(const nID: string);
+    begin
+      nStr := 'Update %s Set D_Valid=''%s'',D_LastDate=%s Where D_ID=''%s''';
+      nStr := Format(nStr, [sTable_BatcodeDoc, sFlag_No,
+              sField_SQLServer_Now, nID]);
+      gDBConnManager.WorkerExec(FDBConn, nStr);
+    end;
 begin
   Result := True;
   FOut.FData := '';
@@ -1047,7 +1063,109 @@ begin
   if RecordCount > 0 then
   begin
     nStr := Fields[0].AsString;
-    if nStr <> sFlag_Yes then Exit;
+    if nStr <> sFlag_Yes then
+    begin
+      nStr := 'Select * from %s Where D_Stock=''%s'' and D_Valid=''%s'' '+
+              'Order By D_UseDate';
+      nStr := Format(nStr, [sTable_BatcodeDoc, FIn.FData, sFlag_Yes]);
+      //xxxxxx
+
+
+      with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+      begin
+        if RecordCount < 1 then
+        begin
+          Result := False;
+          nData := '物料[ %s ]批次不存在.';
+          nData := Format(nData, [FIn.FData]);
+          Exit;
+        end;
+
+        First;
+        nVal := 0;
+        nInc := 1;
+
+        nBatchNew := '';
+        nSelect := sFlag_No;
+
+        while not Eof do
+        try
+          nVal := FieldByName('D_Plan').AsFloat - FieldByName('D_Sent').AsFloat +
+                  FieldByName('D_Rund').AsFloat - FieldByName('D_Init').AsFloat -
+                  StrToFloat(FListA.Values['Value']);
+
+          if FloatRelation(nVal, 0, rtLE) then
+          begin
+            OutuseCode(FieldByName('D_ID').AsString);
+            Continue;
+          end; //超发
+
+          nInt := FieldByName('D_ValidDays').AsInteger;
+          if (nInt > 0) and (Now() - FieldByName('D_UseDate').AsDateTime >= nInt) then
+          begin
+            OutuseCode(FieldByName('D_ID').AsString);
+            Continue;
+          end; //编号过期
+
+          if nInc = 1 then
+          begin
+            nStr := Trim(FListA.Values['CusID']);
+            if (nStr <> '') and
+               (nStr <> FieldByName('D_CusID').AsString) then Continue;
+            //首轮检索客户专用
+          end;
+
+          nSelect   := sFlag_Yes;
+          nBatchNew := FieldByName('D_ID').AsString;
+          Break;
+        finally
+          Next;
+          if Eof and (nInc = 1) and (nSelect <> sFlag_Yes) then
+          begin
+            Inc(nInc);
+            First;
+          end;
+        end;
+
+        if nSelect <> sFlag_Yes then
+        begin
+          Result := False;
+          nData := '满足条件的物料[ %s.%s ]批次不存在.';
+          nData := Format(nData, [FIn.FData, FListA.Values['Brand']]);
+          Exit;
+        end;
+
+        if nVal <= FieldByName('D_Warn').AsFloat then //超发提醒
+        begin
+          nStr := '物料[ %s.%s ]即将更换批次号,请通知化验室准备取样.';
+          nStr := Format(nStr, [FIn.FData,
+                                FListA.Values['Brand']]);
+          //xxxxx
+      
+          FOut.FBase.FErrCode := sFlag_ForceHint;
+          FOut.FBase.FErrDesc := nStr;
+          OutuseCode(nBatchNew);
+        end;
+
+        nStr := 'Update %s Set D_LastDate=null Where D_Valid=''%s'' ' +
+                'And D_LastDate is not NULL';
+        nStr := Format(nStr, [sTable_BatcodeDoc, sFlag_Yes]);
+        gDBConnManager.WorkerExec(FDBConn, nStr);
+        //启用状态的批次号，去掉终止时间
+
+        FOut.FData := nBatchNew;
+        if FOut.FBase.FErrCode = sFlag_ForceHint then
+        begin
+          {$IFDEF SaveHyDanEvent}
+          SaveHyDanEvent(FIn.FData,FOut.FBase.FErrDesc,
+                         sFlag_DepDaTing,sFlag_Solution_OK,sFlag_DepHuaYan);
+          {$ENDIF}
+        end;
+        FOut.FBase.FResult := True;
+        Result := True;
+      end;
+      Exit;
+    end;
   end  else Exit;
   //默认不使用批次号
 
@@ -1272,7 +1390,7 @@ begin
         Exit;
       end;
     end;
-    
+
     while not Eof do
     begin
       //生成当日最大单号
@@ -1336,7 +1454,9 @@ begin
                   SF('balFlag',                 'Y'),
                   SF('balanceDate',             FIn.FExtParam),  //FieldByName('L_OutFact').AsString),//
                   SF('salOrgzCode',             '001'),
-                  SF('remark',                  FieldByName('L_ID').AsString),                                                               //
+                  SF('remark',                  FieldByName('L_ID').AsString),
+                  SF('transAccountCode',        FieldByName('L_TransCode').AsString),
+                  SF('transAccountName',        FieldByName('L_TransName').AsString),
                   SF('fillDate',                FieldByName('L_Date').AsString)                                                     //
                   ], 'SAL.SAL_PickBill',             '', True);
 
@@ -1448,6 +1568,74 @@ begin
   end;
 end;
 
+function TWorkerBusinessCommander.SyncBillToGPS(var nData: string): Boolean;
+var
+  nStr, nSQL, nAPIUrl: string;
+  HttpClient: TIdHTTP;
+  nResList: TStringStream;
+  Jo:ISuperObject;
+  nCode:Integer;
+  nBegin: TDateTime;
+begin
+  Result := False;
+  nBegin := Now;
+  
+  nStr := AdjustListStrFormat(FIn.FData , '''' , True , ',' , True);  
+  nSQL := 'select S_Bill.*,P_PStation,P_MStation,C_Area,C_Addr From $BL left join $PL ' +
+          'on L_ID=P_Bill left join S_Customer on l_cusid=C_ID where L_ID In ($IN)';
+  nSQL := MacroValue(nSQL, [MI('$BL', sTable_Bill), MI('$PL', sTable_PoundLog) , MI('$IN', nStr)]);
+
+  nResList := TStringStream.Create('');
+  HttpClient := TIdHttp.Create();
+
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL)  do
+  try
+    if RecordCount < 1 then
+    begin
+      nData := '编号为[ %s ]的交货单不存在.';
+      nData := Format(nData, [FIn.FData]);
+      Exit;
+    end;
+    nAPIUrl :='http://39.98.224.105:8012/GetDateServices.asmx/GetDate?method='+
+              'LeaveTheFactoryRecord&ApplyId=or5zxujw7lo&PlateNumber=%s'+
+              '&BillNumber=%s&OrderNumber=%s&CustomerCode=%s&CustomerName=%s'+
+              '&MaterialName=%s&MaterialType=%s&PickupNum=%s&EnclosureType=0'+
+              '&FactoryTime=%s&City=%s&Area=%s&Detailed=%s';
+
+    nAPIUrl := Format(nAPIUrl, [FieldByName('L_Truck').AsString,
+               FieldByName('L_ID').AsString, FieldByName('L_ZhiKa').AsString,
+               FieldByName('L_CusId').AsString, FieldByName('L_CusName').AsString,
+               FieldByName('L_StockName').AsString, FieldByName('L_Type').AsString,
+               FieldByName('L_Value').AsString, DateTimeToUnix(StrToDateTime(FIn.FExtParam)),
+               FieldByName('C_Area').AsString, FieldByName('C_Addr').AsString]);
+
+    HttpClient.Get(nAPIUrl,nResList);
+    jo := so(UTF8Decode(nResList.DataString));
+    nStr := Jo['success'].AsString;
+    if nStr = 'true' then
+    begin
+      Result := true;
+      Exit;
+    end
+    else
+    begin
+      nCode := Jo['errorCode'].AsInteger;
+      case nCode of
+        518:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':ApplyId填写错误.';
+        521:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':根据提供的市区，未能匹配到相应区域围栏.';
+        1002:  nStr := 'GPS返回错误码:'+IntToStr(nCode)+':设备黑户状态';
+        2000:  nStr := 'GPS返回错误码:'+IntToStr(nCode)+':根据车牌号，未能匹配到设备信息.';
+        50019: nStr := 'GPS返回错误码:'+IntToStr(nCode)+':ApplyId查询权限不足.';
+      end;
+      writelog('推送提货单['+FieldByName('L_ID').AsString+']至GPS失败,原因:'+nStr);
+    end;
+    writelog('推送提货单['+FieldByName('L_ID').AsString+']至GPS耗时:'+InttoStr(MilliSecondsBetween(Now, nBegin))+'ms');
+  finally
+    nResList.Free;
+    HttpClient.Free;
+  end;
+end;
+
 //同步采购单到ERP
 function TWorkerBusinessCommander.SyncRemoteStockOrder(var nData: string): Boolean;
 var
@@ -1542,10 +1730,10 @@ begin
         end;
       end;
 
-      if FieldByName('O_OrderType').AsString = sFlag_TiHuo then
-        nValue := -FieldByName('D_Value').AsFloat
+      if FieldByName('O_OrderType').AsString = sFlag_CaiTui then
+        nStr := sFlag_CaiTui
       else
-        nValue := FieldByName('D_Value').AsFloat;
+        nstr := sFlag_CaiGou;
 
       nSQL := 'select * from PUR.PUR_ContractMain where billNum=''%s''';
       nSQL := Format(nSQL,[FieldByName('O_BID').AsString]);
@@ -1556,7 +1744,7 @@ begin
                     SF('billNum',               nBill),
                     SF('serialNum',             '1'),
                     SF('contractNum',           FieldByName('O_BID').AsString),
-                    SF('billType',              'D'),
+                    SF('billType',              nStr),
                     SF('supId',                 FieldByName('O_ProID').AsString),
                     SF('supName',               FieldByName('O_ProName').AsString),
                     SF('buyerID',               nTmpDataSet.FieldByName('makeEmpid').AsString),
@@ -1571,10 +1759,10 @@ begin
                     //SF('qstate',                FieldByName('').AsString),  //质检标致 1:已接收  2:已完成  A:未报检 0:已报检
                     //checkstate  T:退货   V:作废
                     SF('mstate',                '1'),  //计量标记 1：已完成，A：未报计量
-                    SF('mresult',               nValue, sfVal),//FieldByName('D_Value').AsFloat),
+                    SF('mresult',               FieldByName('D_Value').AsFloat, sfVal),//
                     SF('carFlag',               '1'),  //出厂标记  0:否  1:是
                     SF('editFlag',              '1'),
-                    SF('realQty',               nvalue, sfval),//FieldByName('D_Value').AsFloat),
+                    SF('realQty',               FieldByName('D_Value').AsFloat, sfval),//FieldByName('D_Value').AsFloat),
                     SF('unitName',              '吨'),
                     SF('grossWeight',           FieldByName('D_MValue').AsFloat),
                     SF('tareWeight',            FieldByName('D_PValue').AsFloat),

@@ -55,7 +55,6 @@ inherited fFormCusLimit: TfFormCusLimit
       Height = 342
       Columns = <
         item
-          Alignment = taCenter
           Caption = #21306#22495#21517#31216
           Width = 200
         end

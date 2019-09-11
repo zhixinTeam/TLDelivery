@@ -53,6 +53,7 @@ type
     N10: TMenuItem;
     N11: TMenuItem;
     ERP1: TMenuItem;
+    GPS1: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -70,6 +71,7 @@ type
     procedure N11Click(Sender: TObject);
     procedure cxView1DblClick(Sender: TObject);
     procedure ERP1Click(Sender: TObject);
+    procedure GPS1Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
@@ -230,7 +232,7 @@ end;
 
 //Desc: 删除
 procedure TfFrameBill.BtnDelClick(Sender: TObject);
-var nStr: string;
+var nStr, nID: string;
     nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
@@ -241,7 +243,7 @@ begin
   with nP do
   begin
     nStr := SQLQuery.FieldByName('L_ID').AsString;
-    nStr := Format('请填写删除[ %s ]单据的原因', [nStr]);
+    nStr := Format('请填写删除[ %s ]单据的原因,须大于等于5个汉字', [nStr]);
 
     FCommand := cCmd_EditData;
     FParamA := nStr;
@@ -256,14 +258,15 @@ begin
     if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
   end;
 
-  if DeleteBill(SQLQuery.FieldByName('L_ID').AsString) then
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+  if DeleteBill(nID) then
   begin
     InitFormData(FWhere);
     ShowMsg('提货单已删除', sHint);
   end;
 
   try
-    SaveWebOrderDelMsg(SQLQuery.FieldByName('L_ID').AsString,sFlag_Sale);
+    SaveWebOrderDelMsg(nID,sFlag_Sale);
   except
   end;
   //插入删除推送
@@ -497,6 +500,18 @@ begin
       ShowMsg('同步单据成功.',sHint);
     end;
   end;
+end;
+
+procedure TfFrameBill.GPS1Click(Sender: TObject);
+var
+  nid:string;
+begin
+  nID :=  SQLQuery.FieldByName('L_ID').AsString;
+  if not SyncBillToGPS(nID) then
+  begin
+    ShowMessage('同步单据失败.');
+    exit;
+  end
 end;
 
 initialization

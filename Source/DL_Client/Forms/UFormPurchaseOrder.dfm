@@ -1,30 +1,30 @@
 inherited fFormPurchaseOrder: TfFormPurchaseOrder
   Left = 451
   Top = 243
-  ClientHeight = 366
-  ClientWidth = 477
+  ClientHeight = 427
+  ClientWidth = 479
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 477
-    Height = 366
+    Width = 479
+    Height = 427
     OptionsItem.AutoControlTabOrders = False
     inherited BtnOK: TButton
-      Left = 331
-      Top = 333
+      Left = 333
+      Top = 394
       Caption = #24320#21333
       TabOrder = 8
     end
     inherited BtnExit: TButton
-      Left = 401
-      Top = 333
+      Left = 403
+      Top = 394
       TabOrder = 10
     end
     object EditValue: TcxTextEdit [2]
       Left = 279
-      Top = 239
+      Top = 262
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
@@ -103,7 +103,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object EditTruck: TcxButtonEdit [9]
       Left = 81
-      Top = 239
+      Top = 262
       ParentFont = False
       Properties.Buttons = <
         item
@@ -120,7 +120,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object EditCardType: TcxComboBox [10]
       Left = 81
-      Top = 264
+      Top = 287
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.Items.Strings = (
@@ -135,13 +135,13 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object cxLabel1: TcxLabel [11]
       Left = 221
-      Top = 264
+      Top = 287
       Caption = #27880':'#20020#26102#21345#20986#21378#26102#22238#25910';'#22266#23450#21345#20986#21378#26102#19981#22238#25910
       ParentFont = False
     end
     object EditKFValue: TcxTextEdit [12]
       Left = 81
-      Top = 289
+      Top = 312
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
@@ -151,7 +151,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object EditKFLS: TcxTextEdit [13]
       Left = 279
-      Top = 285
+      Top = 308
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
@@ -160,7 +160,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object ckbOrderType: TcxCheckBox [14]
       Left = 11
-      Top = 333
+      Top = 394
       Caption = #37319#36141#36864#36135
       ParentFont = False
       Style.BorderColor = clWindowFrame
@@ -169,6 +169,16 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       TabOrder = 17
       Transparent = True
       Width = 86
+    end
+    object editMemo: TcxTextEdit [15]
+      Left = 45
+      Top = 369
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      TabOrder = 18
+      Width = 368
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -260,6 +270,11 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
             ControlOptions.ShowBorder = False
           end
         end
+      end
+      object dxLayout1Item12: TdxLayoutItem [2]
+        CaptionOptions.Text = #22791#27880':'
+        Control = editMemo
+        ControlOptions.ShowBorder = False
       end
       inherited dxLayout1Group1: TdxLayoutGroup
         object dxLayout1Item10: TdxLayoutItem [0]

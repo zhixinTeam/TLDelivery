@@ -11,7 +11,8 @@ uses
   UFormNormal, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, ComCtrls, ImgList, ExtCtrls,
   cxTextEdit, cxMaskEdit, cxButtonEdit, cxListView, cxLabel,
-  dxLayoutControl, StdCtrls;
+  dxLayoutControl, StdCtrls, dxSkinsCore, dxSkinsDefaultPainters,
+  dxLayoutcxEditAdapters;
 
 type
   TWechatCustomer = record
@@ -85,6 +86,7 @@ begin
       nIdx := Integer(ListQuery.Selected.Data);
       nP.FParamB := FUsers[nIdx].FBindID;
       nP.FParamC := FUsers[nIdx].FCusName;
+      nP.FParamD := FUsers[nIdx].FPhone;
     end;
   finally
     Free;

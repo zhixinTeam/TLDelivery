@@ -46,6 +46,8 @@ type
     dxLayout1Item7: TdxLayoutItem;
     ckbOrderType: TcxCheckBox;
     dxLayout1Item10: TdxLayoutItem;
+    editMemo: TcxTextEdit;
+    dxLayout1Item12: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -309,17 +311,20 @@ begin
     Values['KFLS']          := Trim(EditKFLS.Text);
 
     if ckbOrderType.Checked then
-      Values['OrderType']          := sFlag_TiHuo
+      Values['OrderType']          := sFlag_CaiTui
     else
-      Values['OrderType']          := sFlag_Provide;//采购退货
+      Values['OrderType']          := sFlag_CaiGou;//采购退货
+    Values['thMemo'] := editMemo.Text;
   end;
 
   nOrder := SaveOrder(PackerEncodeStr(FListA.Text));
   if nOrder='' then Exit;
 
+  {$IFNDEF YHTL}
   if nCardType = 'L' then
     PrintRCOrderReport(nOrder, True);
   //临时卡提示打印入厂
+  {$ENDIF}
 
   SetOrderCard(nOrder, FListA.Values['Truck'], True);
   //办理磁卡

@@ -11,7 +11,8 @@ uses
   UDataModule, cxGraphics, StdCtrls, cxMaskEdit, cxDropDownEdit,
   cxMCListBox, cxMemo, dxLayoutControl, cxContainer, cxEdit, cxTextEdit,
   cxControls, cxButtonEdit, cxCalendar, ExtCtrls, cxPC, cxLookAndFeels,
-  cxLookAndFeelPainters;
+  cxLookAndFeelPainters, dxSkinsCore, dxSkinsDefaultPainters,
+  dxLayoutcxEditAdapters, dxLayoutControlAdapters;
 
 type
   TfFormHYRecord = class(TForm)
@@ -98,6 +99,12 @@ type
     cxTextEdit57: TcxTextEdit;
     Label44: TLabel;
     cxTextEdit58: TcxTextEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    cxTextEdit1: TcxTextEdit;
+    cxTextEdit2: TcxTextEdit;
+    cxTextEdit3: TcxTextEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditIDPropertiesButtonClick(Sender: TObject;

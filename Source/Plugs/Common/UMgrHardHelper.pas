@@ -115,6 +115,7 @@ type
     procedure StopRead;
     //启停读取
     function GetPoundCard(const nPound: string; var nReader: string): string;
+    function GetReaderInfo(const nReader: string;var nDept: string): string;
     procedure SetPoundCardExt(const nPound,nExtCard: string);
     //磅站卡号
     procedure OpenDoor(const nReader: string);
@@ -686,6 +687,32 @@ begin
     SetReaderCard(nR, nStr);
   finally
     FOwner.FSyncLock.Leave;
+  end;
+end;
+
+//Desc: 获取nReader所属岗位、部门
+function THardwareHelper.GetReaderInfo(const nReader: string;
+  var nDept: string): string;
+var nIdx: Integer;
+begin
+  FSyncLock.Enter;
+  try
+    Result := '';
+
+    for nIdx:=Low(FItems) to High(FItems) do
+    if CompareText(nReader, FItems[nIdx].FID) = 0 then
+    begin
+      Result := FItems[nIdx].FPost;
+      //xxxxx
+
+      if Result <> '' then
+      begin
+        nDept := FItems[nIdx].FDept;
+        Break;
+      end;
+    end;
+  finally
+    FSyncLock.Leave;
   end;
 end;
 
