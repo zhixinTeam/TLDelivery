@@ -3587,7 +3587,7 @@ end;
 function SyncBillToGPS(const nBillID:string):Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
-  result := CallBusinessCommand(cBC_SyncBillToGPS, nBillID, '' , @nOut);
+  result := CallBusinessCommand(cBC_SyncBillToGPS, nBillID, FormatDateTime('yyyy-mm-dd HH:MM:SS',Now) , @nOut);
 end;
 
 

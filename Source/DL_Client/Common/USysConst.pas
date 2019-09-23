@@ -186,7 +186,9 @@ const
   cFI_FormCusLimit      = $0098;                     //客户提货限制
   cFI_FormQryCard       = $0099;                     //查询磁卡信息
   cFI_FrameOrderCheck   = $0100;                     //审核采购拒收单
-
+  cFI_FormSetPriceLimit = $0101;                     //设置限价
+  cFI_FramePurDayReport = $0103;                     //采购日报表
+  cFI_FrameSaleDayReport= $0104;                     //销售日报表
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -344,6 +346,7 @@ begin
   AddMenuModuleItem('MAIN_A07', cFI_FrameAuthorize);
   AddMenuModuleItem('MAIN_A08', cFI_FormTodo, mtForm);
   AddMenuModuleItem('MAIN_A09', cFI_FrameTodo);
+  AddMenuModuleItem('MAIN_A10', cFI_FormSetPriceLimit, mtForm);
 
   AddMenuModuleItem('MAIN_B01', cFI_FormBaseInfo, mtForm);
   AddMenuModuleItem('MAIN_B02', cFI_FrameCustomer);
@@ -412,7 +415,7 @@ begin
 
   AddMenuModuleItem('MAIN_M01', cFI_FrameProvider);
   AddMenuModuleItem('MAIN_M02', cFI_FrameMaterails);
-  AddMenuModuleItem('MAIN_M03', cFI_FrameMakeOCard); 
+  AddMenuModuleItem('MAIN_M03', cFI_FrameMakeOCard);
   AddMenuModuleItem('MAIN_M04', cFI_FrameOrder);
   AddMenuModuleItem('MAIN_M08', cFI_FrameOrderDetail);
   AddMenuModuleItem('MAIN_M09', cFI_FrameOrderBase);
@@ -425,6 +428,8 @@ begin
   AddMenuModuleItem('MAIN_M06', cFI_FrameTransBase);
   AddMenuModuleItem('MAIN_L11', cFI_FrameTransferDetailQuery);
   AddMenuModuleItem('MAIN_L12', cFI_FormQryCard, mtForm);
+  AddMenuModuleItem('MAIN_L13', cFI_FrameSaleDayReport);
+  AddMenuModuleItem('MAIN_L14', cFI_FramePurDayReport);
 end;
 
 //Desc: 清理模块列表

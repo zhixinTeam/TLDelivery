@@ -10,7 +10,7 @@ interface
 uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   UBusinessConst, UMgrDBConn, UMgrParam, ZnMD5, ULibFun, UFormCtrl, UBase64,
-  USysLoger, USysDB, UMITConst, DateUtils, IdHTTP, SuperObject;
+  USysLoger, USysDB, UMITConst, DateUtils, IdHTTP, SuperObject, IdURI;
 
 type
   TBusWorkerQueryField = class(TBusinessWorkerBase)
@@ -1579,7 +1579,7 @@ var
 begin
   Result := False;
   nBegin := Now;
-  
+
   nStr := AdjustListStrFormat(FIn.FData , '''' , True , ',' , True);  
   nSQL := 'select S_Bill.*,P_PStation,P_MStation,C_Area,C_Addr From $BL left join $PL ' +
           'on L_ID=P_Bill left join S_Customer on l_cusid=C_ID where L_ID In ($IN)';
@@ -1602,13 +1602,19 @@ begin
               '&MaterialName=%s&MaterialType=%s&PickupNum=%s&EnclosureType=0'+
               '&FactoryTime=%s&City=%s&Area=%s&Detailed=%s';
 
-    nAPIUrl := Format(nAPIUrl, [FieldByName('L_Truck').AsString,
-               FieldByName('L_ID').AsString, FieldByName('L_ZhiKa').AsString,
-               FieldByName('L_CusId').AsString, FieldByName('L_CusName').AsString,
-               FieldByName('L_StockName').AsString, FieldByName('L_Type').AsString,
-               FieldByName('L_Value').AsString, DateTimeToUnix(StrToDateTime(FIn.FExtParam)),
-               FieldByName('C_Area').AsString, FieldByName('C_Addr').AsString]);
-
+    nAPIUrl := Format(nAPIUrl, [UTF8Encode(FieldByName('L_Truck').AsString),
+               FieldByName('L_ID').AsString,
+               FieldByName('L_ZhiKa').AsString,
+               FieldByName('L_CusId').AsString,
+               UTF8Encode(FieldByName('L_CusName').AsString),
+               UTF8Encode(FieldByName('L_StockName').AsString),
+               FieldByName('L_Type').AsString,
+               FieldByName('L_Value').AsString,
+               IntToStr(DateTimeToUnix(StrToDateTime(FIn.FExtParam))*1000-28800000),
+               UTF8Encode(FieldByName('C_Area').AsString),
+               UTF8Encode(FieldByName('C_Addr').AsString),
+               UTF8Encode(FieldByName('L_OutMan').AsString)]);
+    nAPIUrl := TIdURI.URLEncode(nAPIUrl);
     HttpClient.Get(nAPIUrl,nResList);
     jo := so(UTF8Decode(nResList.DataString));
     nStr := Jo['success'].AsString;
@@ -1622,6 +1628,8 @@ begin
       nCode := Jo['errorCode'].AsInteger;
       case nCode of
         518:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':ApplyId填写错误.';
+        519:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':行政区划为空.';
+        520:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':提货单重复推送.';
         521:   nStr := 'GPS返回错误码:'+IntToStr(nCode)+':根据提供的市区，未能匹配到相应区域围栏.';
         1002:  nStr := 'GPS返回错误码:'+IntToStr(nCode)+':设备黑户状态';
         2000:  nStr := 'GPS返回错误码:'+IntToStr(nCode)+':根据车牌号，未能匹配到设备信息.';

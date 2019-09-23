@@ -240,6 +240,15 @@ begin
     ShowMsg('请选择要删除的记录', sHint); Exit;
   end;
 
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+  {$IFDEF YHTL}
+  if SQLQuery.FieldByName('L_Outfact').AsString <> '' then
+  begin
+    ShowMsg('该订单已经完成，不允许删除.',sHint);
+    Exit;
+  end;
+  {$ENDIF}
+
   with nP do
   begin
     nStr := SQLQuery.FieldByName('L_ID').AsString;
@@ -250,15 +259,13 @@ begin
     FParamB := 320;
     FParamD := 10;
 
-    nStr := SQLQuery.FieldByName('R_ID').AsString;
     FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
-    FParamC := Format(FParamC, [sTable_Bill, nStr]);
+    FParamC := Format(FParamC, [sTable_Bill, nID]);
 
     CreateBaseFormItem(cFI_FormMemo, '', @nP);
     if (FCommand <> cCmd_ModalResult) or (FParamA <> mrOK) then Exit;
   end;
 
-  nID := SQLQuery.FieldByName('L_ID').AsString;
   if DeleteBill(nID) then
   begin
     InitFormData(FWhere);

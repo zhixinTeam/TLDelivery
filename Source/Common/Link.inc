@@ -48,7 +48,7 @@
 
 //--------------------------------- 特定系统 -----------------------------------
 
-{$DEFINE YHTL}
+{$DEFINE QSTL}
 //特定系统
 
 //确山同力
@@ -104,6 +104,8 @@
   //启用LED大屏显示
   {$DEFINE DoubleCheck}
   //二次验收
+  {$DEFINE SyncToGPS}
+  //推送单据至GPS系统
 {$ENDIF}
 
 //豫鹤同力
@@ -165,6 +167,6 @@
   //保存化验单事件
   {$DEFINE UseWXServiceEx}
   //微信二期
-  {$DEFINE SyncMemDate}
+  {.$DEFINE SyncMemDate}
   //出厂推送Mem数据
 {$ENDIF}

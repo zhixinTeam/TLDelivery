@@ -47,7 +47,8 @@ uses
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormChangeState,
   UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail,UFormCusLimit,
   UFormQryCard, UFrameZTQuery, UFrameOrderCheck, UFrameBatchNo,
-  UFormBatcodeEdit,UFrameBatcodeQuery ;
+  UFormBatcodeEdit,UFrameBatcodeQuery, UFormSetPriceLimit, UFrameSaleDayReport,
+  UFramePurDayReport;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

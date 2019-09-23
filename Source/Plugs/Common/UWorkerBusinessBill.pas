@@ -2860,6 +2860,7 @@ begin
       WriteLog('同步单据'+nStr+'至erp成功.');
     end;
 
+    {$IFDEF SyncToGPS}
     nStr := CombinStr(FListB, ',', True);
     if (nBills[0].FStockNo<> '02010001S') and (nBills[0].FStockNo<> '02030001S') then
     if not TWorkerBusinessCommander.CallMe(cBC_SyncBillToGPS, nStr, nTimeTruckOut, @nOut) then
@@ -2867,6 +2868,7 @@ begin
       nData := nOut.FData;
       WriteLog('同步单据'+nStr+'至erp失败,出厂失败.');
     end
+    {$ENDIF}
   end;
 
   //----------------------------------------------------------------------------

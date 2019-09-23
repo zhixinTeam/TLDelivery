@@ -168,9 +168,9 @@ object fFormMain: TfFormMain
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 570
+    Top = 665
     Width = 829
-    Height = 104
+    Height = 9
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -179,7 +179,7 @@ object fFormMain: TfFormMain
       Left = 265
       Top = 0
       Width = 281
-      Height = 104
+      Height = 9
       Align = alClient
       AutoSize = True
       BevelOuter = bvNone
@@ -208,17 +208,17 @@ object fFormMain: TfFormMain
         Properties.Alignment.Vert = taVCenter
         Properties.WordWrap = True
         Transparent = True
-        Height = 104
+        Height = 9
         Width = 281
         AnchorX = 141
-        AnchorY = 52
+        AnchorY = 5
       end
     end
     object PanelBRight: TPanel
       Left = 546
       Top = 0
       Width = 283
-      Height = 104
+      Height = 9
       Align = alRight
       AutoSize = True
       BevelOuter = bvNone
@@ -234,7 +234,7 @@ object fFormMain: TfFormMain
         Left = 0
         Top = 0
         Width = 283
-        Height = 104
+        Height = 9
         Align = alRight
         AutoSize = True
         Picture.Data = {
@@ -3629,7 +3629,7 @@ object fFormMain: TfFormMain
       Left = 0
       Top = 0
       Width = 265
-      Height = 104
+      Height = 9
       Align = alLeft
       BevelOuter = bvNone
       Color = clBlack
@@ -8986,6 +8986,26 @@ object fFormMain: TfFormMain
         OnClick = imgCardClick
       end
     end
+  end
+  object labelTrans: TcxLabel
+    Left = 0
+    Top = 570
+    Align = alTop
+    AutoSize = False
+    Caption = #36816#36755#20844#21496':'
+    ParentFont = False
+    Style.Font.Charset = DEFAULT_CHARSET
+    Style.Font.Color = clWhite
+    Style.Font.Height = -64
+    Style.Font.Name = #23435#20307
+    Style.Font.Style = [fsBold]
+    Style.IsFontAssigned = True
+    Properties.Alignment.Horz = taLeftJustify
+    Properties.Alignment.Vert = taVCenter
+    Transparent = True
+    Height = 95
+    Width = 829
+    AnchorY = 618
   end
   object ComPort1: TComPort
     BaudRate = br9600

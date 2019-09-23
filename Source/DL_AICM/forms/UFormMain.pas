@@ -36,6 +36,7 @@ type
     imgCard: TImage;
     ImageSep: TImage;
     imgPurchaseCard: TImage;
+    labelTrans: TcxLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ComPort1RxChar(Sender: TObject; Count: Integer);
@@ -268,6 +269,7 @@ begin
     LabelStock.Caption := '品种名称:';
     LabelNum.Caption := '开放道数:';
     LabelTon.Caption := '提货数量:';
+    labelTrans.Caption := '运输公司';
     LabelHint.Caption := '请您刷卡';
     //if FCardType=ctttce then FSzttceApi.ResetMachine;
   end else
@@ -391,11 +393,12 @@ begin
       FHYDan := FieldByName('L_HYDan').AsString;
       FStockName := FieldByName('L_StockName').AsString;
 
-      LabelBill.Caption := '交货单号: ' + FieldByName('L_ID').AsString;
+      LabelBill.Caption  := '交货单号: ' + FieldByName('L_ID').AsString;
       LabelOrder.Caption := '销售订单: ' + FieldByName('L_ZhiKa').AsString;
       LabelTruck.Caption := '车牌号码: ' + FieldByName('L_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('L_StockName').AsString;
-      LabelTon.Caption := '提货数量: ' + FieldByName('L_Value').AsString + '吨';
+      LabelTon.Caption   := '提货数量: ' + FieldByName('L_Value').AsString + '吨';
+      labelTrans.Caption := '运输公司: ' + FieldByName('L_TransName').AsString ;
     end;
     WriteLog('TfFormMain.QueryCard(nCard='''+nCard+''')查询提货单[nStr]-耗时：'+InttoStr(MilliSecondsBetween(Now, nBeginTotal))+'ms');
     //--------------------------------------------------------------------------
@@ -626,7 +629,7 @@ begin
     nTop := nIni.ReadInteger('screen','top',0);
     nWidth := nIni.ReadInteger('screen','width',1024);
     nHeight := nIni.ReadInteger('screen','height',768);
-    nItemHeigth := nHeight div 8;
+    nItemHeigth := nHeight div 9;
 
     LabelTruck.Height := nItemHeigth;
     LabelDec.Height := nItemHeigth;
@@ -636,6 +639,7 @@ begin
     LabelStock.Height := nItemHeigth;
     LabelNum.Height := nItemHeigth;
     LabelHint.Height := nItemHeigth;
+    labelTrans.Height := nItemHeigth;
     imgCard.Height := nItemHeigth;
     imgPurchaseCard.Height := nItemHeigth;
     imgPrint.Height := nItemHeigth;
