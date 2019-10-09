@@ -75,6 +75,8 @@ type
     EditName: TcxTextEdit;
     dxLayout1Item13: TdxLayoutItem;
     dxLayout1Group5: TdxLayoutGroup;
+    Button1: TButton;
+    dxLayout1Item14: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditSManPropertiesEditValueChanged(Sender: TObject);
@@ -87,6 +89,7 @@ type
     procedure BtnOKClick(Sender: TObject);
     procedure EditCustomKeyPress(Sender: TObject; var Key: Char);
     procedure EditPricePropertiesEditValueChanged(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   protected
     { Protected declarations }
     FRecordID: string;
@@ -867,6 +870,84 @@ begin
 
   ModalResult := mrOK;
   ShowMsg('纸卡已保存', sHint);
+end;
+
+procedure TfFormZhiKa.Button1Click(Sender: TObject);
+var
+  nStr, nType, nStockNo, nBill: string;
+  transtyleCode,transtyleName,payTypeCode,payTypeName,blncTypeCode:string;
+  blncTypeName,packForm,packFormName,unitName,prodSpec:string;
+begin
+  nStr := 'select * from s_bill where l_id in (''TH1909250218'',''TH1909260013'',''TH1909250130'')';
+  with FDM.QuerySQL(nStr) do
+  begin
+    First;
+    while not Eof do
+    begin
+      nStockNo := fieldbyname('L_StockNo').AsString;
+      nStockNo := Copy(nStockNo,1,Length(nStockNo)-1);
+      nType := fieldbyname('L_Type').AsString;
+      if nType ='D' then
+      begin
+        if nStockNo = '0101010022' then
+          nType := '007'
+        else
+          nType := '001';
+      end
+      else
+      begin
+        if nStockNo = '0101010022' then
+          nType := '008'
+        else if nStockNo = '02010001' then
+          nType := '003'
+        else
+          nType := '002';
+      end;
+
+      nStr := 'select * from sal.SAL_Contract_v where contractCode=''%s'' '+
+              ' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
+      nStr := Format(nStr,[fieldbyname('L_ZhiKa').AsString, nStockNo ,nType]);
+      with fdm.QueryTemp(nStr,True) do
+      begin
+        transtyleCode := FieldByName('transtyleCode').AsString ;
+        transtyleName := FieldByName('transtyleName').AsString ;
+        payTypeCode := FieldByName('payTypeCode').AsString;
+        payTypeName := FieldByName('payTypeName').AsString;
+        blncTypeCode := FieldByName('blncTypeCode').AsString;
+        blncTypeName := FieldByName('blncTypeName').AsString;
+        packForm := FieldByName('packForm').AsString;
+        packFormName := FieldByName('packFormName').AsString;
+        unitName := FieldByName('unitName').AsString;
+        prodSpec := FieldByName('prodSpec').AsString;
+      end;
+
+      nStr := 'select * from SAL.SAL_PickBill where remark=''%s''';
+      nStr := Format(nStr,[FieldByName('L_ID').AsString]);
+      with fdm.QueryTemp(nStr,True) do
+        nBill := fieldbyname('pBillCode').AsString;
+
+      nStr := SF('pBillCode', nBill);
+      nStr := MakeSQLByStr([SF('transtyleCode', transtyleCode),
+              SF('transtyleName', transtyleName),
+              SF('payTypeCode', payTypeCode),
+              SF('payTypeName', payTypeName),
+              SF('blncTypeCode', blncTypeCode),
+              SF('blncTypeName', blncTypeName)
+              ], 'SAL.SAL_PickBill', nStr, False);
+      FDM.ExecuteSQL(nStr, True);
+
+      nStr := SF('pBillCode', nBill);
+      nStr := MakeSQLByStr([SF('packForm', packForm),
+              SF('packFormName', packFormName),
+              SF('unitName', unitName),
+              SF('prodSpec', prodSpec)
+              ], 'SAL.SAL_PickBillItem', nStr, False);
+      FDM.ExecuteSQL(nStr, True);
+
+      Next;
+    end;
+    ShowMsg('完成',sHint);
+  end;
 end;
 
 initialization

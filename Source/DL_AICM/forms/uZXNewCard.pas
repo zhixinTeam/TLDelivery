@@ -271,7 +271,8 @@ begin
           FWebOrderItems[i].FGoodsname      := Values['materielName'];
           FWebOrderItems[i].FData           := Values['quantity'];
           FWebOrderItems[i].ForderDetailType:= Values['orderDetailType'];
-          FWebOrderItems[i].FYunTianOrderId := Values['contractNo']; 
+          FWebOrderItems[i].FYunTianOrderId := Values['contractNo'];
+          FWebOrderItems[i].FStatus         := Values['status'];
           AddListViewItem(FWebOrderItems[i]);
         end;
       end;
@@ -429,6 +430,21 @@ begin
     Writelog(nMsg);
     Exit;
   end;
+
+  if nOrderItem.FStatus <> '1' then
+  begin
+    if nOrderItem.FStatus = '0' then
+      nMsg := '此订单状态未知'
+    else if nOrderItem.FStatus = '6' then
+      nMsg := '此订单已取消'
+    else if nOrderItem.FStatus = '7' then
+      nMsg := '此订单已过期'
+    else
+      nMsg := '此订单已使用';
+    ShowMsg(nMsg,sHint);
+    Writelog(nMsg+nOrderItem.FStatus);
+    Exit;
+  end;
   {$ENDIF}
 
   //填充界面信息
@@ -464,7 +480,7 @@ begin
     nValue := Fields[0].AsFloat;
   //冻结量
 
-  nStr := 'select accountCode,salePrice,accountName,realProj,reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
+  nStr := 'select accountCode,salePrice,accountName,realProj,reqQty-pickQty as leaveQty,itemcode from sal.SAL_Contract_v where '+
           ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
   nStr := Format(nStr,[nOrderItem.FYunTianOrderId,nStockNo,nType]);
   FDM.QueryData(ADOQuery1, nStr, True);
@@ -497,6 +513,7 @@ begin
 
     nPriceNow := FieldByName('salePrice').AsFloat;
     nPreFun := FieldByName('realProj').AsString;
+    //FWebOrderItems[FWebOrderIndex].FItemCode := fieldbyname('itemcode').AsString;暂时保存
 
     nSql := 'select *,GETDATE() as dtNow from SAL.SAL_ProdPrice_v '+
           'where priceStat=''1'' and prodCode=''%s'' and packCode=''%s''';

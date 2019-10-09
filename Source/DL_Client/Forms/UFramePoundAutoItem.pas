@@ -426,6 +426,30 @@ begin
     Exit;
   end;
 
+  //进厂规定时间内不过皮视为无效单据
+  {$IFDEF QSTL}
+  if (FCardUsed=sFlag_Provide) and (nBills[0].FNextStatus = sFlag_TruckBFP) then
+  begin
+    nStr := 'select * from %s where D_Name=''%s''';
+    nStr := Format(nStr,[sTable_SysDict,sFlag_InFactWaiteTime]);
+    with fdm.QueryTemp(nStr) do
+      nIdx := FieldByName('D_Value').AsInteger;
+
+    nStr := 'select * from %s where l_id=''%s''';
+    nStr := Format(nStr,[sTable_Bill,nBills[0].FID]);
+    with fdm.QueryTemp(nStr) do
+    begin
+      if MinuteOf(Now) - MinuteOf(FieldByName('D_Value').AsDateTime) > nIdx then
+      begin
+        nStr := '进厂和过皮中时间间隔过大,请联系管理员.';
+        WriteSysLog('提货单'+nBills[0].FID+nStr);
+        PlayVoice(nStr);
+        Exit;
+      end;
+    end;
+  end;
+  {$ENDIF}
+
   nHint := '';
   nInt := 0;
 
@@ -453,7 +477,8 @@ begin
       Break;
     end;
 
-    {$IFNDEF CGJSSP} //启用拒收审核
+    //启用拒收审核
+    {$IFNDEF CGJSSP}
     if (FCardUsed=sFlag_Provide) and (FNextStatus = sFlag_TruckBFM) and (FYSValid = sFlag_No) then
     begin
       nStr := 'select * from %s where D_ID=''%s''';
@@ -878,7 +903,7 @@ begin
     exit;
   end;
 
-  if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) then
+  if (FUIData.FPData.FValue > 0) or (FUIData.FMData.FValue > 0) then
   begin
     if FBillItems[0].FYSValid <> sFlag_Yes then //判断是否空车出厂
     begin

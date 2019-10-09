@@ -199,7 +199,7 @@ end;
 //Parm: 
 //Desc: 删除未完成记录
 procedure TfFrameOrderDetail.N3Click(Sender: TObject);
-var nStr, nSQL, nP, nID, nOrderID,nCardType: string;
+var nStr, nSQL, nP, nID, nOrderID,nCardType,nOID: string;
     nOutFact : Boolean;
     nIdx: Integer;
     nVal, nFreeze: Double;
@@ -208,6 +208,7 @@ begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
     nID := SQLQuery.FieldByName('D_ID').AsString;
+    nOID := SQLQuery.FieldByName('D_OID').AsString;
     if not QueryDlg('确认删除该采购订单么?', sAsk) then Exit;
 
     nP       := SQLQuery.FieldByName('D_MDate').AsString;
@@ -283,7 +284,7 @@ begin
       ShowMsg('删除完毕', sHint);
 
       try
-        SaveWebOrderDelMsg(nID,sFlag_Provide);
+        SaveWebOrderDelMsg(nOID,sFlag_Provide);
       except
       end;
       //插入删除推送

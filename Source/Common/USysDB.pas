@@ -292,9 +292,11 @@ const
   sFlag_TruckLoadLimit   = 'TruckLimit';              //普通水泥客户限载
   sFlag_SLTruckLoadLimit = 'SLTruckLimit';            //熟料客户发货日限额
 
-  sFlag_AutoPurchaseID= 'AutoPurchaseID';             //是否自动生成原材料编号
-  sFlag_Purchase      = 'Bus_Purchase';               //原材料编号
-  sFlag_PriceLimit    = 'PriceLimit';                 //最低限价
+  sFlag_AutoPurchaseID   = 'AutoPurchaseID';          //是否自动生成原材料编号
+  sFlag_Purchase         = 'Bus_Purchase';            //原材料编号
+  sFlag_PriceLimit       = 'PriceLimit';              //最低限价
+  sFlag_InFactWaiteTime  = 'InFactWaiteTime';         //进厂之后过皮重等待时间
+
 
   {*数据表*}
   sTable_Group        = 'Sys_Group';                 //用户组

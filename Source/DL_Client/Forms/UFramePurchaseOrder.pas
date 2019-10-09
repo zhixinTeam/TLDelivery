@@ -15,7 +15,8 @@ uses
   cxTextEdit, cxMaskEdit, cxButtonEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, cxCheckBox;
+  ComCtrls, ToolWin, cxCheckBox, dxSkinsCore, dxSkinsDefaultPainters,
+  dxSkinscxPCPainter, dxLayoutcxEditAdapters;
 
 type
   TfFramePurchaseOrder = class(TfFrameNormal)
@@ -166,7 +167,7 @@ end;
 
 //Desc: 删除
 procedure TfFramePurchaseOrder.BtnDelClick(Sender: TObject);
-var nStr: string;
+var nStr, nID: string;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
@@ -174,9 +175,18 @@ begin
   end;
 
   nStr := SQLQuery.FieldByName('O_ID').AsString;
+  nID  := SQLQuery.FieldByName('O_ID').AsString;
   if not QueryDlg('确定要删除编号为[ ' + nStr + ' ]的订单吗?', sAsk) then Exit;
 
-  if DeleteOrder(nStr) then ShowMsg('已成功删除记录', sHint);
+  if DeleteOrder(nStr) then
+  begin
+    try
+      SaveWebOrderDelMsg(nID,sFlag_Provide);
+    except
+    end;
+    //插入删除推送
+    ShowMsg('已成功删除记录', sHint);
+  end;
 
   InitFormData('');
 end;

@@ -474,7 +474,9 @@ begin
       Values['CusID'] := FieldByName('accountCode').AsString;
       Values['CusName'] := FieldByName('accountName').AsString;
       Values['CusPY'] := GetPinYinOfStr(FieldByName('accountName').AsString);
-      //Values['OrderNo'] := FieldByName('itemCode').AsString;
+      {$IFDEF QSTL}
+      Values['OrderNo'] := FieldByName('itemCode').AsString;
+      {$ENDIF}
       //Values['Area'] := FieldByName('C_Area').AsString;
       //Values['SaleID'] := FieldByName('Z_SaleMan').AsString;
       //Values['SaleMan'] := FieldByName('S_Name').AsString;
@@ -2353,10 +2355,15 @@ begin
         if FType = sFlag_San then //散装需交验资金额
         begin
           //验证erp订单量是否够用
-          nStr := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
-                  'L_StockNo=''%s'' and L_OutFact is null';
-          nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo]);
+          nStr := 'select * from %s where L_ID=''%s''';
+          nStr := Format(nStr,[sTable_Bill,FID]);
           with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+            nTmp := fieldbyname('L_Order').AsString;
+
+          nSQL := 'select SUM(L_Value) from %s where L_ZhiKa=''%s'' and '+
+                  'L_StockNo=''%s'' and L_Order=''%s'' and L_OutFact is null';
+          nSQL := Format(nSQL,[sTable_Bill,FZhiKa,FStockNo, nTmp]);
+          with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
             nBillNum := Fields[0].AsFloat;
           //冻结量
 
@@ -2385,11 +2392,6 @@ begin
                   ' contractCode=''%s'' and prodCode=''%s'' and packForm=''%s'' and enableFlag=''Y''';
           nStr := Format(nStr,[FZhiKa,nStockNo,nType]);
           {$ELSE}
-          nStr := 'select * from %s where L_ID=''%s''';
-          nStr := Format(nStr,[sTable_Bill,FID]);
-          with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-            nTmp := fieldbyname('L_Order').AsString;
-
           nStr := 'select reqQty-pickQty as leaveQty from sal.SAL_Contract_v where '+
                   ' contractCode=''%s'' and itemcode=''%s'' and enableFlag=''Y''';
           nStr := Format(nStr,[FZhiKa,nTmp]);
