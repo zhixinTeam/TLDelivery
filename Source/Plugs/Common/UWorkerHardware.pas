@@ -477,29 +477,19 @@ begin
         Result := False;
         nData := Format('交货单[ %s ]已无效.', [FIn.FData]); Exit;
       end;
-
-      {$IFDEF UseERP_K3}
-      nCode := StringReplace(Fields[0].AsString, 'TH', '', [rfIgnoreCase]);
-      nCode := Fields[1].AsString + '-' +
-               Copy(FIn.FExtParam, Length(FIn.FExtParam) - 1, 2) + '-' + nCode;
-      {$ENDIF}
-
-      {$IFDEF RDHX}
-      nCode := Trim(Fields[1].AsString);
-      nCode := nCode + Date2Str(Now, False);;
-      {$ENDIF}
-
-      {$IFDEF ZZSJ}
-      nCode := Fields[0].AsString;
-      System.Delete(nCode, 1, Length('TH170707'));
-      nCode := Date2Str(Now) + Fields[1].AsString + nCode;
-      //上街: 年月日 + 水泥批次号 + 流水号
-      {$ENDIF}
-
+      {$IFDEF QSTL}
       nCode := Fields[0].AsString;
       System.Delete(nCode, 1, Length('TH170707'));
       nCode := Date2Str(Now) + Fields[1].AsString + nCode;
       //年月日 + 水泥批次号 + 流水号
+      {$ENDIF}
+
+      {$IFDEF STL}
+      nCode := Fields[0].AsString;
+      System.Delete(nCode, 1, Length('TH170707'));
+      nCode := Date2Str(Now)+ nCode + Fields[1].AsString;
+      //年月日+ 流水号 + 水泥批次号 
+      {$ENDIF}
     end;
   end;
 

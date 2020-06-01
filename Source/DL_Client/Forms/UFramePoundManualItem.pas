@@ -12,7 +12,7 @@ uses
   UMgrPoundTunnels, UBusinessConst, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, Menus, ExtCtrls, cxCheckBox,
   StdCtrls, cxButtons, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxLabel,
-  ULEDFont, cxRadioGroup, UFrameBase;
+  ULEDFont, cxRadioGroup, UFrameBase, dxSkinsCore, dxSkinsDefaultPainters;
 
 type
   TfFrameManualPoundItem = class(TBaseFrame)
@@ -321,9 +321,10 @@ end;
 //Parm: 磁卡或交货单号
 //Desc: 读取nCard对应的交货单
 procedure TfFrameManualPoundItem.LoadBillItems(const nCard: string);
-var nStr,nHint: string;
+var nStr,nHint, nVoice: string;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
+    nRet: Boolean;
 begin
   if nCard = '' then
   begin
@@ -332,18 +333,36 @@ begin
     ShowMsg('请输入磁卡号', sHint); Exit;
   end;
 
+  {$IFDEF UseELabel}
+  FCardUsed := sFlag_DuanDao;
+  {$ELSE}
   FCardUsed := GetCardUsed(nCard);
-  if ((FCardUsed=sFlag_Provide)
-      and (not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
-    or
-    ((FCardUsed <> sFlag_Provide)
-      and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
-  then
+  {$ENDIF}
+
+  if FCardUsed = sFlag_Provide then
+     nRet := GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills) else
+  if FCardUsed=sFlag_DuanDao then
+     nRet := GetDuanDaoItems(nCard, sFlag_TruckBFP, nBills) else
+  if FCardUsed=sFlag_Sale then
+     nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills) else nRet := False;
+
+  if (not nRet) or (Length(nBills) < 1) then
   begin
     SetUIData(True);
     Exit;
   end;
-  
+
+//  if ((FCardUsed=sFlag_Provide)
+//      and (not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
+//    or
+//    ((FCardUsed <> sFlag_Provide)
+//      and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
+//  then
+//  begin
+//    SetUIData(True);
+//    Exit;
+//  end;
+
   nHint := '';
   nInt := 0;
 
@@ -734,7 +753,9 @@ end;
 //------------------------------------------------------------------------------
 //Desc: 原材料或临时
 function TfFrameManualPoundItem.SavePoundData: Boolean;
-var nNextStatus: string;
+var
+  nNextStatus, nStr: string;
+  nVal:Double;
 begin
   Result := False;
   //init
@@ -753,6 +774,37 @@ begin
       Exit;
     end;
   end;
+
+  {$IFDEF YHTL}    //提货量超出退货量，禁止过磅
+  nVal := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue);
+  nStr := 'select o_ctid,O_OrderType from %s ,%s where O_ID=D_OID'+
+              ' and D_ID=''%s''';
+  nStr := Format(nStr,[sTable_Order,sTable_OrderDtl,FUIData.FID]);
+  with fdm.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    //如果是退货
+    if FieldByName('O_OrderType').asstring='T' then
+    begin
+      nStr := 'select * from %s where T_ID=''%s''';
+      nStr := Format(nStr,[sTable_OrderReturn,FieldByName('o_ctid').asstring]);
+      with fdm.QueryTemp(nStr) do
+      if RecordCount > 0 then
+      begin
+        //如果超量
+        if nVal > FieldByName('T_Value').AsFloat - FieldByName('T_ValDone').AsFloat then
+        begin
+          nStr := '已提退货量超出批准退货量,超出:[%s],请返厂卸车.';
+          nStr := Format(nStr,[FloatToStr(nVal-FieldByName('T_Value').AsFloat +
+                  FieldByName('T_ValDone').AsFloat)]);
+          ShowMsg('退货单'+ FUIData.FID + nStr, sHint);
+          PlayVoice(nStr);
+          Exit;
+        end;
+      end;
+    end;
+  end;
+  {$ENDIF}
 
   if (Length(FBillItems)>0) and (FCardUsed = sFlag_Provide) then
     nNextStatus := FBillItems[0].FNextStatus;

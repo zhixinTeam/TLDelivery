@@ -322,7 +322,9 @@ var nStr, nSQL: string;
     nIdx: Integer;
     nVal: Double;
     nOut: TWorkerBusinessCommand;
+    nLimitValue, nLeaveValue: Double;
 begin
+  Result := False;
   FListA.Text := PackerDecodeStr(FIn.FData);
   nVal := StrToFloat(FListA.Values['Value']);
   //unpack Order
@@ -330,7 +332,61 @@ begin
   nStr := FListA.Values['Truck'];
   TWorkerBusinessCommander.CallMe(cBC_SaveTruckInfo,nStr, '',@nOut);
   //保存车牌号
-
+  {$IFDEF ProdLimited}
+  //按客户日限额
+  nSQL := 'select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_ProdLimit, FListA.Values['StockNO']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+      if FieldByName('D_Value').AsString = sFlag_Yes then  //启用发货限制
+      begin
+        nSQL := 'select * from %s where L_ProdNo=''%s'' and L_StockNo=''%s''';
+        nSQL := Format(nSQL,[sTable_ProdLimit,FListA.Values['ProviderID'],FListA.Values['StockNO']]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        begin
+          if recordcount > 0 then
+          begin
+            nLimitValue := FieldByName('L_Value').AsFloat;
+            nSQL := 'Select sum(D_Value) as D_Value from %s where D_StockNo=''%s'''+
+                    ' and D_InTime >= ''%s'' and D_InTime < ''%s'' and D_ProId=''%s''';
+            nSQL := Format(nSQL,[sTable_OrderDtl,FListA.Values['StockNO'],
+                  Date2Str(Date,True)+' 00:00:00',Date2Str(Date+1,True)+' 00:00:00',
+                  FListA.Values['ProviderID']]);
+            with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+            begin
+              nLeaveValue := nLimitValue - FieldByName('D_Value').AsFloat;
+              if nLeaveValue <= 0 then
+              begin
+                nData := '客户限额:物料[ %s ]已超出日发货限量，无法开单';
+                nData := Format(nData,[FListA.Values['StockNO']+'-'+FListA.Values['StockName']]);
+                Exit;
+              end
+              else
+              begin
+                if nLeaveValue < nVal then
+                begin
+                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                           '当前剩余配额：[ %s ]吨';
+                  nData := Format(nData,[FListA.Values['StockNO']+'-'+FListA.Values['StockName'],
+                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+                  WriteLog(nData);
+                  Exit;
+                end;
+              end;
+            end;
+          end
+          else
+          begin      //如果没有记录则允许提货
+            nData := '用户 [ %s ] 对于 [ %s ]不可送货.';
+            nData := Format(nData,[FListA.Values['CusName'],FListA.Values['StockNO']]);
+            WriteLog(nData);
+            Exit;
+          end;
+        end;
+      end;
+  end;
+  {$ENDIF}
   //----------------------------------------------------------------------------
   FDBConn.FConn.BeginTrans;
   try
@@ -379,6 +435,7 @@ begin
             SF('O_Memo',FListA.Values['thMemo']),
             SF('O_Man', FIn.FBase.FFrom.FUser),
             SF('O_OrderType', FListA.Values['OrderType']),
+            SF('O_CTid', FListA.Values['CTID']),
             SF('O_Date', sField_SQLServer_Now, sfVal)
             ], sTable_Order, '', True);
     gDBConnManager.WorkerExec(FDBConn, nStr);
@@ -1022,6 +1079,23 @@ begin
       begin
         FOut.FData := Fields[0].AsString;
       end;
+
+      //采购退货更新已退量
+      {$IFDEF YHTL}
+      nSQL := 'select o_ctid,O_OrderType from %s ,%s where O_ID=D_OID'+
+              ' and D_ID=''%s''';
+      nSQL := Format(nSQL,[sTable_Order,sTable_OrderDtl,FID]);
+      with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+      if RecordCount > 0 then
+      begin
+        if FieldByName('O_OrderType').AsString = 'T'  then
+        begin
+          nSQL := 'update %s set T_ValDone=T_ValDone+(%s) where T_Id=''%s''';
+          nSQL := Format(nSQL,[sTable_OrderReturn, FloatToStr(nVal) ,FieldByName('o_ctid').AsString]);
+          FListA.Add(nSQL);
+        end;
+      end;
+      {$ENDIF}
     end;
   end else
 

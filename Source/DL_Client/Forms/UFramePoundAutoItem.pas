@@ -408,8 +408,24 @@ var nRet, nValidELabel: Boolean;
 begin
   nStr := Format('读取到卡号[ %s ],开始执行业务.', [nCard]);
   WriteLog(nStr);
-
+  {$IFDEF UseELabel}
+  FCardUsed := sFlag_DuanDao;
+  {$ELSE}
   FCardUsed := GetCardUsed(nCard);
+  {$ENDIF}
+  if FCardUsed = sFlag_Tx then
+  begin
+    nVoice := '通行卡';
+    PlayVoice(nVoice);
+
+    OpenDoorByReader(FLastReader);
+    //打开主道闸
+    OpenDoorByReader(FLastReader, sFlag_No);
+
+    WriteSysLog(nVoice + nCard);
+    SetUIData(True);
+    Exit;
+  end else
   if FCardUsed = sFlag_Provide then
      nRet := GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills) else
   if FCardUsed=sFlag_DuanDao then
@@ -439,7 +455,7 @@ begin
     nStr := Format(nStr,[sTable_Bill,nBills[0].FID]);
     with fdm.QueryTemp(nStr) do
     begin
-      if MinuteOf(Now) - MinuteOf(FieldByName('D_Value').AsDateTime) > nIdx then
+      if MinuteOf(Now) - MinuteOf(FieldByName('L_InTime').AsDateTime) > nIdx then
       begin
         nStr := '进厂和过皮中时间间隔过大,请联系管理员.';
         WriteSysLog('提货单'+nBills[0].FID+nStr);
@@ -478,7 +494,7 @@ begin
     end;
 
     //启用拒收审核
-    {$IFNDEF CGJSSP}
+    {$IFDEF CGJSSP}
     if (FCardUsed=sFlag_Provide) and (FNextStatus = sFlag_TruckBFM) and (FYSValid = sFlag_No) then
     begin
       nStr := 'select * from %s where D_ID=''%s''';
@@ -774,6 +790,10 @@ begin
     {$ENDIF}
     if nCard = '' then Exit;
 
+    //电子标签过磅，直接去掉H
+    {$IFDEF UseELabel}
+    nCard := Copy(nCard,2,Length(nCard)-1);
+    {$ENDIF}
     if nCard <> FLastCard then
          nDoneTmp := 0
     else nDoneTmp := FLastCardDone;
@@ -808,7 +828,9 @@ begin
       Exit;
     end;
 
+    {$IFNDEF UseELabel}  //在磅上刷卡的话，不检查磅上是否有重量
     if Not ChkPoundStatus then Exit;
+    {$ENDIF}
 
     FCardTmp := nCard;
     EditBill.Text := nCard;
@@ -903,7 +925,7 @@ begin
     exit;
   end;
 
-  if (FUIData.FPData.FValue > 0) or (FUIData.FMData.FValue > 0) then
+  if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) then
   begin
     if FBillItems[0].FYSValid <> sFlag_Yes then //判断是否空车出厂
     begin
@@ -1057,7 +1079,7 @@ end;
 //Desc: 原材料或临时
 function TfFrameAutoPoundItem.SavePoundData: Boolean;
 var nNextStatus, nStr: string;
-    nVal: Double;
+    nVal, nLimitYL, nLimitZL, nDoneVal, nLoadLimit: Double;   //nLimitYL:富余量
 begin
   Result := False;
   //init
@@ -1071,20 +1093,88 @@ begin
     end;
   end;
 
-  //如果拒收，判断皮毛重误差，太多不允许出厂
-  if (FCardUsed = sFlag_Provide) and (FUIData.FYSValid = sFlag_No) then
+  nLoadLimit := GetOrderTruckLimit;
+  //获取限载值
+
+  if FUIData.FMData.FValue > nLoadLimit then
+  begin
+    nStr := '超出最大限载重量.';
+    WriteLog(nStr);
+    PlayVoice(nStr);
+    exit;
+  end;
+
+  {$IFDEF YHTL}    //提货量超出退货量，禁止过磅
+  if FCardUsed = sFlag_Provide then
   begin
     nVal := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue);
-    if nVal > gSysParam.FJsWc then
+    nStr := 'select o_ctid,O_OrderType from %s ,%s where O_ID=D_OID'+
+                ' and D_ID=''%s''';
+    nStr := Format(nStr,[sTable_Order,sTable_OrderDtl,FUIData.FID]);
+    with fdm.QueryTemp(nStr) do
+    if RecordCount > 0 then
     begin
-      nStr := '采购拒收车辆误差:'+floattostr(nVal)+',允许误差:'+floattostr(gSysParam.FJsWc)+
-              ',皮毛重误差超出标准值皮重:['+floattostr(FUIData.FPData.FValue)+
-              '],毛重:['+floattostr(FUIData.FMData.FValue)+'],请联系管理员处理.';
-      WriteSysLog(nStr);
-      PlayVoice(nStr);
-      Exit;
+      //如果是退货
+      if FieldByName('O_OrderType').asstring='T' then
+      begin
+        nStr := 'select * from %s where T_ID=''%s''';
+        nStr := Format(nStr,[sTable_OrderReturn,FieldByName('o_ctid').asstring]);
+        with fdm.QueryTemp(nStr) do
+        if RecordCount > 0 then
+        begin
+          //如果超量
+          if nVal > FieldByName('T_Value').AsFloat - FieldByName('T_ValDone').AsFloat then
+          begin
+            nStr := '已提退货量超出批准退货量,超出:[%s]吨,请返厂卸车.';
+            nStr := Format(nStr,[FloatToStr(nVal-FieldByName('T_Value').AsFloat +
+                    FieldByName('T_ValDone').AsFloat)]);
+            WriteSysLog('退货单'+ FUIData.FID + nStr);
+            PlayVoice(nStr);
+            Exit;
+          end;
+        end;
+      end;
+    end;
+
+    //采购限量
+    nStr := 'select * from %s where D_Name=''%s'' and D_ParamB=''%s''';
+    nStr := Format(nStr,[sTable_SysDict,sFlag_ProdLimit,FUIData.FStockNo]);
+    with fdm.QueryTemp(nStr) do
+    begin
+      if recordcount > 0 then
+      if FieldByName('D_Value').AsString = sflag_yes then
+      begin
+        nStr := 'select * from sys_dict where d_name=''%s''';
+        nStr := Format(nStr,[sFlag_ProdLimitYL]);
+        with fdm.QueryTemp(nStr) do
+          nLimitYL := FieldByName('D_Value').AsFloat;
+
+        nStr := 'select L_Value from %s where L_ProdNo=''%s'' and L_StockNo=''%s''';
+        nStr := Format(nStr,[sTable_ProdLimit,FUIData.FCusID,FUIData.FStockNo]);
+        with FDM.QueryTemp(nStr) do
+          nLimitZL := fieldbyname('L_Value').AsFloat;
+
+        nStr := 'Select sum(D_Value) as D_Value from %s where D_StockNo=''%s'''+
+                ' and D_InTime >= ''%s'' and D_InTime < ''%s'' and D_ProId=''%s''';
+        nStr := Format(nStr,[sTable_OrderDtl,FUIData.FStockNo,
+              Date2Str(Date,True)+' 00:00:00',Date2Str(Date+1,True)+' 00:00:00',
+              FUIData.FCusID]);
+        with FDM.QueryTemp(nStr) do
+        begin
+          nDoneVal := FieldByName('D_Value').AsFloat;
+          if nLimitZL + nLimitYL < nVal + nDoneVal then
+          begin
+            nStr := '送货量超出日限额,超出:[%s]吨,请返厂卸车.';
+            nStr := Format(nStr,[FloatToStr(nval + nDoneVal - nLimitZL - nLimitYL)]);
+            WriteSysLog('采购单'+ FUIData.FID + nStr);
+            PlayVoice(nStr);
+            Exit;
+          end;
+        end;
+      end;
     end;
   end;
+  {$ENDIF}
 
   nNextStatus := FBillItems[0].FNextStatus;
   //暂存过磅状态
@@ -1134,6 +1224,7 @@ procedure TfFrameAutoPoundItem.OnPoundData(const nValue: Double);
 var nRet: Boolean;
     nInt: Int64;
     nStr: string;
+    nVal:Double;
 begin
   FLastBT := GetTickCount;
   EditValue.Text := Format('%.2f', [nValue]);
@@ -1192,6 +1283,42 @@ begin
   //临时过磅也对调重量
   if FCardUsed <> sFlag_Sale then
   begin
+    if FCardUsed =sFlag_Provide then
+    begin
+      nStr := 'select * from %s where D_ID=''%s''';
+      nStr := Format(nStr,[sTable_OrderDtl,FUIData.FID]);
+      with fdm.QueryTemp(nStr) do
+      if ((FieldByName('D_YSResult').AsString = sFlag_No) or (FieldByName('D_WlbYS').AsString = sFlag_No))
+        and (FUIData.FNextStatus = sFlag_TruckBFM) then
+      begin
+        if FInnerData.FPData.FValue < nValue then
+        begin
+          nStr := '采购拒收订单出厂重量不能超过进厂重量.';
+          PlayVoice(nStr);
+          WriteSysLog(nStr);
+          if FBarrierGate then
+            OpenDoorByReader(FLastReader, sFlag_No);
+          Timer_SaveFail.Enabled := True;
+          Exit;
+        end;
+
+        nVal := FInnerData.FPData.FValue - nValue;
+        if  nVal > gSysParam.FJsWc then
+        begin
+          //nStr := '采购拒收订单出厂重量超出误差范围.';
+          nStr := '采购拒收车辆误差:'+floattostr(nVal)+',允许误差:'+floattostr(gSysParam.FJsWc)+
+                ',皮毛重误差超出标准值,皮重:['+floattostr(FInnerData.FPData.FValue)+
+                '],毛重:['+floattostr(nValue)+'],请联系管理员处理.';
+          PlayVoice(nStr);
+          WriteSysLog(nStr);
+          if FBarrierGate then
+            OpenDoorByReader(FLastReader, sFlag_No);
+          Timer_SaveFail.Enabled := True;
+          Exit;
+        end;
+      end;
+    end;
+    
     if FInnerData.FPData.FValue > 0 then
     begin
       if nValue <= FInnerData.FPData.FValue then
@@ -1279,9 +1406,10 @@ begin
     PlayVoice(nStr);
     LEDDisplay(nStr);
     WriteSysLog('车辆[ '+FUIData.FTruck+' ]称重无效.');
+    Exit;
   end;
 
-  if FBarrierGate then
+  if FBarrierGate and nRet then
     OpenDoorByReader(FLastReader, sFlag_No);
   //打开副道闸
 end;

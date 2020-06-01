@@ -294,6 +294,7 @@ begin
         FPType      := Values['PType'];
         FPoundID    := Values['PoundID'];
         FSelected   := Values['Selected'] = sFlag_Yes;
+        FIsNei      := Values['IsNei'];
 
         with FPData do
         begin
@@ -394,6 +395,7 @@ begin
         Values['PModel']     := FPModel;
         Values['PType']      := FPType;
         Values['PoundID']    := FPoundID;
+        Values['IsNei']      := FIsNei;
 
         with FPData do
         begin

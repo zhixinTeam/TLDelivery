@@ -1,23 +1,23 @@
 inherited fFormTruck: TfFormTruck
-  Left = 586
-  Top = 381
-  ClientHeight = 289
+  Left = 594
+  Top = 293
+  ClientHeight = 314
   ClientWidth = 375
   Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
     Width = 375
-    Height = 289
+    Height = 314
     inherited BtnOK: TButton
       Left = 229
-      Top = 256
-      TabOrder = 10
+      Top = 281
+      TabOrder = 11
     end
     inherited BtnExit: TButton
       Left = 299
-      Top = 256
-      TabOrder = 11
+      Top = 281
+      TabOrder = 12
     end
     object EditTruck: TcxTextEdit [2]
       Left = 81
@@ -50,68 +50,68 @@ inherited fFormTruck: TfFormTruck
     end
     object CheckValid: TcxCheckBox [5]
       Left = 23
-      Top = 171
+      Top = 196
       Caption = #36710#36742#20801#35768#24320#21333'.'
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
-      TabOrder = 4
+      TabOrder = 5
       Transparent = True
       Width = 165
     end
     object CheckVerify: TcxCheckBox [6]
       Left = 23
-      Top = 223
+      Top = 248
       Caption = #39564#35777#36710#36742#24050#21040#20572#36710#22330'.'
-      ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      TabOrder = 8
-      Transparent = True
-      Width = 165
-    end
-    object CheckUserP: TcxCheckBox [7]
-      Left = 23
-      Top = 197
-      Caption = #36710#36742#20351#29992#39044#32622#30382#37325'.'
-      ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      TabOrder = 6
-      Transparent = True
-      Width = 165
-    end
-    object CheckVip: TcxCheckBox [8]
-      Left = 193
-      Top = 197
-      Caption = 'VIP'#36710#36742
-      ParentFont = False
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebsSingle
-      TabOrder = 7
-      Transparent = True
-      Width = 100
-    end
-    object CheckGPS: TcxCheckBox [9]
-      Left = 193
-      Top = 223
-      Caption = #24050#23433#35013'GPS'
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       TabOrder = 9
       Transparent = True
+      Width = 165
+    end
+    object CheckUserP: TcxCheckBox [7]
+      Left = 23
+      Top = 222
+      Caption = #36710#36742#20351#29992#39044#32622#30382#37325'.'
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 7
+      Transparent = True
+      Width = 165
+    end
+    object CheckVip: TcxCheckBox [8]
+      Left = 193
+      Top = 222
+      Caption = 'VIP'#36710#36742
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 8
+      Transparent = True
+      Width = 100
+    end
+    object CheckGPS: TcxCheckBox [9]
+      Left = 193
+      Top = 248
+      Caption = #24050#23433#35013'GPS'
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 10
+      Transparent = True
       Width = 100
     end
     object checkVipCus: TcxCheckBox [10]
       Left = 193
-      Top = 171
+      Top = 196
       Caption = 'VIP'#23458#25143
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.HotTrack = False
-      TabOrder = 5
+      TabOrder = 6
       Transparent = True
       Width = 121
     end
@@ -123,6 +123,24 @@ inherited fFormTruck: TfFormTruck
       Style.BorderStyle = ebsSingle
       Style.HotTrack = False
       TabOrder = 3
+      Width = 121
+    end
+    object editPFBZ: TcxComboBox [12]
+      Left = 81
+      Top = 136
+      ParentFont = False
+      Properties.DropDownListStyle = lsFixedList
+      Properties.Items.Strings = (
+        #22269#19977
+        #22269#22235
+        #22269#20116
+        #22269#20845)
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      Style.ButtonStyle = btsHotFlat
+      Style.PopupBorderStyle = epbsSingle
+      TabOrder = 4
       Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
@@ -154,6 +172,11 @@ inherited fFormTruck: TfFormTruck
         object dxLayout1Item12: TdxLayoutItem
           CaptionOptions.Text = #39044#32622#30382#37325':'
           Control = editPreValue
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item13: TdxLayoutItem
+          CaptionOptions.Text = #25490#25918#26631#20934':'
+          Control = editPFBZ
           ControlOptions.ShowBorder = False
         end
       end

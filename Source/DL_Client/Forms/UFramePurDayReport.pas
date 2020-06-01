@@ -11,7 +11,8 @@ uses
   cxSplitter, dxLayoutControl, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   ComCtrls, ToolWin, dxLayoutcxEditAdapters, cxTextEdit, cxMaskEdit,
-  cxDropDownEdit, cxCalendar, StdCtrls;
+  cxDropDownEdit, cxCalendar, StdCtrls, Menus, cxGridCustomPopupMenu,
+  cxGridPopupMenu;
 
 type
   TfFramePurDayReport = class(TfFrameNormal)
@@ -65,10 +66,13 @@ end;
 
 procedure TfFramePurDayReport.Button1Click(Sender: TObject);
 var
-  nStr, nSQL, nDate: string;
+  nStr, nSQL, nDate, nTable: string;
   nDateEnd: TDate;
   nIdx:Integer;
 begin
+  nTable :='Select D_ProID,D_ProName,D_OutFact,(case o_ordertype when ''T'''+
+           ' then -D_Value else D_Value end) as D_value '+
+           'From P_OrderDtl od Inner Join P_Order oo on od.D_OID=oo.O_ID';
   nDate := FormatDateTime('yyyy-mm-dd',editDate.date);
   FDM.ADOConn.BeginTrans;
   try
@@ -87,9 +91,9 @@ begin
     nSQL := 'insert into #PDayReport(D_ProId,D_ProName,D_Value'+
             ') select D_ProID,D_ProName,'+
             'CAST(Sum(d_value) as decimal(38, 2)) as d_value '+
-            ' from P_OrderDtl where D_OutFact>=''%s'' and D_OutFact<''%s'''+
+            ' from (%s)as tt where D_OutFact>=''%s'' and D_OutFact<''%s'''+
             ' group by D_ProID,D_ProName';
-    nSQL := Format(nSQL,[nDate,Date2Str(editDate.Date+1)]);
+    nSQL := Format(nSQL,[nTable,nDate,Date2Str(editDate.Date+1)]);
     FDM.ExecuteSQL(nSQL);
     //插入所选日期的提货汇总
 
@@ -100,17 +104,17 @@ begin
 
     nSQL := 'select D_ProID,D_ProName,'+
             'CAST(Sum(d_value) as decimal(38, 2)) as d_value '+
-            ' from P_OrderDtl where D_OutFact>=''%s'' and D_OutFact<''%s'''+
+            ' from (%s)as tt where D_OutFact>=''%s'' and D_OutFact<''%s'''+
             ' group by D_ProID,D_ProName';
-    nSQL := Format(nSQL,[nDate, Date2Str(nDateEnd+1)]);
+    nSQL := Format(nSQL,[nTable,nDate, Date2Str(nDateEnd+1)]);
     with FDM.QueryTemp(nSQL) do
     begin
       First;
       while not Eof do
       begin
         nSQL := 'update #PDayReport set D_MonValue=%s where D_ProId=''%s''';
-        nSQL := Format(nSQL,[FieldByName('L_Value').AsString,
-                FieldByName('L_CusID').AsString]);
+        nSQL := Format(nSQL,[FloatToStr(FieldByName('D_Value').AsFloat),
+                FieldByName('D_ProID').AsString]);
         FDM.ExecuteSQL(nSQL);
         Next;
       end;
@@ -122,17 +126,17 @@ begin
 
     nSQL := 'select D_ProID,D_ProName,'+
             'CAST(Sum(d_value) as decimal(38, 2)) as d_value '+
-            ' from P_OrderDtl where D_OutFact>=''%s'' and D_OutFact<''%s'''+
+            ' from (%s)as tt  where D_OutFact>=''%s'' and D_OutFact<''%s'''+
             ' group by D_ProID,D_ProName';
-    nSQL := Format(nSQL,[nDate, Date2Str(nDateEnd+1)]);
+    nSQL := Format(nSQL,[nTable,nDate, Date2Str(nDateEnd+1)]);
     with FDM.QueryTemp(nSQL) do
     begin
       First;
       while not Eof do
       begin
         nSQL := 'update #PDayReport set D_YearValue=%s where D_ProId=''%s''';
-        nSQL := Format(nSQL,[FieldByName('L_Value').AsString,
-                FieldByName('L_CusID').AsString]);
+        nSQL := Format(nSQL,[FloatToStr(FieldByName('D_Value').AsFloat),
+                FieldByName('D_ProID').AsString]);
         FDM.ExecuteSQL(nSQL);
         Next;
       end;

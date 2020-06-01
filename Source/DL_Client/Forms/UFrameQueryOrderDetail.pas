@@ -99,9 +99,12 @@ begin
   {$ENDIF}
 
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
-  Result := 'Select *,(D_MValue-D_PValue-D_KZValue) as D_NetWeight ' +
-            'From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
+  //Result := 'Select *,(D_MValue-D_PValue-D_KZValue) as D_NetWeight ' +
+  //          'From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
+  Result := 'Select *,(case o_ordertype when ''T'' then (D_PValue+D_KZValue-D_MValue)'+
+            ' else (D_MValue-D_PValue-D_KZValue) end) as D_NetWeight ' +
+            'From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
 
   if FJBWhere = '' then
   begin

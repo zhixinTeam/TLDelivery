@@ -259,7 +259,7 @@ begin
     FParamB := 320;
     FParamD := 10;
 
-    FParamC := 'Update %s Set L_Memo=''$Memo'' Where R_ID=%s';
+    FParamC := 'Update %s Set L_Memo=''$Memo'' Where L_ID=''%s''';
     FParamC := Format(FParamC, [sTable_Bill, nID]);
 
     CreateBaseFormItem(cFI_FormMemo, '', @nP);

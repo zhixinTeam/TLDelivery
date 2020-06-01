@@ -549,13 +549,21 @@ begin
 
       FIsVIP      := FieldByName('B_IsUsed').AsString;
       FIsNei      := FieldByName('B_IsNei').AsString;  //是否内倒
-
+      {$IFDEF QSTL}
+      if FIsNei = sflag_yes then
+        FIsVIP := sFlag_No;
+      {$ENDIF}
+      FPrePData:= FieldByName('PrePUse').AsString;
+      
       with FPData do
       begin
         FDate   := FieldByName('B_PDate').AsDateTime;
         FValue  := FieldByName('B_PValue').AsFloat;
         FOperator := FieldByName('B_PMan').AsString;
       end;
+
+      WriteLog('zyww::'+FTruck+',IsVip::'+FIsVIP+',FIsNei:'+FIsNei+
+          ',FPrePData:'+FPrePData+',PrePValue:'+floattostr(FieldByName('PrePValue').asfloat));
 
       if FIsVIP <> sFlag_Yes then
       begin
@@ -577,7 +585,6 @@ begin
           nNewTransBase:= True;
         end;
 
-        FPrePData:= FieldByName('PrePUse').AsString;
         if (FPrePData=sFlag_Yes) then
         begin
             FPData.FDate    := FieldByName('PrePTime').AsDateTime;
@@ -696,6 +703,12 @@ begin
       if nNeedP then FNextStatus := sFlag_TruckBFP;
       //需要过磅
 
+      {$IFDEF QSKS}
+      FStatus := sFlag_TruckBFP;
+      FNextStatus := sFlag_TruckBFM;
+      {$ENDIF}
+      //进厂将状态改成当前过皮重，下一状态过毛重
+
       nSQL := MakeSQLByStr([
               SF('T_ID', nOut.FData),
               SF('T_Card', FCard),
@@ -710,7 +723,11 @@ begin
               SF('T_Status', FStatus),
               SF('T_NextStatus', FNextStatus),
               SF('T_InTime', sField_SQLServer_Now, sfVal),
-              SF('T_InMan', FIn.FBase.FFrom.FUser)
+              SF('T_InMan', FIn.FBase.FFrom.FUser),
+
+              SF('T_PValue', FPData.FValue),
+              SF('T_PDate', FPData.FDate),
+              SF('T_PMan', FPData.FOperator)
               ], sTable_Transfer, '', True);
       FListA.Add(nSQL);
 
@@ -718,6 +735,9 @@ begin
               SF('B_TID', nOut.FData),
               SF('B_IsUsed', sFlag_Yes),
               SF('B_Status', FStatus),
+              SF('B_PValue', FPData.FValue),
+              SF('B_PDate', FPData.FDate),
+              SF('B_PMan', FPData.FOperator),
               SF('B_NextStatus', FNextStatus)
               ], sTable_TransBase, SF('B_ID', FZhiKa), False);
       FListA.Add(nSQL);
@@ -842,6 +862,9 @@ begin
       end else
       begin
         nSQL := MakeSQLByStr([
+                SF('P_PValue', FPData.FValue, sfVal),
+                SF('P_PDate', sField_SQLServer_Now, sfVal),
+                SF('P_PMan', FIn.FBase.FFrom.FUser),
                 SF('P_MValue', FMData.FValue, sfVal),
                 SF('P_MDate', sField_SQLServer_Now, sfVal),
                 SF('P_MMan', FIn.FBase.FFrom.FUser),
@@ -852,6 +875,9 @@ begin
 
         nSQL := MakeSQLByStr([
                 SF('T_Status', sFlag_TruckBFM),
+                SF('T_PValue', FPData.FValue, sfVal),
+                SF('T_PDate', sField_SQLServer_Now, sfVal),
+                SF('T_PMan', FIn.FBase.FFrom.FUser),
                 SF('T_NextStatus', sFlag_TruckOut),
                 SF('T_MValue', FMData.FValue, sfVal),
                 SF('T_MDate', sField_SQLServer_Now, sfVal),
@@ -892,6 +918,7 @@ begin
     if nN = sFlag_TruckOut then
     with nPound[0] do
     begin
+      FNextStatus := '';
       nSQL := MakeSQLByStr([
               SF('T_Status', sFlag_TruckOut),
               SF('T_NextStatus', ''),

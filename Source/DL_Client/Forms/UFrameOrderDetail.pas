@@ -15,7 +15,8 @@ uses
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   ComCtrls, ToolWin, cxCheckBox, dxSkinsCore, dxSkinsDefaultPainters,
-  dxSkinscxPCPainter, dxLayoutcxEditAdapters, Dialogs;
+  dxSkinscxPCPainter, dxLayoutcxEditAdapters, Dialogs,
+  cxGridCustomPopupMenu, cxGridPopupMenu;
 
 type
   TfFrameOrderDetail = class(TfFrameNormal)
@@ -52,6 +53,7 @@ type
     procedure Check1Click(Sender: TObject);
     procedure N4Click(Sender: TObject);
     procedure BtnEditClick(Sender: TObject);
+    procedure cxView1DblClick(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -331,6 +333,20 @@ begin
     nP.FParamB  := SQLQuery.FieldByName('D_OID').AsString;
 
     CreateBaseFormItem(cFI_FormOrderDtl, '', @nP);
+  end;
+end;
+
+procedure TfFrameOrderDetail.cxView1DblClick(Sender: TObject);
+var
+  nP: TFormCommandParam;
+begin
+  nP.FCommand := cCmd_EditData;
+  nP.FParamA := SQLQuery.FieldByName('D_ID').AsString;
+  CreateBaseFormItem(cFI_FormOrderHYRes, '', @nP);
+
+  if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+  begin
+    InitFormData(FWhere);
   end;
 end;
 

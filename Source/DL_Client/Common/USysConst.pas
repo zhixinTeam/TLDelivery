@@ -190,6 +190,14 @@ const
   cFI_FramePurDayReport = $0103;                     //采购日报表
   cFI_FrameSaleDayReport= $0104;                     //销售日报表
 
+  cFI_FrameOrderReturn  = $1201;                     //采购退货
+  cFI_FormOrderReturn   = $1202;                     //采购退货
+  cFI_FrameOR_HYS       = $1203;                     //采退化验室审核
+  cFI_FrameOR_CGB       = $1204;                     //采退采购部审核
+  cFI_FormPOrder_CT     = $1205;                     //采购退货
+  cFI_FormProdLimit     = $1206;                     //采购限量
+  cFI_FormOrderHYRes    = $1207;                     //采购检验结果录入
+
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
   cCmd_ViewSysLog       = $0003;                     //系统日志
@@ -420,6 +428,10 @@ begin
   AddMenuModuleItem('MAIN_M08', cFI_FrameOrderDetail);
   AddMenuModuleItem('MAIN_M09', cFI_FrameOrderBase);
   AddMenuModuleItem('MAIN_M11', cFI_FrameOrderCheck);
+  AddMenuModuleItem('MAIN_M12', cFI_FrameOrderReturn);
+  AddMenuModuleItem('MAIN_M13', cFI_FrameOR_HYS);
+  AddMenuModuleItem('MAIN_M14', cFI_FrameOR_CGB);
+  AddMenuModuleItem('MAIN_M15', cFI_FormProdLimit, mtForm);
 
   AddMenuModuleItem('MAIN_W01', cFI_FrameWXAccount);
   AddMenuModuleItem('MAIN_W02', cFI_FrameWXSendLog);

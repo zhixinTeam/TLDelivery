@@ -45,10 +45,13 @@ uses
   UFormGetWechartAccount, UFrameAuditTruck, UFormAuditTruck, UFrameBillBuDanAudit,
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo,
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormChangeState,
-  UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail,UFormCusLimit,
+  UFormTransfer, UFrameTransfer, UFrameQueryTransferDetail, UFormCusLimit,
   UFormQryCard, UFrameZTQuery, UFrameOrderCheck, UFrameBatchNo,
-  UFormBatcodeEdit,UFrameBatcodeQuery, UFormSetPriceLimit, UFrameSaleDayReport,
-  UFramePurDayReport;
+  UFormBatcodeEdit, UFrameBatcodeQuery, UFormSetPriceLimit, UFrameSaleDayReport,
+  UFramePurDayReport, UFormProdLimit,
+  //²É¹ºÍË»õ
+  UFrameOrderReturn, UFormOrderReturn, UFrameOR_HYS,
+  UFrameOR_CGB, UFormPOrder_CT, UFormOrderHYRes;
 
 procedure InitSystemObject;
 procedure RunSystemObject;

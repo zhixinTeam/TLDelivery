@@ -94,6 +94,7 @@ const
   sFlag_Returns       = 'R';                         //退货
   sFlag_Other         = 'O';                         //其它
   sFlag_DuanDao       = 'D';                         //短倒(First=>Second)
+  sFlag_Tx            = 'T';                          //通行卡
   
   sFlag_TiHuo         = 'T';                         //自提
   sFlag_SongH         = 'S';                         //送货
@@ -257,12 +258,16 @@ const
   sFlag_Order         = 'Bus_Order';                 //采购单号
   sFlag_OrderDtl      = 'Bus_OrderDtl';              //采购单号
   sFlag_OrderBase     = 'Bus_OrderBase';             //采购申请单号
+  sFlag_OrderReturn   = 'Bus_OrderReturn';           //采购退货申请单号
 
   sFlag_Departments   = 'Departments';               //部门列表
   sFlag_DepDaTing     = '大厅';                      //服务大厅
   sFlag_DepJianZhuang = '监装';                      //监装
   sFlag_DepBangFang   = '磅房';                      //磅房
   sFlag_DepHuaYan     = '化验室';                    //化验室
+  sFlag_HYSMgr        = '化验室主任';                //化验室
+  sFlag_CGBMgr        = '采购部主任';                //采购部
+  sFlag_WLBMgr        = '物流部';                    //物流部
 
   sFlag_Solution_YN   = 'Y=通过;N=禁止';
   sFlag_Solution_YNI  = 'Y=通过;N=禁止;I=忽略';
@@ -285,12 +290,18 @@ const
   sFlag_SanForceQueue = 'SanForceQueue';             //散装强制排队
   sFlag_AreaLimit     = 'AreaLimit';                 //客户发货日限额
   sFlag_StopNewBill   = 'StopNewBill';               //暂停开卡
+  sFlag_StopNotG5Bill = 'StopNotG5Bill';           //暂停国五以下车辆开卡功能
+
 
   sFlag_TruckInNeedManu  = 'TruckNeedManu';           //车牌识别需人工干预
   sFlag_CusLoadLimit     = 'CusLoadLimit';            //客户发货日限额
+  sFlag_ProdLimit        = 'ProdLimit';               //采购发货日限额
+  sFlag_ProdLimitYL      = 'ProdLimitYL';             //采购发货日限额
+
   sFlag_VipTruckLoadLimit= 'VipTruckLimit';           //VIP客户限载
   sFlag_TruckLoadLimit   = 'TruckLimit';              //普通水泥客户限载
-  sFlag_SLTruckLoadLimit = 'SLTruckLimit';            //熟料客户发货日限额
+  sFlag_SLTruckLoadLimit = 'SLTruckLimit';            //熟料客户发货限载
+  sFlag_OrderTruckLimit  = 'OrderTruckLimit';         //采购客户发货限载
 
   sFlag_AutoPurchaseID   = 'AutoPurchaseID';          //是否自动生成原材料编号
   sFlag_Purchase         = 'Bus_Purchase';            //原材料编号
@@ -388,6 +399,8 @@ const
   
   sTable_SnapTruck    = 'Sys_SnapTruck';             //车辆抓拍记录
   sTable_CusLimit     = 'S_CusLimit';                //客户限提
+  sTable_ProdLimit    = 'S_ProdLimit';               //客户限提
+  sTable_OrderReturn  = 'P_OrderReturn';             //采购退货
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -830,7 +843,7 @@ const
        'L_Man varChar(32), L_Date DateTime,' +
        'L_DelMan varChar(32), L_DelDate DateTime, L_Memo varChar(320),'+
        'L_SyncStatus char(1) default(''N''),L_TransCode varchar(30),'+
-       'L_TransName varchar(80))';
+       'L_TransName varchar(80), L_HDBills varchar(20))';
   {-----------------------------------------------------------------------------
    交货单表: Bill
    *.R_ID: 编号
@@ -871,6 +884,7 @@ const
    *.L_Memo: 动作备注
    *.L_SyncStatus:同步状态 默认N未同步
    *.L_TransCode,L_TransName:运输公司
+   *.L_HDBills:合单编号
   -----------------------------------------------------------------------------}
 
   sSQL_NewBillHK = 'Create Table $Table(R_ID $Inc, H_Bill varChar(20),' +
@@ -925,7 +939,7 @@ const
        'O_Man varChar(32), O_Date DateTime,' +
        'O_KFValue varChar(16), O_KFLS varChar(32),O_StockPrc $Float,' +
        'O_DelMan varChar(32), O_DelDate DateTime, O_Memo varChar(500),'+
-       'O_OrderType char(1))';
+       'O_OrderType char(1), O_CTID varchar(20))';
   {-----------------------------------------------------------------------------
    采购订单表: Order
    *.R_ID: 编号
@@ -949,6 +963,7 @@ const
    *.O_DelDate: 采购单删除时间
    *.O_Memo: 动作备注
    *.O_Ordertype: 类型P采购，T 退货
+   *.O_CTID:采购退货申请单ID
   -----------------------------------------------------------------------------}
 
   sSQL_NewOrderDtl = 'Create Table $Table(R_ID $Inc, D_ID varChar(20),' +
@@ -966,9 +981,12 @@ const
        'D_YLine varChar(15), D_YLineName varChar(32), D_Unload varChar(80),' +
        'D_DelMan varChar(32), D_DelDate DateTime, D_YSResult Char(1), ' +
        'D_OutFact DateTime, D_OutMan varChar(32), D_Memo varChar(500),'+
-       'D_WlbYTime DateTime, D_WlbYMan varchar(32),D_WlbYS char(1) Default ''N'''+
-       'D_BMCheck char(1), D_BMCheckMan varchar(32),D_BMCheckTime DataTime,D_BMMemo varchar(200),'+
-       'D_LeaderCheck char(1), D_Leader varchar(32),D_LeaderCheckTime DataTime,D_LeaderMemo varchar(200))';
+       'D_WlbYTime DateTime, D_WlbYMan varchar(32),D_WlbYS char(1) Default ''N'','+
+       'D_BMCheck char(1), D_BMCheckMan varchar(32),D_BMCheckTime DateTime,D_BMMemo varchar(200),'+
+       'D_LeaderCheck char(1), D_Leader varchar(32),D_LeaderCheckTime DateTime,'+
+       'D_LeaderMemo varchar(200),D_SF varchar(32),D_Fe2O3 varchar(32),'+
+       'D_LD varchar(32), D_Htl varchar(32),D_SiO3 varchar(32),D_SO3 varchar(32),'+
+       'D_CaO varchar(32), D_MgO varchar(32))';
   {-----------------------------------------------------------------------------
    采购订单明细表: OrderDetail
    *.R_ID: 编号
@@ -997,6 +1015,7 @@ const
    *.D_WlbYTime,D_WlbYMan,D_WlbYS:物流部验收时间，人，结果
    *.D_BMCheck,D_BMCheckMan,D_BMCheckTime,D_BMMemo 部门审核
    *.D_LeaderCheck,D_Leader,D_LeaderCheckTime,D_LeaderMemo 领导审核
+   *.D_SF,D_Fe2O3,D_LD,D_Htl,D_SiO3,D_SO3,D_CaO,D_MgO 检验参数
   -----------------------------------------------------------------------------}
 
   sSQL_NewCard = 'Create Table $Table(R_ID $Inc, C_Card varChar(16),' +
@@ -1028,7 +1047,7 @@ const
        'T_PlateColor varChar(12),T_Type varChar(12), T_LastTime DateTime, ' +
        'T_Card varChar(32), T_CardUse Char(1), T_Card2 varChar(32),' +
        'T_NoVerify Char(1), T_Valid Char(1), T_VIPTruck Char(1), T_HasGPS Char(1),'+
-       'T_VipCus char(1))';
+       'T_VipCus char(1),T_PFBZ integer default -1)';
   {-----------------------------------------------------------------------------
    车辆信息:Truck
    *.R_ID: 记录号
@@ -1055,6 +1074,7 @@ const
    *.T_VIPTruck:是否VIP
    *.T_HasGPS:安装GPS(Y/N)
    *.T_VipCus:同力独有，是VIPcus车重可以超100吨
+   T_PFBZ:排放标准
 
    有效平均皮重算法:
    T_PValue = (T_PValue * T_PTime + 新皮重) / (T_PTime + 1)
@@ -1399,7 +1419,15 @@ const
        'P_Jian varChar(20), P_ChouDu varChar(20), P_BuRong varChar(20),' +
        'P_YLiGai varChar(20), P_Water varChar(20), P_KuangWu varChar(20),' +
        'P_GaiGui varChar(20), P_3DZhe varChar(20), P_28Zhe varChar(20),' +
-       'P_3DYa varChar(20), P_28Ya varChar(20))';
+       'P_3DYa varChar(20), P_28Ya varChar(20),'+
+       'P_3DSHR varchar(20),P_7DSHR varchar(20),P_NaOJD varchar(20),'+
+       'P_YLYHL varchar(20),P_38C8HKY varchar(20),P_60C8HKY varchar(20),'+
+       'P_15To30CD varchar(20),P_CHTime varchar(20),P_SHB varchar(20),'+
+       'P_ZMJType varchar(20),P_ZmjVal varchar(20),P_GSSG varchar(20),'+
+       'P_LSSG varchar(20),P_TLS2BLS varchar(20),P_4DXPZL varchar(20),'+
+       'P_TLSSG varchar(20),P_BZCDYS varchar(20),P_28DNM varchar(20),'+
+       'P_28DGSL varchar(20),P_C3S varchar(20),P_C3A varchar(20),'+
+       'P_7DZhe varchar(20),P_7DYa varchar(20))' ;
   {-----------------------------------------------------------------------------
    品种参数:StockParam
    *.P_ID:记录编号
@@ -1428,6 +1456,30 @@ const
    *.P_28DZhe:28抗折强度
    *.P_3DYa:3天抗压强度
    *.P_28DYa:28抗压强度
+   -----------省同力新增------------
+   *.P_3DSHR 3天水化热
+   *.P_7DSHR 7天水化热
+   *.P_NaOJD 氧化钠当标识的总碱度
+   *.P_YLYHL 游离液含量
+   *.P_38C8HKY 38度常压8小时抗压强度
+   *.P_60C8HKY 60度常压8小时抗压强度
+   *.P_15To30CD 15-30min稠度
+   *.P_CHTime  稠化时间
+   *.P_SHB 水灰比
+   *.P_ZMJType 助磨剂种类
+   *.P_ZmjVal 助磨剂掺量
+   *.P_GSSG 硅酸三钙
+   *.P_LSSG 铝酸三钙
+   *.P_TLS2BLS 铁铝酸四钙+二倍氯酸三钙
+   *.P_4DXPZL  4d线膨胀率
+   *.P_TLSSG 铁铝酸四钙
+   *.P_BZCDYS 标准稠度用水
+   *.P_28DNM 28d耐磨性
+   *.P_28DGSL 28d干缩率
+   *.P_C3S
+   *.P_C3A
+   *.P_7DZhe  7天抗折
+   *.P_7DYa   7天抗压
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockRecord = 'Create Table $Table(R_ID $Inc, R_SerialNo varChar(15),' +
@@ -1447,7 +1499,17 @@ const
        'R_28Ya1 varChar(20), R_28Ya2 varChar(20), R_28Ya3 varChar(20),' +
        'R_28Ya4 varChar(20), R_28Ya5 varChar(20), R_28Ya6 varChar(20),' +
        'R_Date DateTime, R_Man varChar(32),R_SrxGe varchar(20),'+
-       'R_FXNei varchar(20),R_FXWai varchar(20))';
+       'R_FXNei varchar(20),R_FXWai varchar(20),'+
+       'R_3DSHR varchar(20),R_7DSHR varchar(20),R_NaOJD varchar(20),'+
+       'R_YLYHL varchar(20),R_38C8HKY varchar(20),R_60C8HKY varchar(20),'+
+       'R_15To30CD varchar(20),R_CHTime varchar(20),R_SHB varchar(20),'+
+       'R_ZMJType varchar(20),R_ZmjVal varchar(20),R_GSSG varchar(20),'+
+       'R_LSSG varchar(20),R_TLS2BLS varchar(20),R_4DXPZL varchar(20),'+
+       'R_TLSSG varchar(20),R_BZCDYS varchar(20),R_28DNM varchar(20),'+
+       'R_28DGSL varchar(20),R_C3S varchar(20),R_C3A varchar(20),'+
+       'R_7DZhe1 varchar(20),R_7DZhe2 varchar(20),R_7DZhe3 varchar(20),'+
+       'R_7DYa1 varchar(20),R_7DYa2 varchar(20),R_7DYa3 varchar(20),'+
+       'R_7DYa4 varchar(20),R_7DYa5 varchar(20),R_7DYa6 varchar(20))' ;
   {-----------------------------------------------------------------------------
    检验记录:StockRecord
    *.R_ID:记录编号
@@ -1496,6 +1558,30 @@ const
    *.R_SrxGe:水溶性铬
    *.R_FXNei:放射性内照指数
    *.R_FXWai:放射性外照指数
+   -------省同力新增-------
+   *.R_3DSHR 3天水化热
+   *.R_7DSHR 7天水化热
+   *.R_NaOJD 氧化钠当标识的总碱度
+   *.R_YLYHL 游离液含量
+   *.R_38C8HKY 38度常压8小时抗压强度
+   *.R_60C8HKY 60度常压8小时抗压强度
+   *.R_15To30CD 15-30min稠度
+   *.R_CHTime  稠化时间
+   *.R_SHB 水灰比
+   *.R_ZMJType 助磨剂种类
+   *.R_ZmjVal 助磨剂掺量
+   *.R_GSSG 硅酸三钙
+   *.R_LSSG 铝酸三钙
+   *.R_TLS2BLS 铁铝酸四钙+二倍氯酸三钙
+   *.R_4DXPZL  4d线膨胀率
+   *.R_TLSSG 铁铝酸四钙
+   *.R_BZCDYS 标准稠度用水
+   *.R_28DNM 28d耐磨性
+   *.R_28DGSL 28d干缩率
+   *.R_C3S
+   *.R_C3A
+   *.R_7DZhe1 ,R_7DZhe2 ,R_7DZhe3  7天抗折
+   *.R_7DYa1 ,R_7DYa2 ,R_7DYa3,R_7DYa4 ,R_7DYa5 ,R_7DYa6  7天抗压
   -----------------------------------------------------------------------------}
 
   sSQL_NewStockHuaYan = 'Create Table $Table(H_ID $Inc, H_No varChar(15),' +
@@ -1546,7 +1632,7 @@ const
 
   sSQL_NewBatchNo ='Create Table $Table(R_ID $Inc, B_Stock varChar(32),' +
        'B_Name varChar(80),B_NO varChar(20),B_Status char(1),'+
-       'B_HasUse $Float Default 0,B_Date Datetime,B_User varchar(20)';
+       'B_HasUse $Float Default 0,B_Date Datetime,B_User varchar(20))';
   {-----------------------------------------------------------------------------
    手动批次编码表: BatchNo
    -----------------------------------------------------------------------------}
@@ -1698,6 +1784,18 @@ const
    *.L_User:操作员
   -----------------------------------------------------------------------------}
 
+  sSQL_NewProdLimit = 'Create Table $Table(R_ID $Inc,L_ProdNo varchar(20), L_ProdName varchar(100),'
+      +'L_StockNo varchar(40),L_Value $Float,L_Date DateTime,L_User varchar(20))';
+  {-----------------------------------------------------------------------------
+   限购表: CusLimit
+   *.R_ID: 记录编号
+   *.L_StockNo, L_StockName:物料编号
+   *.L_CusNo:客户编号
+   *.L_Value:限载值
+   *.L_Date:时间
+   *.L_User:操作员
+  -----------------------------------------------------------------------------}
+
 sSQL_NewBatcodeDoc = 'Create Table $Table(R_ID $Inc, D_ID varChar(32),' +
        'D_Stock varChar(32),D_Name varChar(80), D_Brand varChar(32), ' +
        'D_Type Char(1), D_Plan $Float, D_Sent $Float Default 0, ' +
@@ -1728,7 +1826,25 @@ sSQL_NewBatcodeDoc = 'Create Table $Table(R_ID $Inc, D_ID varChar(32),' +
    *.D_LastDate: 终止时间
    *.D_Valid: 是否启用(N、封存;Y、启用；D、删除)
   -----------------------------------------------------------------------------}
-
+sSQL_NewOrderReturn ='Create Table $Table(R_ID $Inc, T_ID varChar(32),'+
+        'T_ProId varchar(30),T_ProName varchar(80),T_StockNO varchar(20),'+
+        'T_StockName varchar(50),T_Value $Float,T_ValDone $Float default 0,'+
+        'T_Man varchar(30),T_Date DateTime, T_HYSMan varchar(30),'+
+        'T_HYSDate DateTime, T_HYSState char(1),T_HYSMemo varchar(300),'+
+        'T_CGBMan varchar(30),T_CGBDate DateTime,T_CGBMemo varchar(300),'+
+        'T_CGBState char(1), T_HTId varchar(30), T_Memo varchar(200))';
+  {-----------------------------------------------------------------------------
+   *.R_ID: 编号
+   *.T_ID: 编号
+   *.T_HTId:采购合同编号
+   *.T_ProId,T_ProName: 供应商
+   *.T_StockNO, T_StockName: 原材料
+   *.T_Value: 申请退货量
+   *.T_ValDone: 已退量
+   *.T_Man,T_Date: 退货发起人
+   *.T_HYSMan, T_HYSDate, T_HYSState, T_HYSMemo :化验室主任审核
+   *.T_CGBMan, T_CGBDate, T_CGBMemo, T_CGBState :采购部主任审核
+  -----------------------------------------------------------------------------}
 
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
@@ -1881,8 +1997,10 @@ begin
 
   AddSysTableItem(sTable_SnapTruck,sSQL_SnapTruck);    // 车牌识别记录
   AddSysTableItem(sTable_CusLimit, sSQL_NewCusLimit);  //限提设置
+  AddSysTableItem(sTable_ProdLimit, sSQL_NewProdLimit);  //采购限量
 
   AddSysTableItem(sTable_BatcodeDoc, sSQL_NewBatcodeDoc);
+  AddSysTableItem(sTable_OrderReturn, sSQL_NewOrderReturn);
 end;
 
 //Desc: 清理系统表

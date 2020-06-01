@@ -507,7 +507,7 @@ end;
 
 function TfFormNewPurchaseCard.SaveBillProxy: Boolean;
 var
-  nHint:string;
+  nHint, nStr:string;
   nWebOrderID:string;
   nList: TStrings;
   nOrderItem:stMallPurchaseItem;

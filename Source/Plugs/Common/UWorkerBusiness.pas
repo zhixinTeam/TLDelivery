@@ -648,8 +648,9 @@ begin
     gDBConnManager.ReleaseConnection(nCErpWorker);
   end;
 
-  nStr := 'select * from %s where A_CID=''%s''';
-  nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+  nStr := 'select SUM(L_Price*L_value) as A_FreezeMoney from %s '+
+            'where L_CusID=''%s'' and L_Status <>''O''';
+  nStr := Format(nStr,[sTable_Bill, nCusId]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   begin
@@ -706,12 +707,21 @@ begin
     begin
       if RecordCount > 0 then
       begin
+        //确山同力
         {$IFDEF QSTL}
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
-        {$ELSE}
-        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
-        {$ENDIF}
           nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
+        //豫鹤同力
+        {$IFDEF YHTL}
+        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
+          nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
+        //省同力 需要赊销合同标记
+        {$IFDEF STL}
+        if FieldByName('paytypecode').AsString = '00001' then  //允欠合同 一类合同是允欠
+          nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
       end;
 
       if FieldByName('invalidDate').AsDateTime < Now then
@@ -722,8 +732,10 @@ begin
       end;
     end;
 
-    nStr := 'select * from %s where A_CID=''%s''';
-    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+    //nStr := 'select * from %s where A_CID=''%s''';
+    nStr := 'select SUM(L_Price*L_value) as A_FreezeMoney from %s '+
+            'where L_CusID=''%s'' and L_Status <>''O''';
+    nStr := Format(nStr,[sTable_Bill, nCusId]);
 
     with gDBConnManager.WorkerQuery(FDBConn, nStr) do
     begin
@@ -1047,9 +1059,9 @@ var nStr,nP, nBatchNew,nSelect: string;
     //Desc: 封存记录
     procedure OutuseCode(const nID: string);
     begin
-      nStr := 'Update %s Set D_Valid=''%s'',D_LastDate=%s Where D_ID=''%s''';
+      nStr := 'Update %s Set D_Valid=''%s'',D_LastDate=%s Where D_ID=''%s'' and D_Valid<>''%s''';
       nStr := Format(nStr, [sTable_BatcodeDoc, sFlag_No,
-              sField_SQLServer_Now, nID]);
+              sField_SQLServer_Now, nID, sPopedom_Delete]);
       gDBConnManager.WorkerExec(FDBConn, nStr);
     end;
 begin
@@ -1394,7 +1406,7 @@ begin
     while not Eof do
     begin
       //生成当日最大单号
-      nSQL := 'select isnull(max(tpickbill0_.pbillCode), '''') as col_0_0_ from '+
+      {nSQL := 'select isnull(max(tpickbill0_.pbillCode), '''') as col_0_0_ from '+
               'SAL.SAL_PickBill tpickbill0_ where 1=1 and (tpickbill0_.pbillCode like ''%s'')';
       nSQL := Format(nSQL,['TH'+formatdatetime('yyyymmdd',now)+'%']);
 
@@ -1414,7 +1426,9 @@ begin
             nBill := '0' + nBill;
           nBill := 'TH' + FormatDateTime('yyyymmdd',Now) + nBill;
         end;
-      end;
+      end;}   //启用，直接用一卡通提货单号
+
+      nBill := FieldByName('L_ID').AsString;
 
       nSQL := 'select isnull(sum(rtnSum), 0) as col_0_0_ from SAL.SAL_ContractRtn '+
               'where contractCode=''%s''';
@@ -1509,20 +1523,21 @@ begin
                   SF('Item_Name',               FieldByName('L_StockName').AsString),
 
                   SF('Tare_Time',               FieldByName('L_PDate').AsString),         //皮重信息
-                  SF('Tare_Weight',             FieldByName('L_PValue').AsFloat),
+                  SF('Tare_Weight',             FieldByName('L_PValue').AsFloat*1000),
                   SF('T_Operator_Name',         FieldByName('L_PMan').AsString),
                   SF('T_Weight_Order',          FieldByName('P_PStation').AsString),       //皮重磅站编号
 
                   SF('Gross_Time',               FieldByName('L_MDate').AsString),        //皮重信息
-                  SF('Gross_Weight',             FieldByName('L_MValue').AsFloat),
+                  SF('Gross_Weight',             FieldByName('L_MValue').AsFloat*1000),
                   SF('G_Operator_Name',          FieldByName('L_MMan').AsString),
                   SF('G_Weight_Order',           FieldByName('P_MStation').AsString),      //皮重磅站编号
 
                   SF('Car_Code',                 FieldByName('L_Truck').AsString),
                   SF('Sup_Id',                   FieldByName('L_CusID').AsString),
                   SF('Sup_Name',                 FieldByName('L_CusName').AsString),
-
-                  SF('Net_Weight',               FieldByName('L_Value').AsString)
+                  SF('wei_Flag',                 'ST'),
+                  SF('note',                     FieldByName('L_ID').AsString),
+                  SF('Net_Weight',               FieldByName('L_Value').AsFloat*1000)
                    ], 'MEM_WTData',             '', True);
       FListB.Add(nSQL);
 
@@ -1713,6 +1728,7 @@ begin
     //conn db
 
     FListA.Clear;
+    FListB.Clear;
     First;
     while not Eof do
     begin
@@ -1752,7 +1768,7 @@ begin
                     SF('billNum',               nBill),
                     SF('serialNum',             '1'),
                     SF('contractNum',           FieldByName('O_BID').AsString),
-                    SF('billType',              nStr),
+                    SF('billType',              nStr),          //采购类型:进货,退货
                     SF('supId',                 FieldByName('O_ProID').AsString),
                     SF('supName',               FieldByName('O_ProName').AsString),
                     SF('buyerID',               nTmpDataSet.FieldByName('makeEmpid').AsString),
@@ -1788,20 +1804,21 @@ begin
                   SF('Item_Name',               FieldByName('O_StockName').AsString),
 
                   SF('Tare_Time',               FieldByName('D_PDate').AsString),         //皮重信息
-                  SF('Tare_Weight',             FieldByName('D_PValue').AsFloat),
+                  SF('Tare_Weight',             FieldByName('D_PValue').AsFloat*1000),
                   SF('T_Operator_Name',         FieldByName('D_PMan').AsString),
                   SF('T_Weight_Order',          FieldByName('P_PStation').AsString),       //皮重磅站编号
 
                   SF('Gross_Time',               FieldByName('D_MDate').AsString),        //皮重信息
-                  SF('Gross_Weight',             FieldByName('D_MValue').AsFloat),
+                  SF('Gross_Weight',             FieldByName('D_MValue').AsFloat*1000),
                   SF('G_Operator_Name',          FieldByName('D_MMan').AsString),
                   SF('G_Weight_Order',           FieldByName('P_MStation').AsString),      //皮重磅站编号
 
                   SF('Car_Code',                 FieldByName('O_Truck').AsString),
                   SF('Sup_Id',                   FieldByName('O_ProID').AsString),
                   SF('Sup_Name',                 FieldByName('O_ProName').AsString),
-
-                  SF('Net_Weight',               FieldByName('D_Value').AsString)
+                  SF('wei_Flag',                 'PP'),
+                  SF('note',                     FieldByName('D_ID').AsString),
+                  SF('Net_Weight',               FieldByName('D_Value').AsFloat*1000)
                    ], 'MEM_WTData',             '',         True);
       FListB.Add(nSQL);
       
@@ -1982,8 +1999,8 @@ begin
 
           nStr := SF('P_ID', FieldByName('accountCode').AsString);
           nStr := MakeSQLByStr([
-                  SF('C_Name', FieldByName('accountName').AsString),
-                  SF('C_PY', GetPinYinOfStr(FieldByName('accountName').AsString))
+                  SF('P_Name', FieldByName('accountName').AsString),
+                  SF('P_PY', GetPinYinOfStr(FieldByName('accountName').AsString))
                   ], sTable_Provider, nStr, False);
                   
           FListA.Add(nStr);

@@ -3,12 +3,12 @@ object fFormHYStock: TfFormHYStock
   Top = 99
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  ClientHeight = 644
-  ClientWidth = 600
+  ClientHeight = 568
+  ClientWidth = 830
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -15
+  Font.Height = -12
   Font.Name = #23435#20307
   Font.Style = []
   KeyPreview = True
@@ -16,39 +16,38 @@ object fFormHYStock: TfFormHYStock
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 120
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 12
   object dxLayoutControl1: TdxLayoutControl
     Left = 0
     Top = 0
-    Width = 600
-    Height = 644
+    Width = 830
+    Height = 568
     Align = alClient
     TabOrder = 0
     TabStop = False
-    AutoContentSizes = [acsWidth, acsHeight]
-    LookAndFeel = FDM.dxLayoutWeb1
+    LayoutLookAndFeel = FDM.dxLayoutWeb1
     object BtnOK: TButton
-      Left = 406
-      Top = 603
-      Width = 88
-      Height = 27
+      Left = 674
+      Top = 535
+      Width = 70
+      Height = 22
       Caption = #20445#23384
       TabOrder = 7
       OnClick = BtnOKClick
     end
     object BtnExit: TButton
-      Left = 499
-      Top = 603
-      Width = 87
-      Height = 27
+      Left = 749
+      Top = 535
+      Width = 70
+      Height = 22
       Caption = #21462#28040
       TabOrder = 8
       OnClick = BtnExitClick
     end
     object EditID: TcxButtonEdit
-      Left = 87
-      Top = 45
+      Left = 81
+      Top = 36
       Hint = 'T.P_ID'
       HelpType = htKeyword
       HelpKeyword = 'NU'
@@ -59,12 +58,15 @@ object fFormHYStock: TfFormHYStock
         end>
       Properties.MaxLength = 15
       Properties.OnButtonClick = EditIDPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
-      Width = 152
+      Width = 121
     end
     object EditStock: TcxComboBox
-      Left = 87
-      Top = 73
+      Left = 81
+      Top = 61
       Hint = 'T.P_Stock'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
@@ -74,23 +76,29 @@ object fFormHYStock: TfFormHYStock
       Properties.ItemHeight = 18
       Properties.MaxLength = 15
       Properties.OnEditValueChanged = EditStockPropertiesEditValueChanged
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
+      Style.PopupBorderStyle = epbsSingle
       TabOrder = 1
-      Width = 232
+      Width = 185
     end
     object EditMemo: TcxMemo
-      Left = 87
-      Top = 129
+      Left = 81
+      Top = 111
       Hint = 'T.P_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 5
-      Height = 44
-      Width = 414
+      Height = 35
+      Width = 331
     end
     object EditType: TcxComboBox
-      Left = 382
-      Top = 73
+      Left = 329
+      Top = 61
       Hint = 'T.P_Type'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
@@ -101,1107 +109,1501 @@ object fFormHYStock: TfFormHYStock
         'D=D'#12289#34955#35013
         'S=S'#12289#25955#35013)
       Properties.ReadOnly = True
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
+      Style.PopupBorderStyle = epbsSingle
       TabOrder = 2
-      Width = 157
+      Width = 125
     end
     object EditName: TcxTextEdit
-      Left = 87
-      Top = 101
+      Left = 81
+      Top = 86
       Hint = 'T.P_Name'
       ParentFont = False
       Properties.MaxLength = 50
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 3
-      Width = 232
+      Width = 185
     end
     object wPage: TcxPageControl
-      Left = 14
-      Top = 187
-      Width = 535
-      Height = 360
-      ActivePage = Sheet2
+      Left = 11
+      Top = 158
+      Width = 428
+      Height = 288
+      ActivePage = Sheet1
       ParentColor = False
       ShowFrame = True
       Style = 9
       TabOrder = 6
       TabSlants.Kind = skCutCorner
-      ClientRectBottom = 359
+      ClientRectBottom = 287
       ClientRectLeft = 1
-      ClientRectRight = 534
-      ClientRectTop = 22
+      ClientRectRight = 427
+      ClientRectTop = 19
       object Sheet1: TcxTabSheet
         Caption = #22269#26631#21442#25968
         ImageIndex = 0
         object Label1: TLabel
-          Left = 15
+          Left = 12
           Top = 319
-          Width = 91
-          Height = 15
+          Width = 72
+          Height = 12
           Caption = '3'#22825#25239#21387#24378#24230':'
           Transparent = True
         end
         object Label2: TLabel
-          Left = 15
-          Top = 291
-          Width = 91
-          Height = 15
+          Left = 12
+          Top = 297
+          Width = 72
+          Height = 12
           Caption = '3'#22825#25239#25240#24378#24230':'
           Transparent = True
         end
         object Label3: TLabel
-          Left = 15
-          Top = 146
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 117
+          Width = 54
+          Height = 12
           Caption = #30897' '#21547' '#37327':'
           Transparent = True
         end
         object Label4: TLabel
-          Left = 206
-          Top = 49
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 39
+          Width = 54
+          Height = 12
           Caption = #19981' '#28342' '#29289':'
           Transparent = True
         end
         object Label5: TLabel
-          Left = 15
-          Top = 179
-          Width = 70
-          Height = 15
+          Left = 12
+          Top = 143
+          Width = 54
+          Height = 12
           Caption = #31264'    '#24230':'
           Transparent = True
         end
         object Label6: TLabel
-          Left = 15
-          Top = 114
-          Width = 70
-          Height = 15
+          Left = 12
+          Top = 91
+          Width = 54
+          Height = 12
           Caption = #32454'    '#24230':'
           Transparent = True
         end
         object Label7: TLabel
-          Left = 16
-          Top = 244
-          Width = 69
-          Height = 15
+          Left = 13
+          Top = 195
+          Width = 54
+          Height = 12
           Caption = #27695' '#31163' '#23376':'
           Transparent = True
         end
         object Label8: TLabel
-          Left = 15
-          Top = 16
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 13
+          Width = 54
+          Height = 12
           Caption = #27687' '#21270' '#38209':'
           Transparent = True
         end
         object Label9: TLabel
-          Left = 289
+          Left = 231
           Top = 319
-          Width = 99
-          Height = 15
+          Width = 78
+          Height = 12
           Caption = '28'#22825#25239#21387#24378#24230':'
           Transparent = True
         end
         object Label10: TLabel
-          Left = 289
-          Top = 291
-          Width = 99
-          Height = 15
+          Left = 231
+          Top = 297
+          Width = 78
+          Height = 12
           Caption = '28'#22825#25239#25240#24378#24230':'
           Transparent = True
         end
         object Label11: TLabel
-          Left = 206
-          Top = 81
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 65
+          Width = 54
+          Height = 12
           Caption = #21021#20957#26102#38388':'
           Transparent = True
         end
         object Label12: TLabel
-          Left = 206
-          Top = 113
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 90
+          Width = 54
+          Height = 12
           Caption = #32456#20957#26102#38388':'
           Transparent = True
         end
         object Label13: TLabel
-          Left = 206
-          Top = 16
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 13
+          Width = 54
+          Height = 12
           Caption = #27604#34920#38754#31215':'
           Transparent = True
         end
         object Label14: TLabel
-          Left = 206
-          Top = 244
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 195
+          Width = 54
+          Height = 12
           Caption = #30789' '#37240' '#30416':'
           Transparent = True
         end
         object Label15: TLabel
-          Left = 15
-          Top = 49
-          Width = 68
-          Height = 15
+          Left = 12
+          Top = 39
+          Width = 54
+          Height = 12
           Caption = #19977#27687#21270#30827':'
         end
         object Label16: TLabel
-          Left = 15
-          Top = 81
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 65
+          Width = 54
+          Height = 12
           Caption = #28903' '#22833' '#37327':'
         end
         object Bevel1: TBevel
-          Left = 15
-          Top = 270
-          Width = 525
-          Height = 9
+          Left = 12
+          Top = 280
+          Width = 420
+          Height = 7
           Shape = bsBottomLine
         end
         object Label33: TLabel
-          Left = 15
-          Top = 210
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 168
+          Width = 54
+          Height = 12
           Caption = #28216' '#31163' '#38041':'
           Transparent = True
         end
         object Label35: TLabel
-          Left = 206
-          Top = 210
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 168
+          Width = 54
+          Height = 12
           Caption = #38041' '#30789' '#27604':'
           Transparent = True
         end
         object Label36: TLabel
-          Left = 206
-          Top = 178
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 142
+          Width = 54
+          Height = 12
           Caption = #20445' '#27700' '#29575':'
           Transparent = True
         end
         object Label37: TLabel
-          Left = 206
-          Top = 145
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 116
+          Width = 54
+          Height = 12
           Caption = #23433' '#23450' '#24615':'
           Transparent = True
         end
+        object Label45: TLabel
+          Left = 349
+          Top = 13
+          Width = 60
+          Height = 12
+          Caption = '3'#22825#27700#21270#28909':'
+          Transparent = True
+        end
+        object Label46: TLabel
+          Left = 349
+          Top = 39
+          Width = 60
+          Height = 12
+          Caption = '7'#22825#27700#21270#28909':'
+        end
+        object Label47: TLabel
+          Left = 307
+          Top = 65
+          Width = 102
+          Height = 12
+          Caption = #27687#21270#38048#34920#31034#30340#30897#24230':'
+        end
+        object Label48: TLabel
+          Left = 343
+          Top = 90
+          Width = 66
+          Height = 12
+          Caption = #28216#31163#28082#21547#37327':'
+          Transparent = True
+        end
+        object Label49: TLabel
+          Left = 313
+          Top = 116
+          Width = 96
+          Height = 12
+          Caption = '38'#176'C'#24120#21387'8h'#25239#21387':'
+        end
+        object Label50: TLabel
+          Left = 313
+          Top = 142
+          Width = 96
+          Height = 12
+          Caption = '60'#176'C'#24120#21387'8h'#25239#21387':'
+        end
+        object Label51: TLabel
+          Left = 331
+          Top = 168
+          Width = 78
+          Height = 12
+          Caption = '15-30min'#31264#24230':'
+          Transparent = True
+        end
+        object Label52: TLabel
+          Left = 368
+          Top = 195
+          Width = 42
+          Height = 12
+          Caption = #27700#28784#27604':'
+          Transparent = True
+        end
+        object Label53: TLabel
+          Left = 557
+          Top = 15
+          Width = 66
+          Height = 12
+          Caption = #21161#30952#21058#31181#31867':'
+        end
+        object Label54: TLabel
+          Left = 557
+          Top = 41
+          Width = 66
+          Height = 12
+          Caption = #21161#30952#21058#25530#37327':'
+        end
+        object Label55: TLabel
+          Left = 569
+          Top = 67
+          Width = 54
+          Height = 12
+          Caption = #30789#37240#19977#38041':'
+          Transparent = True
+        end
+        object Label56: TLabel
+          Left = 569
+          Top = 90
+          Width = 54
+          Height = 12
+          Caption = #38109#37240#19977#38041':'
+        end
+        object Label57: TLabel
+          Left = 485
+          Top = 116
+          Width = 138
+          Height = 12
+          Caption = #38081#38109#37240#22235#38041'+2'#20493#38109#37240#19977#38041':'
+        end
+        object Label58: TLabel
+          Left = 557
+          Top = 142
+          Width = 72
+          Height = 12
+          Caption = '14d'#32447#33192#32960#29575':'
+          Transparent = True
+        end
+        object Label59: TLabel
+          Left = 557
+          Top = 168
+          Width = 66
+          Height = 12
+          Caption = #38081#38109#37240#22235#38041':'
+          Transparent = True
+        end
+        object Label60: TLabel
+          Left = 533
+          Top = 195
+          Width = 90
+          Height = 12
+          Caption = #26631#20934#31264#24230#29992#27700#37327':'
+        end
+        object Label61: TLabel
+          Left = 336
+          Top = 221
+          Width = 72
+          Height = 12
+          Caption = 'C3A('#36873#25321#24615'):'
+          Transparent = True
+        end
+        object Label62: TLabel
+          Left = 5
+          Top = 219
+          Width = 60
+          Height = 12
+          Caption = '28d'#32784#30952#24615':'
+        end
+        object Label63: TLabel
+          Left = 162
+          Top = 221
+          Width = 54
+          Height = 12
+          Caption = '28d'#24178#32553#29575
+          Transparent = True
+        end
+        object Label64: TLabel
+          Left = 558
+          Top = 221
+          Width = 72
+          Height = 12
+          Caption = 'C3S('#36873#25321#24615'):'
+          Transparent = True
+        end
+        object Label65: TLabel
+          Left = 13
+          Top = 245
+          Width = 54
+          Height = 12
+          Caption = #31264#21270#26102#38388':'
+          Transparent = True
+        end
+        object Label66: TLabel
+          Left = 439
+          Top = 319
+          Width = 72
+          Height = 12
+          Caption = '7'#22825#25239#21387#24378#24230':'
+          Transparent = True
+        end
+        object Label67: TLabel
+          Left = 439
+          Top = 297
+          Width = 72
+          Height = 12
+          Caption = '7'#22825#25239#25240#24378#24230':'
+          Transparent = True
+        end
         object cxTextEdit2: TcxTextEdit
-          Left = 84
-          Top = 10
+          Left = 67
+          Top = 8
           Hint = 'T.P_MgO'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 0
           Text = #8804
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit3: TcxTextEdit
-          Left = 85
-          Top = 238
+          Left = 68
+          Top = 190
           Hint = 'T.P_CL'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 7
           Text = #8804
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit14: TcxTextEdit
-          Left = 84
-          Top = 108
+          Left = 67
+          Top = 86
           Hint = 'T.P_XiDu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 3
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit16: TcxTextEdit
-          Left = 84
-          Top = 173
+          Left = 67
+          Top = 138
           Hint = 'T.P_ChouDu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 5
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit15: TcxTextEdit
-          Left = 275
-          Top = 43
+          Left = 220
+          Top = 34
           Hint = 'T.P_BuRong'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 9
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit1: TcxTextEdit
-          Left = 84
-          Top = 140
+          Left = 67
+          Top = 112
           Hint = 'T.P_Jian'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 4
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit6: TcxTextEdit
-          Left = 84
-          Top = 43
+          Left = 67
+          Top = 34
           Hint = 'T.P_SO3'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 1
           Text = #8804
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit5: TcxTextEdit
-          Left = 84
-          Top = 75
+          Left = 67
+          Top = 60
           Hint = 'T.P_ShaoShi'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 2
           Text = #8804
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit13: TcxTextEdit
-          Left = 275
-          Top = 238
+          Left = 220
+          Top = 190
           Hint = 'T.P_KuangWu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 15
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit7: TcxTextEdit
-          Left = 275
-          Top = 10
+          Left = 220
+          Top = 8
           Hint = 'T.P_BiBiao'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 8
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit4: TcxTextEdit
-          Left = 275
-          Top = 75
+          Left = 220
+          Top = 60
           Hint = 'T.P_ChuNing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 10
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit8: TcxTextEdit
-          Left = 275
-          Top = 106
+          Left = 220
+          Top = 85
           Hint = 'T.P_ZhongNing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 11
           Text = #8804
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit11: TcxTextEdit
-          Left = 108
-          Top = 288
+          Left = 86
+          Top = 294
           Hint = 'T.P_3DZhe'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 16
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 106
+          Width = 85
         end
         object cxTextEdit9: TcxTextEdit
-          Left = 108
-          Top = 315
+          Left = 86
+          Top = 316
           Hint = 'T.P_3DYa'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 17
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 106
+          Width = 85
         end
         object cxTextEdit12: TcxTextEdit
-          Left = 388
-          Top = 288
+          Left = 310
+          Top = 294
           Hint = 'T.P_28Zhe'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 18
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 106
+          Width = 85
         end
         object cxTextEdit10: TcxTextEdit
-          Left = 388
-          Top = 315
+          Left = 310
+          Top = 316
           Hint = 'T.P_28Ya'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 19
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 106
+          Width = 85
         end
         object cxTextEdit44: TcxTextEdit
-          Left = 84
-          Top = 204
+          Left = 67
+          Top = 163
           Hint = 'T.P_YLiGai'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 6
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit46: TcxTextEdit
-          Left = 275
-          Top = 204
+          Left = 220
+          Top = 163
           Hint = 'T.P_GaiGui'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 14
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit50: TcxTextEdit
-          Left = 275
-          Top = 171
+          Left = 220
+          Top = 137
           Hint = 'T.P_Water'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 13
           Text = #8805
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit51: TcxTextEdit
-          Left = 275
-          Top = 139
+          Left = 220
+          Top = 111
           Hint = 'T.P_AnDing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 12
           Text = #21512#26684
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
+        end
+        object cxTextEdit59: TcxTextEdit
+          Left = 408
+          Top = 8
+          Hint = 'E.P_3DSHR'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 20
+          Width = 75
+        end
+        object cxTextEdit60: TcxTextEdit
+          Left = 408
+          Top = 34
+          Hint = 'E.P_7DSHR'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 21
+          Width = 75
+        end
+        object cxTextEdit61: TcxTextEdit
+          Left = 408
+          Top = 60
+          Hint = 'E.P_NaOJD'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 22
+          Width = 75
+        end
+        object cxTextEdit62: TcxTextEdit
+          Left = 408
+          Top = 85
+          Hint = 'E.P_YLYHL'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 23
+          Width = 75
+        end
+        object cxTextEdit63: TcxTextEdit
+          Left = 408
+          Top = 111
+          Hint = 'E.P_38C8HKY'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 24
+          Width = 75
+        end
+        object cxTextEdit64: TcxTextEdit
+          Left = 408
+          Top = 137
+          Hint = 'E.P_60C8HKY'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 25
+          Width = 75
+        end
+        object cxTextEdit65: TcxTextEdit
+          Left = 408
+          Top = 163
+          Hint = 'E.P_15To30CD'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 26
+          Width = 75
+        end
+        object cxTextEdit66: TcxTextEdit
+          Left = 410
+          Top = 190
+          Hint = 'E.P_SHB'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 27
+          Width = 75
+        end
+        object cxTextEdit67: TcxTextEdit
+          Left = 627
+          Top = 10
+          Hint = 'E.P_ZMJType'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 28
+          Width = 75
+        end
+        object cxTextEdit68: TcxTextEdit
+          Left = 627
+          Top = 36
+          Hint = 'E.P_ZmjVal'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 29
+          Width = 75
+        end
+        object cxTextEdit69: TcxTextEdit
+          Left = 627
+          Top = 62
+          Hint = 'E.P_GSSG'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 30
+          Width = 75
+        end
+        object cxTextEdit70: TcxTextEdit
+          Left = 627
+          Top = 85
+          Hint = 'E.P_LSSG'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 31
+          Width = 75
+        end
+        object cxTextEdit71: TcxTextEdit
+          Left = 627
+          Top = 111
+          Hint = 'E.P_TLS2BLS'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 32
+          Width = 75
+        end
+        object cxTextEdit72: TcxTextEdit
+          Left = 627
+          Top = 137
+          Hint = 'E.P_4DXPZL'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 33
+          Width = 75
+        end
+        object cxTextEdit73: TcxTextEdit
+          Left = 627
+          Top = 163
+          Hint = 'E.P_TLSSG'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 34
+          Width = 75
+        end
+        object cxTextEdit74: TcxTextEdit
+          Left = 627
+          Top = 190
+          Hint = 'E.P_BZCDYS'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 35
+          Width = 75
+        end
+        object cxTextEdit75: TcxTextEdit
+          Left = 410
+          Top = 216
+          Hint = 'E.P_C3A'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 36
+          Width = 75
+        end
+        object cxTextEdit76: TcxTextEdit
+          Left = 68
+          Top = 214
+          Hint = 'E.P_28DNM'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 37
+          Width = 75
+        end
+        object cxTextEdit77: TcxTextEdit
+          Left = 219
+          Top = 216
+          Hint = 'E.P_28DGSL'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 38
+          Width = 75
+        end
+        object cxTextEdit78: TcxTextEdit
+          Left = 627
+          Top = 216
+          Hint = 'E.P_C3S'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 39
+          Width = 75
+        end
+        object cxTextEdit79: TcxTextEdit
+          Left = 66
+          Top = 240
+          Hint = 'E.P_CHTime'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 40
+          Width = 75
+        end
+        object cxTextEdit80: TcxTextEdit
+          Left = 518
+          Top = 294
+          Hint = 'T.P_7Zhe'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 41
+          Text = #8805
+          OnKeyPress = cxTextEdit2KeyPress
+          Width = 85
+        end
+        object cxTextEdit81: TcxTextEdit
+          Left = 518
+          Top = 316
+          Hint = 'T.P_7Ya'
+          ParentFont = False
+          Properties.MaxLength = 20
+          TabOrder = 42
+          Text = #8805
+          OnKeyPress = cxTextEdit2KeyPress
+          Width = 85
         end
       end
       object Sheet2: TcxTabSheet
         Caption = #26816#39564#21442#25968
         ImageIndex = 1
         object Label17: TLabel
-          Left = 15
-          Top = 330
-          Width = 91
-          Height = 15
+          Left = 12
+          Top = 264
+          Width = 72
+          Height = 12
           Caption = '3'#22825#25239#21387#24378#24230':'
           Transparent = True
         end
         object Label18: TLabel
-          Left = 15
-          Top = 291
-          Width = 91
-          Height = 15
+          Left = 12
+          Top = 233
+          Width = 72
+          Height = 12
           Caption = '3'#22825#25239#25240#24378#24230':'
           Transparent = True
         end
         object Label19: TLabel
-          Left = 15
-          Top = 146
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 117
+          Width = 54
+          Height = 12
           Caption = #30897' '#21547' '#37327':'
           Transparent = True
         end
         object Label20: TLabel
-          Left = 206
-          Top = 49
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 39
+          Width = 54
+          Height = 12
           Caption = #19981' '#28342' '#29289':'
           Transparent = True
         end
         object Label21: TLabel
-          Left = 15
-          Top = 179
-          Width = 70
-          Height = 15
+          Left = 12
+          Top = 143
+          Width = 54
+          Height = 12
           Caption = #31264'    '#24230':'
           Transparent = True
         end
         object Label22: TLabel
-          Left = 15
-          Top = 114
-          Width = 70
-          Height = 15
+          Left = 12
+          Top = 91
+          Width = 54
+          Height = 12
           Caption = #32454'    '#24230':'
           Transparent = True
         end
         object Label23: TLabel
-          Left = 15
-          Top = 244
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 195
+          Width = 54
+          Height = 12
           Caption = #27695' '#31163' '#23376':'
           Transparent = True
         end
         object Label24: TLabel
-          Left = 15
-          Top = 16
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 13
+          Width = 54
+          Height = 12
           Caption = #27687' '#21270' '#38209':'
           Transparent = True
         end
         object Label25: TLabel
-          Left = 289
-          Top = 330
-          Width = 99
-          Height = 15
+          Left = 231
+          Top = 264
+          Width = 78
+          Height = 12
           Caption = '28'#22825#25239#21387#24378#24230':'
           Transparent = True
         end
         object Label26: TLabel
-          Left = 289
-          Top = 291
-          Width = 99
-          Height = 15
+          Left = 231
+          Top = 233
+          Width = 78
+          Height = 12
           Caption = '28'#22825#25239#25240#24378#24230':'
           Transparent = True
         end
         object Label27: TLabel
-          Left = 206
-          Top = 81
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 65
+          Width = 54
+          Height = 12
           Caption = #21021#20957#26102#38388':'
           Transparent = True
         end
         object Label28: TLabel
-          Left = 206
-          Top = 114
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 91
+          Width = 54
+          Height = 12
           Caption = #32456#20957#26102#38388':'
           Transparent = True
         end
         object Label29: TLabel
-          Left = 206
-          Top = 16
-          Width = 68
-          Height = 15
+          Left = 165
+          Top = 13
+          Width = 54
+          Height = 12
           Caption = #27604#34920#38754#31215':'
           Transparent = True
         end
         object Label30: TLabel
-          Left = 206
-          Top = 146
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 117
+          Width = 54
+          Height = 12
           Caption = #23433' '#23450' '#24615':'
           Transparent = True
         end
         object Label31: TLabel
-          Left = 15
-          Top = 49
-          Width = 68
-          Height = 15
+          Left = 12
+          Top = 39
+          Width = 54
+          Height = 12
           Caption = #19977#27687#21270#30827':'
         end
         object Label32: TLabel
-          Left = 15
-          Top = 81
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 65
+          Width = 54
+          Height = 12
           Caption = #28903' '#22833' '#37327':'
         end
         object Bevel2: TBevel
-          Left = 15
-          Top = 270
-          Width = 525
-          Height = 9
+          Left = 12
+          Top = 216
+          Width = 420
+          Height = 7
           Shape = bsBottomLine
         end
         object Label34: TLabel
-          Left = 15
-          Top = 210
-          Width = 69
-          Height = 15
+          Left = 12
+          Top = 168
+          Width = 54
+          Height = 12
           Caption = #28216' '#31163' '#38041':'
           Transparent = True
         end
         object Label38: TLabel
-          Left = 206
-          Top = 244
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 195
+          Width = 54
+          Height = 12
           Caption = #30789' '#37240' '#30416':'
           Transparent = True
         end
         object Label39: TLabel
-          Left = 206
-          Top = 210
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 168
+          Width = 54
+          Height = 12
           Caption = #38041' '#30789' '#27604':'
           Transparent = True
         end
         object Label40: TLabel
-          Left = 206
-          Top = 178
-          Width = 69
-          Height = 15
+          Left = 165
+          Top = 142
+          Width = 54
+          Height = 12
           Caption = #20445' '#27700' '#29575':'
           Transparent = True
         end
         object Label41: TLabel
-          Left = 392
-          Top = 16
-          Width = 68
-          Height = 15
+          Left = 314
+          Top = 13
+          Width = 54
+          Height = 12
           Caption = #30707#33167#31181#31867':'
           Transparent = True
         end
         object Label42: TLabel
-          Left = 392
-          Top = 49
-          Width = 69
-          Height = 15
+          Left = 314
+          Top = 39
+          Width = 54
+          Height = 12
           Caption = #30707' '#33167' '#37327':'
         end
         object Label43: TLabel
-          Left = 392
-          Top = 81
-          Width = 68
-          Height = 15
+          Left = 314
+          Top = 65
+          Width = 54
+          Height = 12
           Caption = #28151#21512#26448#31867':'
         end
         object Label44: TLabel
-          Left = 392
-          Top = 114
-          Width = 68
-          Height = 15
+          Left = 314
+          Top = 91
+          Width = 54
+          Height = 12
           Caption = #28151#21512#26448#37327':'
           Transparent = True
         end
         object cxTextEdit17: TcxTextEdit
-          Left = 84
-          Top = 10
+          Left = 67
+          Top = 8
           Hint = 'E.R_MgO'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 0
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit18: TcxTextEdit
-          Left = 84
-          Top = 235
+          Left = 67
+          Top = 188
           Hint = 'E.R_CL'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 7
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit19: TcxTextEdit
-          Left = 84
-          Top = 108
+          Left = 67
+          Top = 86
           Hint = 'E.R_XiDu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 3
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit20: TcxTextEdit
-          Left = 84
-          Top = 173
+          Left = 67
+          Top = 138
           Hint = 'E.R_ChouDu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 5
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit21: TcxTextEdit
-          Left = 275
-          Top = 43
+          Left = 220
+          Top = 34
           Hint = 'E.R_BuRong'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 9
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit22: TcxTextEdit
-          Left = 84
-          Top = 140
+          Left = 67
+          Top = 112
           Hint = 'E.R_Jian'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 4
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit23: TcxTextEdit
-          Left = 84
-          Top = 43
+          Left = 67
+          Top = 34
           Hint = 'E.R_SO3'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 1
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit24: TcxTextEdit
-          Left = 84
-          Top = 75
+          Left = 67
+          Top = 60
           Hint = 'E.R_ShaoShi'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 2
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit25: TcxTextEdit
-          Left = 275
-          Top = 140
+          Left = 220
+          Top = 112
           Hint = 'E.R_AnDing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 12
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit26: TcxTextEdit
-          Left = 275
-          Top = 10
+          Left = 220
+          Top = 8
           Hint = 'E.R_BiBiao'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 8
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit27: TcxTextEdit
-          Left = 275
-          Top = 108
+          Left = 220
+          Top = 86
           Hint = 'E.R_ZhongNing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 11
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit28: TcxTextEdit
-          Left = 275
-          Top = 75
+          Left = 220
+          Top = 60
           Hint = 'E.R_ChuNing'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 10
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit29: TcxTextEdit
-          Left = 104
-          Top = 285
+          Left = 83
+          Top = 228
           Hint = 'E.R_3DZhe1'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 16
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit30: TcxTextEdit
-          Left = 104
-          Top = 316
+          Left = 83
+          Top = 253
           Hint = 'E.R_3DYa1'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 19
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit31: TcxTextEdit
-          Left = 389
-          Top = 285
+          Left = 311
+          Top = 228
           Hint = 'E.R_28Zhe1'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 25
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit32: TcxTextEdit
-          Left = 389
-          Top = 316
+          Left = 311
+          Top = 253
           Hint = 'E.R_28Ya1'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 28
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit33: TcxTextEdit
-          Left = 438
-          Top = 285
+          Left = 350
+          Top = 228
           Hint = 'E.R_28Zhe2'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 26
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit34: TcxTextEdit
-          Left = 486
-          Top = 285
+          Left = 389
+          Top = 228
           Hint = 'E.R_28Zhe3'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 27
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 53
+          Width = 42
         end
         object cxTextEdit35: TcxTextEdit
-          Left = 438
-          Top = 316
+          Left = 350
+          Top = 253
           Hint = 'E.R_28Ya2'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 29
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit36: TcxTextEdit
-          Left = 486
-          Top = 316
+          Left = 389
+          Top = 253
           Hint = 'E.R_28Ya3'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 30
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 53
+          Width = 42
         end
         object cxTextEdit37: TcxTextEdit
-          Left = 153
-          Top = 285
+          Left = 122
+          Top = 228
           Hint = 'E.R_3DZhe2'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 17
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit38: TcxTextEdit
-          Left = 153
-          Top = 316
+          Left = 122
+          Top = 253
           Hint = 'E.R_3DYa2'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 20
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit39: TcxTextEdit
-          Left = 203
-          Top = 285
+          Left = 162
+          Top = 228
           Hint = 'E.R_3DZhe3'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 18
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit40: TcxTextEdit
-          Left = 203
-          Top = 316
+          Left = 162
+          Top = 253
           Hint = 'E.R_3DYa3'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bRight, bBottom]
           TabOrder = 21
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit41: TcxTextEdit
-          Left = 104
-          Top = 338
+          Left = 83
+          Top = 270
           Hint = 'E.R_3DYa4'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 22
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit42: TcxTextEdit
-          Left = 153
-          Top = 338
+          Left = 122
+          Top = 270
           Hint = 'E.R_3DYa5'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 23
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit43: TcxTextEdit
-          Left = 203
-          Top = 338
+          Left = 162
+          Top = 270
           Hint = 'E.R_3DYa6'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bRight, bBottom]
           TabOrder = 24
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit47: TcxTextEdit
-          Left = 389
-          Top = 338
+          Left = 311
+          Top = 270
           Hint = 'E.R_28Ya4'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bTop, bBottom]
           TabOrder = 31
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit48: TcxTextEdit
-          Left = 438
-          Top = 338
+          Left = 350
+          Top = 270
           Hint = 'E.R_28Ya5'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bRight, bBottom]
           TabOrder = 32
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 52
+          Width = 42
         end
         object cxTextEdit49: TcxTextEdit
-          Left = 486
-          Top = 338
+          Left = 389
+          Top = 270
           Hint = 'E.R_28Ya6'
           ParentFont = False
           Properties.MaxLength = 20
           Style.Edges = [bLeft, bRight, bBottom]
           TabOrder = 33
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 53
+          Width = 42
         end
         object cxTextEdit45: TcxTextEdit
-          Left = 84
-          Top = 204
+          Left = 67
+          Top = 163
           Hint = 'E.R_YLiGai'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 6
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit52: TcxTextEdit
-          Left = 275
-          Top = 238
+          Left = 220
+          Top = 190
           Hint = 'E.R_KuangWu'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 15
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit53: TcxTextEdit
-          Left = 275
-          Top = 204
+          Left = 220
+          Top = 163
           Hint = 'E.R_GaiGui'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 14
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit54: TcxTextEdit
-          Left = 275
-          Top = 171
+          Left = 220
+          Top = 137
           Hint = 'E.R_Water'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 13
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit55: TcxTextEdit
-          Left = 465
-          Top = 10
+          Left = 372
+          Top = 8
           Hint = 'E.R_SGType'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 34
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit56: TcxTextEdit
-          Left = 465
-          Top = 43
+          Left = 372
+          Top = 34
           Hint = 'E.R_SGValue'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 35
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit57: TcxTextEdit
-          Left = 465
-          Top = 75
+          Left = 372
+          Top = 60
           Hint = 'E.R_HHCType'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 36
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
         object cxTextEdit58: TcxTextEdit
-          Left = 465
-          Top = 108
+          Left = 372
+          Top = 86
           Hint = 'E.R_HHCValue'
           ParentFont = False
           Properties.MaxLength = 20
           TabOrder = 37
           OnKeyPress = cxTextEdit2KeyPress
-          Width = 94
+          Width = 75
         end
       end
     end
     object EditQLevel: TcxTextEdit
-      Left = 382
-      Top = 101
+      Left = 329
+      Top = 86
       Hint = 'T.P_QLevel'
       ParentFont = False
       Properties.MaxLength = 20
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
       TabOrder = 4
-      Width = 157
+      Width = 125
     end
     object dxLayoutControl1Group_Root: TdxLayoutGroup
-      ShowCaption = False
+      AlignHorz = ahParentManaged
+      AlignVert = avParentManaged
+      CaptionOptions.Visible = False
+      ButtonOptions.Buttons = <>
       Hidden = True
       ShowBorder = False
       object dxLayoutControl1Group1: TdxLayoutGroup
-        Caption = #22522#26412#20449#24687
+        CaptionOptions.Text = #22522#26412#20449#24687
+        ButtonOptions.Buttons = <>
         object dxLayoutControl1Item1: TdxLayoutItem
-          Caption = #21697#31181#32534#21495':'
+          CaptionOptions.Text = #21697#31181#32534#21495':'
           Control = EditID
           ControlOptions.ShowBorder = False
         end
         object dxLayoutControl1Group6: TdxLayoutGroup
-          ShowCaption = False
+          CaptionOptions.Visible = False
+          ButtonOptions.Buttons = <>
           Hidden = True
           LayoutDirection = ldHorizontal
           ShowBorder = False
           object dxLayoutControl1Item12: TdxLayoutItem
-            AutoAligns = [aaVertical]
-            Caption = #27700#27877#21517#31216':'
+            AlignHorz = ahLeft
+            CaptionOptions.Text = #27700#27877#21517#31216':'
             Control = EditStock
             ControlOptions.ShowBorder = False
           end
           object dxLayoutControl1Item2: TdxLayoutItem
-            AutoAligns = [aaVertical]
             AlignHorz = ahClient
-            Caption = #27700#27877#31867#22411':'
+            CaptionOptions.Text = #27700#27877#31867#22411':'
             Control = EditType
             ControlOptions.ShowBorder = False
           end
         end
         object dxLayoutControl1Group2: TdxLayoutGroup
-          ShowCaption = False
+          CaptionOptions.Visible = False
+          ButtonOptions.Buttons = <>
           Hidden = True
           LayoutDirection = ldHorizontal
           ShowBorder = False
           object dxLayoutControl1Item3: TdxLayoutItem
-            Caption = #21697#31181#31561#32423':'
+            CaptionOptions.Text = #21697#31181#31561#32423':'
             Control = EditName
             ControlOptions.ShowBorder = False
           end
           object dxLayoutControl1Item4: TdxLayoutItem
-            AutoAligns = [aaVertical]
             AlignHorz = ahClient
-            Caption = #24378#24230#31561#32423':'
+            CaptionOptions.Text = #24378#24230#31561#32423':'
             Control = EditQLevel
             ControlOptions.ShowBorder = False
           end
         end
         object dxLayoutControl1Item8: TdxLayoutItem
-          Caption = #22791#27880#20449#24687':'
+          CaptionOptions.Text = #22791#27880#20449#24687':'
           Control = EditMemo
           ControlOptions.ShowBorder = False
         end
       end
       object dxLayoutControl1Item25: TdxLayoutItem
-        AutoAligns = [aaHorizontal]
         AlignVert = avClient
-        Caption = 'cxPageControl1'
-        ShowCaption = False
+        CaptionOptions.Text = 'cxPageControl1'
+        CaptionOptions.Visible = False
         Control = wPage
         ControlOptions.AutoColor = True
         ControlOptions.ShowBorder = False
       end
       object dxLayoutControl1Group5: TdxLayoutGroup
-        AutoAligns = [aaHorizontal]
         AlignVert = avBottom
-        ShowCaption = False
+        CaptionOptions.Visible = False
+        ButtonOptions.Buttons = <>
         Hidden = True
         LayoutDirection = ldHorizontal
         ShowBorder = False
         object dxLayoutControl1Item10: TdxLayoutItem
-          AutoAligns = [aaVertical]
           AlignHorz = ahRight
-          Caption = 'Button3'
-          ShowCaption = False
+          CaptionOptions.Text = 'Button3'
+          CaptionOptions.Visible = False
           Control = BtnOK
           ControlOptions.ShowBorder = False
         end
         object dxLayoutControl1Item11: TdxLayoutItem
-          AutoAligns = [aaVertical]
           AlignHorz = ahRight
-          Caption = 'Button4'
-          ShowCaption = False
+          CaptionOptions.Text = 'Button4'
+          CaptionOptions.Visible = False
           Control = BtnExit
           ControlOptions.ShowBorder = False
         end

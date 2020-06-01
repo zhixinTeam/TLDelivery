@@ -397,7 +397,7 @@ procedure TfFormNewCard.LoadSingleOrder;
 var
   nOrderItem:stMallOrderItem;
   nRepeat, nIsSale:Boolean;
-  nWebOrderID, nType, nStockNo:string;
+  nWebOrderID, nType, nStockNo, nItemCode:string;
   nMsg,nStr:string;
   nPriceNow, nPriceGP, nZXFD, nPriceZX, nValue: Double;
   nPreFun, nSql, nAddOrDec : string;
@@ -512,7 +512,7 @@ begin
     end;
 
     nPriceNow := FieldByName('salePrice').AsFloat;
-    nPreFun := FieldByName('realProj').AsString;
+    nPreFun := trim(FieldByName('realProj').AsString);
     //FWebOrderItems[FWebOrderIndex].FItemCode := fieldbyname('itemcode').AsString;暂时保存
 
     nSql := 'select *,GETDATE() as dtNow from SAL.SAL_ProdPrice_v '+
@@ -559,12 +559,13 @@ begin
       Exit;
     end;
   end;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF YHTL}
   nStockNo := Copy(nOrderItem.FGoodsID,1,Pos('-',nOrderItem.FGoodsID)-1);
   nType :=  Copy(nOrderItem.FGoodsID,Pos('-',nOrderItem.FGoodsID)+1,Length(nOrderItem.FGoodsID)-Pos('-',nOrderItem.FGoodsID)-1);
 
-  nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_OutFact is null';
-  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,nStockNo+sFlag_San]);
+  nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and l_order=''%s'' and L_OutFact is null';
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,nStockNo+sFlag_San, nType]);
   with FDM.QueryTemp(nStr) do
     nValue := Fields[0].AsFloat;
 
@@ -592,7 +593,7 @@ begin
     end;
     nPriceZX := FieldByName('salePrice').AsFloat;
 
-    if FieldByName('salePrice').AsFloat- nValue - StrToFloat(nOrderItem.FData) < 0 then
+    if FieldByName('leaveQty').AsFloat- nValue - StrToFloat(nOrderItem.FData) < 0 then
     begin
       showmessage('ERP中订单数量不足,无法下单.');
       Exit;
@@ -602,7 +603,52 @@ begin
     FWebOrderItems[FWebOrderIndex].FGoodsID := nStockNo+sFlag_San;
     FWebOrderItems[FWebOrderIndex].FItemCode := nType;
   end;
+  {$ENDIF}
+  //省同力
+  {$IFDEF STL}
+  nStockNo := Copy(nOrderItem.FGoodsID,1,Pos('-',nOrderItem.FGoodsID)-1);
+  nItemCode :=  Copy(nOrderItem.FGoodsID,Pos('-',nOrderItem.FGoodsID)+1,Length(nOrderItem.FGoodsID)-Pos('-',nOrderItem.FGoodsID)-1);
+  nType := Copy(nOrderItem.FGoodsID,Length(nOrderItem.FGoodsID),1);
 
+  nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and l_order=''%s'' and L_OutFact is null';
+  nStr := Format(nStr,[sTable_Bill,nOrderItem.FYunTianOrderId,nStockNo+nType, nType]);
+  with FDM.QueryTemp(nStr) do
+    nValue := Fields[0].AsFloat;
+
+  nStr := 'select reqQty-pickQty as leaveQty,* from sal.SAL_Contract_v where '+
+          ' contractCode=''%s'' and itemcode=''%s'' and enableFlag=''Y''';
+  nStr := Format(nStr,[nOrderItem.FYunTianOrderId,nItemCode]);
+  with FDM.QueryTemp(nStr, True) do
+  begin
+    if RecordCount < 1 then
+    begin
+      ShowMessage('订单[ '+ nOrderItem.FYunTianOrderId +' ]已丢失.');
+      Exit;
+    end;
+
+    if RecordCount > 0 then
+    begin                                      
+      EditCus.Text    := fieldbyname('accountCode').AsString;
+      EditCName.Text  := fieldbyname('accountName').AsString;
+    end;
+
+    if (FieldByName('contractStat').AsString <> 'Formal') and (FieldByName('contractStat').AsString <> 'Balance') then
+    begin
+      ShowMessage('订单[ '+nOrderItem.FYunTianOrderId+' ]已被管理员作废.');
+      Exit;
+    end;
+    nPriceZX := FieldByName('salePrice').AsFloat;
+
+    if FieldByName('leaveQty').AsFloat- nValue - StrToFloat(nOrderItem.FData) < 0 then
+    begin
+      showmessage('ERP中订单数量不足,无法下单.');
+      Exit;
+    end;
+
+    nOrderItem.FGoodsID := nStockNo+ntype;
+    FWebOrderItems[FWebOrderIndex].FGoodsID := nStockNo+ntype;
+    FWebOrderItems[FWebOrderIndex].FItemCode := nItemCode;
+  end;
   {$ENDIF}
 
   //提单信息
@@ -736,24 +782,36 @@ begin
 
   //验证GPS信息
   {$IFDEF QSTL}
-  nTruck := EditTruck.Text +'%';
   if (Pos('熟料',EditSName.Text) =0) and (Pos('石灰石',EditSName.Text) =0) then
-    if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
+  begin
+    nTruck := EditTruck.Text;
+    if not GetGpsByTruck_New(nTruck) then
     begin
-      nTruck := EditTruck.Text;
-      if not GetGpsByTruck_New(nTruck) then
-      begin
-        AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
-                        sFlag_Solution_OK, sFlag_DepDaTing, True);
-        ShowMessage(nTruck);
-        Exit;
-      end
-      else
-      begin
-        if nTruck <> '' then
-          ShowMessage(nTruck);
-      end;
+      AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
+                      sFlag_Solution_OK, sFlag_DepDaTing, True);
+      ShowMessage(nTruck);
+      Exit;
     end;
+  end;
+
+//  nTruck := EditTruck.Text +'%';
+//  if (Pos('熟料',EditSName.Text) =0) and (Pos('石灰石',EditSName.Text) =0) then
+//    if not GetGpsByTruck(nTruck,gSysParam.FGPSFactID,gSysParam.FGPSValidTime) then
+//    begin
+//      nTruck := EditTruck.Text;
+//      if not GetGpsByTruck_New(nTruck) then
+//      begin
+//        AddManualEventRecord(editWebOrderNo.Text,EditTruck.Text,nTruck,'自助机',
+//                        sFlag_Solution_OK, sFlag_DepDaTing, True);
+//        ShowMessage(nTruck);
+//        Exit;
+//      end
+//      else
+//      begin
+//        if nTruck <> '' then
+//          ShowMessage(nTruck);
+//      end;
+//    end;
   {$ENDIF}
 
   for nIdx:=0 to 6 do
@@ -789,13 +847,24 @@ begin
   nTmp := TStringList.Create;
   try
     LoadSysDictItem(sFlag_PrintBill, nStocks);
+    //确山同力
     {$IFDEF QSTL}
     if Pos('散',EditSName.Text) > 0 then
       nTmp.Values['Type'] := 'S'
     else
       nTmp.Values['Type'] := 'D';
     nTmp.Values['StockName'] := copy(EditSName.Text,1,Length(EditSName.Text)-4);
-    {$ELSE}
+    {$ENDIF}
+    //省同力
+    {$IFDEF STL}
+    if Pos('袋',EditSName.Text) > 0 then
+      nTmp.Values['Type'] := 'D'
+    else
+      nTmp.Values['Type'] := 'S';
+    nTmp.Values['StockName'] := EditSName.Text;
+    {$ENDIF}
+    //豫鹤同力
+    {$IFDEF YHTL}
     nTmp.Values['Type'] := 'S';
     nTmp.Values['StockName'] := EditSName.Text;
     {$ENDIF}
@@ -915,19 +984,19 @@ var
   nSelItem:TListItem;
   i:Integer;
 begin
-  nSelItem := lvorders.Selected;
-  if Assigned(nSelItem) then
-  begin
-    for i := 0 to lvOrders.Items.Count-1 do
-    begin
-      if nSelItem = lvOrders.Items[i] then
-      begin
-        FWebOrderIndex := i;
-        LoadSingleOrder;
-        Break;
-      end;
-    end;
-  end;
+//  nSelItem := lvorders.Selected;
+//  if Assigned(nSelItem) then
+//  begin
+//    for i := 0 to lvOrders.Items.Count-1 do
+//    begin
+//      if nSelItem = lvOrders.Items[i] then
+//      begin
+//        FWebOrderIndex := i;
+//        LoadSingleOrder;
+//        Break;
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TfFormNewCard.editWebOrderNoKeyPress(Sender: TObject;

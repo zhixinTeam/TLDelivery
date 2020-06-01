@@ -516,7 +516,7 @@ begin
       if FieldByName('D_Value').AsString = sFlag_Yes then
       begin
         nData := '目前处于暂停开卡状态，请等待管理员通知.';
-        Exit
+        Exit;
       end;
   end;
 
@@ -557,6 +557,31 @@ begin
              '请减小提货量后再开单.';
     nData := Format(nData, [FListA.Values['ZhiKa'], nMoney]); //nVal
     Exit;
+  end;
+
+  nSQL := 'select D_Value from %s where D_Name=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_StopNotG5Bill]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+    if FieldByName('D_Value').AsString = sFlag_Yes then
+    begin
+      nSQL := 'select T_PFBZ from %s where T_Truck=''%s''';
+      nSQL := Format(nSQL,[sTable_Truck, FListA.Values['Truck']]);
+      with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+      begin
+        if recordcount = 0 then
+        begin
+          nData := '国五以下车辆不许开单,且该车牌在系统不存在,请维护车辆信息.';
+          Exit;
+        end;
+        if FieldByName('T_PFBZ').AsInteger < 2 then
+        begin
+          nData := '国五以下车辆不能开单.';
+          Exit;
+        end;
+      end;
+    end;
   end;
 
   {$IFDEF QSTL}
@@ -2106,7 +2131,11 @@ var nStr,nSQL,nTmp,nFixMoney, nStockNo, nType, nTimeTruckOut: string;
     i,nIdx,nInt: Integer;
     nBills: TLadingBillItems;
     nOut: TWorkerBusinessCommand;
-    nCErpWorker: PDBWorker;
+    nCErpWorker,nCErpWorker2: PDBWorker;
+    //限价参数
+    nLimitPrice, nNewBillValue: Double;
+    nTail:Boolean;
+    nP, nHDInfo, nBillNo: string;
 begin
   Result := False;
   AnalyseBillItems(FIn.FData, nBills);
@@ -2332,6 +2361,7 @@ begin
   begin
     nInt := -1;
     nMVal := 0;
+    nTail := False;
 
     for nIdx:=Low(nBills) to High(nBills) do
     if nBills[nIdx].FPoundID = sFlag_Yes then
@@ -2397,6 +2427,7 @@ begin
           nStr := Format(nStr,[FZhiKa,nTmp]);
           {$ENDIF}
           nCErpWorker :=nil;
+          nCErpWorker2 := nil;
           try
             with gDBConnManager.SQLQuery(nStr, nCErpWorker, sFlag_CErp) do
             begin
@@ -2406,17 +2437,98 @@ begin
                 WriteLog(nData);
                 Exit;
               end;
+              {$IFDEF YHTL}  //豫鹤同力自动合单
+              if FieldByName('leaveQty').AsFloat < 0 then
+              begin
+                nData := '订单余量已经小于零,无法合单.';
+                WriteLog(nData);
+                Exit;
+              end;
+              nNewBillValue := FieldByName('leaveQty').AsFloat - FMData.FValue + FPData.FValue;
+              if (FieldByName('leaveQty').AsFloat >= 0) and (nNewBillValue < 0) then
+              begin
+                nNewBillValue := Abs(nNewBillValue);
+                //获取限价
+                nStr := 'select D_Value from %s where D_Name=''%s''';
+                nStr := Format(nStr,[sTable_SysDict,sFlag_PriceLimit]);
+                with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+                  nLimitPrice := FieldByName('D_Value').asfloat;
 
-              nBillNum := fieldbyname('leaveQty').AsFloat - nBillNum + FValue - FMData.FValue + FPData.FValue;
+                nStr := 'select top 1 * from sal.SAL_Contract_v where '+
+                        'contractCode=''%s'' and enableFlag=''Y'' and salePrice>%s'+
+                        ' and reqQty-pickQty>%s and itemcode<>''%s''';
+                nStr := Format(nStr,[FZhiKa, FloatToStr(nLimitPrice),FloatToStr(nNewBillValue), nTmp]);
+                with gDBConnManager.SQLQuery(nStr, nCErpWorker2, sFlag_CErp) do
+                begin
+                  if recordCount=0 then
+                  begin
+                    nData := '该发货单已超可发量且未找到支持尾单合并的NC订单';
+                    WriteLog(nData);
+                    Exit;
+                  end;
+
+                  FListC.Values['Group'] :=sFlag_BusGroup;
+                  FListC.Values['Object'] := sFlag_BillNo;
+                  //to get serial no
+                  if not TWorkerBusinessCommander.CallMe(cBC_GetSerialNO,
+                        FListC.Text, sFlag_Yes, @nOut) then
+                    raise Exception.Create(nOut.FData);
+                  //xxxxx
+                  if (nOut.FData='')then
+                  begin
+                    nData := '获取销售订单编号失败、未能生成新单据';
+                    WriteLog(nData);
+                    Exit;
+                  end;
+
+                  nStr := Format('Select * From %s Where 1<>1', [sTable_Bill]);
+                  //only for fields
+                  nP := '';
+                  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+                  begin
+                    for nIdx:=0 to FieldCount - 1 do
+                     if (Fields[nIdx].DataType <> ftAutoInc) and
+                        (Fields[nIdx].FieldName<>'L_ID') and
+                        (Fields[nIdx].FieldName<>'L_HDBills') and
+                        (Fields[nIdx].FieldName<>'L_Status') and
+                        (Fields[nIdx].FieldName<>'L_NextStatus') and
+                        (Fields[nIdx].FieldName<>'L_Order') and
+                        (Fields[nIdx].FieldName<>'L_Price') and
+                        (Fields[nIdx].FieldName<>'L_Value') and
+                        (Fields[nIdx].FieldName<>'L_MValue') then
+                      nP := nP + Fields[nIdx].FieldName + ',';
+                    //所有字段,不包括删除
+
+                    System.Delete(nP, Length(nP), 1);
+                  end;
+
+                  nStr := 'Insert Into $BB($FL,L_Value,L_MValue, L_Price, L_ID,L_Status,L_NextStatus,L_HDBills,L_Order) ' +
+                          'Select $FL,'+FloatToStr(nNewBillValue)+','+FloatToStr(nNewBillValue)+'+L_PValue, '+
+                                 ' $Price, ''$New'',''M'',''O'',''$HDB'',''$Order'' From $BI Where L_ID=''$ID''';
+                  nStr := MacroValue(nStr, [MI('$BB', sTable_Bill),MI('$FL', nP),
+                                            MI('$Price', FieldByName('salePrice').AsString),MI('$New', nOut.FData),
+                                            MI('$HDB', FID +'、'+ nOut.FData), MI('$Order',FieldByName('itemcode').AsString),
+                                            MI('$BI', sTable_Bill), MI('$ID', FID)]);
+                  FListA.Add(nStr); //生成新订单 （L_Value=实际装车量-开单量）
+                  nHDInfo:= Format('订单 %s 实际净重：%g  所属纸卡 %s 剩余量不足、进行尾单处理、订单分别为: %s、%s ',
+                                              [FID, nMVal - FPData.FValue, FZhiKa, FID, nOut.FData]);
+                  nTail:= True;
+                  nBillNo:= nOut.FData;
+                end;
+              end;
+              {$ELSE}
+              nBillNum := FieldByName('leaveQty').AsFloat - nBillNum + FValue - FMData.FValue + FPData.FValue;
               if nBillNum < 0 then
               begin
                 nData := '订单['+fzhika+'],品种['+nStockNo+'],类型['+nType+']订单量不足,无法出厂,请联系管理员加量.';
                 WriteLog(nData);
                 Exit;
               end;
+              {$ENDIF}
             end;
           finally
             gDBConnManager.ReleaseConnection(nCErpWorker);
+            gDBConnManager.ReleaseConnection(nCErpWorker2);
           end;
 
           if not TWorkerBusinessCommander.CallMe(cBC_GetZhiKaMoney,
@@ -2616,6 +2728,12 @@ begin
 
       if FYSValid <> sFlag_Yes then   //判断是否空车出厂
       begin
+        if nTail then
+        begin
+          FValue:= FMData.FValue-nNewBillValue-FPData.FValue;
+          FMData.FValue:= FMData.FValue-nNewBillValue;
+        end;
+
         nSQL := MakeSQLByStr([SF('L_Value', FValue, sfVal),
                 SF('L_Status', sFlag_TruckBFM),
                 SF('L_NextStatus', sFlag_TruckOut),
@@ -2624,6 +2742,15 @@ begin
                 SF('L_MMan', FIn.FBase.FFrom.FUser)
                 ], sTable_Bill, SF('L_ID', FID), False);
         FListA.Add(nSQL);
+
+        if nTail then
+        begin
+          nSQL := MakeSQLByStr([
+                  SF('L_MDate', sField_SQLServer_Now, sfVal),
+                  SF('L_MMan', FIn.FBase.FFrom.FUser)
+                  ], sTable_Bill, SF('L_ID', nBillNo), False);
+          FListA.Add(nSQL);
+        end;
       end else
       begin
         nSQL := MakeSQLByStr([SF('L_Value', 0.00, sfVal),

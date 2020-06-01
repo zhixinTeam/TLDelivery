@@ -1,6 +1,6 @@
 object fFormNewCard: TfFormNewCard
-  Left = 322
-  Top = 129
+  Left = 70
+  Top = 60
   BorderStyle = bsNone
   Caption = #29992#25143#33258#21161#21150#21345
   ClientHeight = 630

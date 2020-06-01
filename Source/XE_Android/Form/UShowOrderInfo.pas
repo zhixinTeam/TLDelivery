@@ -58,9 +58,34 @@ end;
 
 procedure TFrmShowOrderInfo.BtnOKClick(Sender: TObject);
 var
-  nYSVaid: string;
+  nYSVaid, nStr: string;
+  nInt, nIdx:integer;
 begin
   inherited;
+
+  if not GetPurchaseOrders(gCardNO, 'X', gOrders) then
+  begin
+    BtnCancelClick(Self);
+    Exit;
+  end;
+
+  nInt := 0;
+  for nIdx := Low(gOrders) to High(gOrders) do
+  with gOrders[nIdx] do
+  begin
+    FSelected := (FNextStatus='X') or (FNextStatus='M');
+    if FSelected then Inc(nInt);
+  end;
+
+  if nInt<1 then
+  begin
+    nStr := '磁卡[%s]无需要验收车辆';
+    nStr := Format(nStr, [gCardNo]);
+
+    ShowMessage(nStr);
+    Exit;
+  end;
+
   if Length(gOrders)>0 then
   with gOrders[0] do
   begin

@@ -849,9 +849,24 @@ begin
             nType := '散装';
             nTypeCode := sFlag_San;
           end;
-          {$ELSE}
+          {$ENDIF}
+
+          {$IFDEF YHTL}
           nType := '散装';
           nTypeCode := sFlag_San;
+          {$ENDIF}
+
+          {$IFDEF STL}
+          if FieldByName('packForm').AsString = '002' then
+          begin
+            nType := '袋装';
+            nTypeCode := sFlag_Dai;
+          end
+          else
+          begin
+            nType := '散装';
+            nTypeCode := sFlag_San;
+          end;
           {$ENDIF}
 
           NodeNew('SetDate').ValueAsString    := FieldByName('signDate').AsString;
@@ -1709,12 +1724,21 @@ begin
     begin
       if RecordCount > 0 then
       begin
+        //确山同力
         {$IFDEF QSTL}
         if FieldByName('contracttypecode').AsString = '00006' then  //允欠合同
-        {$ELSE}
-        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
-        {$ENDIF}
           nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
+        //豫鹤同力
+        {$IFDEF YHTL}
+        if FieldByName('paytypecode').AsString = '00002' then  //允欠合同
+          nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
+        //省同力 需要赊销合同标记
+        {$IFDEF STL}
+        if FieldByName('paytypecode').AsString = '00001' then  //允欠合同 一类合同是允欠
+          nCredit := FieldByName('oweValue').AsFloat;
+        {$ENDIF}
       end;
     end;
   finally
@@ -1723,8 +1747,12 @@ begin
 
   nDBWorker := nil;
   try
-    nStr := 'select * from %s where A_CID=''%s''';
-    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+//    nStr := 'select * from %s where A_CID=''%s''';
+//    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+
+    nStr := 'select SUM(L_Price*L_value) as A_FreezeMoney from %s '+
+            'where L_CusID=''%s'' and L_Status <>''O''';
+    nStr := Format(nStr,[sTable_Bill, nCusId]);
     with gDBConnManager.SQLQuery(nStr, nDBWorker) do
     begin
       if RecordCount > 0 then
@@ -3655,8 +3683,12 @@ begin
 
   nDBWorker := nil;
   try
-    nStr := 'select * from %s where A_CID=''%s''';
-    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+//    nStr := 'select * from %s where A_CID=''%s''';
+//    nStr := Format(nStr,[sTable_CusAccount,nCusId]);
+
+    nStr := 'select SUM(L_Price*L_value) as A_FreezeMoney from %s '+
+            'where L_CusID=''%s'' and L_Status <>''O''';
+    nStr := Format(nStr,[sTable_Bill, nCusId]);
     with gDBConnManager.SQLQuery(nStr, nDBWorker) do
     begin
       if RecordCount > 0 then

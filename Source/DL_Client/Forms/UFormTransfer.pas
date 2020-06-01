@@ -93,7 +93,7 @@ end;
 procedure TfFormTransfer.BtnOKClick(Sender: TObject);
 var nIdx: Integer;
     nList: TStrings;
-    nStr, nStock, nStockName: string;
+    nStr, nSQL, nStock, nStockName: string;
 begin
   if EditMID.ItemIndex >=0 then
   begin
@@ -130,8 +130,26 @@ begin
     //call mit bus
     if nStr = '' then Exit;
 
-
+    {$IFDEF UseELabel}  //矿山绑定电子标签
+    nSQL := 'select T_Card from %s where T_Truck=''%s''';
+    nSQL := Format(nSQL,[sTable_Truck,Trim(EditTruck.Text)]);
+    with FDM.QueryTemp(nSQL) do
+    begin
+      if FieldByName('T_Card').AsString = '' then
+      begin
+        ShowMessage('该车尚未办理电子标签.');
+        Exit;
+      end;
+      nSQL := FieldByName('T_Card').AsString;
+      if not SaveDDCard(nStr, nSQL) then
+      begin
+        ShowMessage('订单绑定电子标签磁卡失败,请删单重开.');
+        Exit;
+      end;
+    end;
+    {$ELSE}
     SetDDCard(nStr, EditTruck.Text, True);
+    {$ENDIF}
     //办理磁卡
 
     ModalResult := mrOk;

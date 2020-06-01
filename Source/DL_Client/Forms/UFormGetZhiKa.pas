@@ -168,8 +168,8 @@ begin
     Exit;
   end;
 
-  nStr := ' accountName Like ''%%%s%%'' Or accountCode Like ''%%%s%%''';
-  nWhere := Format(nStr, [EditCus.Text, EditCus.Text]);
+  nStr := ' accountName Like ''%%%s%%'' Or accountCode Like ''%%%s%%'' Or contractCode Like ''%%%s%%''';
+  nWhere := Format(nStr, [EditCus.Text, EditCus.Text, EditCus.Text]);
   //客户名
 
   InitFormData(nWhere);
@@ -179,7 +179,7 @@ procedure TfFormGetZhiKa.BtnOKClick(Sender: TObject);
 var
   nStr, nType, nSql, nPreFun, nAddOrDec:string;   //nPreFun 价格方案  nAddOrDec 加or减
   nValue, nPriceNow, nPriceZX, nPriceGP, nZXFD:Double;
-  //nPriceNow现合同价  nPriceZX最终执行价  nPriceGP挂牌价   nZXFD挂牌价执行幅度
+  //nPriceNow现合同价  nPriceZX最终执行价  nPriceGP挂牌价   nZXFD挂牌价执行幅度  冻结量
 begin
   if cxView1.DataController.GetSelectedCount < 0 then
   begin
@@ -263,12 +263,12 @@ begin
          nType := sFlag_Dai
     else nType := sFlag_San;
     
-    nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_OutFact is null';
-    nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo+nType]);
+    nStr := ' select SUM(L_Value) from %s where L_ZhiKa=''%s'' and L_StockNo=''%s'' and L_order=''%s'' and L_OutFact is null';
+    nStr := Format(nStr,[sTable_Bill,FZhiKa,FStockNo+nType, FieldByName('itemCode').AsString]);
     with FDM.QueryTemp(nStr) do
       nValue := Fields[0].AsFloat;
 
-    FValue       := FieldByName('leaveQty').AsFloat - nValue;
+    FValue := FieldByName('leaveQty').AsFloat - nValue;
 
     if FValue < 0 then
     begin

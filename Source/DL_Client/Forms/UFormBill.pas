@@ -82,7 +82,7 @@ var nBool,nBuDan: Boolean;
     nP: PFormCommandParam;
 begin
   Result := nil;
-  if GetSysValidDate < 1 then Exit;
+  //if GetSysValidDate < 1 then Exit;
 
   nP := nil;
   try

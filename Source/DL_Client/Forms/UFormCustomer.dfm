@@ -277,7 +277,6 @@ inherited fFormCustomer: TfFormCustomer
     object EditWX: TcxComboBox
       Left = 81
       Top = 236
-      Hint = 'T.C_WeiXin'
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.DropDownRows = 20

@@ -1,11 +1,11 @@
 inherited fFrameNormal: TfFrameNormal
-  Width = 602
+  Width = 587
   Height = 367
   ParentBackground = False
   object ToolBar1: TToolBar
     Left = 0
     Top = 22
-    Width = 602
+    Width = 587
     Height = 37
     ButtonHeight = 35
     ButtonWidth = 67
@@ -96,7 +96,7 @@ inherited fFrameNormal: TfFrameNormal
   object cxGrid1: TcxGrid
     Left = 0
     Top = 167
-    Width = 602
+    Width = 587
     Height = 200
     Align = alClient
     BorderStyle = cxcbsNone
@@ -118,29 +118,25 @@ inherited fFrameNormal: TfFrameNormal
   object dxLayout1: TdxLayoutControl
     Left = 0
     Top = 59
-    Width = 602
+    Width = 587
     Height = 100
     Align = alTop
     BevelEdges = [beLeft, beRight, beBottom]
     TabOrder = 2
     TabStop = False
-    LayoutLookAndFeel = FDM.dxLayoutWeb1
-    OptionsItem.AutoControlAreaAlignment = False
+    AutoContentSizes = [acsWidth]
+    AutoControlAlignment = False
+    LookAndFeel = FDM.dxLayoutWeb1
     object dxGroup1: TdxLayoutGroup
-      AlignHorz = ahParentManaged
-      AlignVert = avTop
-      CaptionOptions.Visible = False
-      ButtonOptions.Buttons = <>
+      ShowCaption = False
       Hidden = True
       ShowBorder = False
       object GroupSearch1: TdxLayoutGroup
-        CaptionOptions.Text = #24555#36895#26597#35810
-        ButtonOptions.Buttons = <>
+        Caption = #24555#36895#26597#35810
         LayoutDirection = ldHorizontal
       end
       object GroupDetail1: TdxLayoutGroup
-        CaptionOptions.Text = #31616#26126#20449#24687
-        ButtonOptions.Buttons = <>
+        Caption = #31616#26126#20449#24687
         LayoutDirection = ldHorizontal
       end
     end
@@ -148,7 +144,7 @@ inherited fFrameNormal: TfFrameNormal
   object cxSplitter1: TcxSplitter
     Left = 0
     Top = 159
-    Width = 602
+    Width = 587
     Height = 8
     HotZoneClassName = 'TcxXPTaskBarStyle'
     AlignSplitter = salTop
@@ -157,7 +153,7 @@ inherited fFrameNormal: TfFrameNormal
   object TitlePanel1: TZnBitmapPanel
     Left = 0
     Top = 0
-    Width = 602
+    Width = 587
     Height = 22
     Align = alTop
     object TitleBar: TcxLabel
@@ -183,8 +179,8 @@ inherited fFrameNormal: TfFrameNormal
       Properties.ShadowedColor = clBlack
       Transparent = True
       Height = 22
-      Width = 602
-      AnchorX = 301
+      Width = 587
+      AnchorX = 294
       AnchorY = 11
     end
   end
@@ -198,5 +194,62 @@ inherited fFrameNormal: TfFrameNormal
     DataSet = SQLQuery
     Left = 34
     Top = 202
+  end
+  object cxPMenu1: TcxGridPopupMenu
+    Grid = cxGrid1
+    PopupMenus = <
+      item
+        GridView = cxView1
+        HitTypes = [gvhtColumnHeaderFilterButton]
+        Index = 0
+        PopupMenu = BasePMenu1
+      end
+      item
+        GridView = cxView1
+        HitTypes = [gvhtColumnHeader]
+        Index = 1
+        PopupMenu = BasePMenu2
+      end
+      item
+        GridView = cxView1
+        HitTypes = [gvhtNone, gvhtCell, gvhtRecord]
+        Index = 2
+      end>
+    UseBuiltInPopupMenus = False
+    Left = 6
+    Top = 326
+  end
+  object BasePMenu1: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 34
+    Top = 326
+    object BaseN1: TMenuItem
+      Caption = #8251#39640#32423#31579#36873#8251
+      Enabled = False
+    end
+    object BaseN2: TMenuItem
+      Tag = 10
+      Caption = '  '#25490#38500#36873#20013
+      OnClick = BaseN2Click
+    end
+    object BaseN3: TMenuItem
+      Tag = 20
+      Caption = '  '#27169#31946#25490#38500
+      OnClick = BaseN2Click
+    end
+    object BaseN5: TMenuItem
+      Tag = 30
+      Caption = '  '#27169#31946#21253#21547
+      OnClick = BaseN2Click
+    end
+  end
+  object BasePMenu2: TPopupMenu
+    AutoHotkeys = maManual
+    Left = 62
+    Top = 326
+    object BaseN4: TMenuItem
+      Caption = #33258#21160#21015#23485
+      OnClick = BaseN4Click
+    end
   end
 end

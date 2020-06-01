@@ -1766,6 +1766,14 @@ begin
   begin
     Result := True;
   end;
+
+  nStr := 'select * from %s where O_Truck=''%s'' and O_Card<> '''' and O_CType<>''%s''';
+  nStr := Format(nStr,[sTable_Order,nTruck,sFlag_OrderCardG]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := True;
+  end;
 end;
 
 //验证车辆电子标签

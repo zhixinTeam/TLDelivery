@@ -367,6 +367,7 @@ function VeriFySnapTruck(const nReader: string; nBill: TLadingBillItem;
 procedure RemoteSnapDisPlay(const nPost, nText, nSucc: string);
 
 function GetTruckLoadLimit(nTruck, nStockName:string):Double;
+function GetOrderTruckLimit:Double;
 
 implementation
 
@@ -1388,7 +1389,7 @@ begin
     {$IFDEF CapturePictureEx}
     CapturePictureEx(nTunnel, nLogin, nList);
     {$ELSE}
-    CapturePicture(nTunnel, nList);
+    //CapturePicture(nTunnel, nList);
     //capture file
     {$ENDIF}
 
@@ -2544,22 +2545,39 @@ function GetReportFileByStock(const nStock: string): string;
 begin
   Result := GetPinYinOfStr(nStock);
 
-  if Pos('dj', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan42_DJ.fr3'
+  Result := GetPinYinOfStr(nStock);
+  if Pos('fmhgsy', Result) > 0 then
+    Result := gPath + 'HuaYan_FMHGSY.fr3'      //·ÛÃº»Ò¹èËáÑÎË®Äà
+  else if Pos('gjgklsyyj', Result) > 0 then
+    Result := gPath + 'HuaYan_YJ.fr3'          //G¼¶¸ß¿¹ÁòËáÑÎÓÍ¾®
+  else if Pos('gklsygsy', Result) > 0 then
+    Result := gPath + 'HuaYan_GKLSY.fr3'       //42.5¸ß¿¹ÁòËáÑÎ¹èËáÑÎË®Äà
+  else if Pos('ptyjsn', Result) > 0 then
+    Result := gPath + 'HuaYan_PTYJ.fr3'        //ÆÕÍ¨ÓÍ¾®Ë®Äà
+  else if Pos('zklsygsy', Result) > 0 then
+    Result := gPath + 'HuaYan_ZKLSY.fr3'       //ÖÐ¿¹ÁòËáÑÎ¹èËáÑÎ
+  else if Pos('7.5dlgsy', Result) > 0 then
+    Result := gPath + 'HuaYan_75.fr3'          //7.5µÀÂ·¹èËáÑÎË®Äà
+  else if Pos('7.5dlgsy', Result) > 0 then
+    Result := gPath + 'HuaYan_JC.fr3'          //42.5µÀÂ·¹èËáÑÎË®Äà
+  else if Pos('shn', Result) > 0 then
+    Result := gPath  + 'HuaYan_HN.fr3'         //É¢»ºÄý
+  else if Pos('dj', Result) > 0 then
+    Result := gPath + 'Report\HuaYan_DJ.fr3'
   else if Pos('gsysl', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan_gsl.fr3'
+    Result := gPath + 'Report\HuaYan_gsl.fr3'
   else if Pos('kzf', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan_kzf.fr3'
+    Result := gPath + 'Report\HuaYan_kzf.fr3'
   else if Pos('qz', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan_qz.fr3'
+    Result := gPath + 'Report\HuaYan_qz.fr3'
   else if Pos('32', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan32.fr3'
+    Result := gPath + 'Report\HuaYan32.fr3'
   else if Pos('42', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan42.fr3'
+    Result := gPath + 'Report\HuaYan42.fr3'
   else if Pos('52', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan52.fr3'
+    Result := gPath + 'Report\HuaYan52.fr3'
   else if Pos('sl', Result) > 0 then
-    Result := gPath + sReportDir + 'HuaYan_sl.fr3'
+    Result := gPath + 'Report\HuaYan_sl.fr3'
   else Result := '';
 end;
 
@@ -3387,15 +3405,15 @@ begin
     try
       {$IFDEF CapturePictureEx}
       CapturePictureEx(nTunnel, nLogin, nList);
-      {$ELSE}
-      CapturePicture(nTunnel, nList);
-      //capture file
-      {$ENDIF}
 
       for nIdx:=0 to nList.Count - 1 do
         SavePicture(nOut.FData, nData[0].FTruck,
                                 nData[0].FStockName, nList[nIdx]);
       //save file
+      {$ELSE}
+      //CapturePicture(nTunnel, nList);
+      //capture file
+      {$ENDIF}
     finally
       nList.Free;
     end;
@@ -3787,6 +3805,21 @@ begin
         if recordcount > 0 then
           Result := FieldByName('D_Value').AsFloat;
     end;
+  end;
+end;
+
+
+function GetOrderTruckLimit:Double;
+var
+  nStr:string;
+begin
+  Result := 50;
+  nStr := 'select * from %s where D_Name=''%s''';
+  nStr := Format(nStr,[sTable_SysDict, sFlag_OrderTruckLimit]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if recordcount > 0 then
+      Result := FieldByName('D_Value').AsFloat;
   end;
 end;
 

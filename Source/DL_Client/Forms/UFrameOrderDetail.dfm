@@ -48,6 +48,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
     Height = 224
     inherited cxView1: TcxGridDBTableView
       PopupMenu = pmPMenu1
+      OnDblClick = cxView1DblClick
       DataController.Summary.Options = [soNullIgnore]
     end
   end

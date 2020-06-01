@@ -41,6 +41,8 @@ type
     dxLayout1Group5: TdxLayoutGroup;
     editPreValue: TcxTextEdit;
     dxLayout1Item12: TdxLayoutItem;
+    editPFBZ: TcxComboBox;
+    dxLayout1Item13: TdxLayoutItem;
     procedure BtnOKClick(Sender: TObject);
   protected
     { Protected declarations }
@@ -126,6 +128,7 @@ begin
     CheckVip.Checked   := FieldByName('T_VIPTruck').AsString = sFlag_TypeVIP;
     CheckGPS.Checked   := FieldByName('T_HasGPS').AsString = sFlag_Yes;
     checkVipCus.Checked:= FieldByName('T_VipCus').AsString = sFlag_Yes;
+    editPFBZ.ItemIndex := FieldByName('T_PFBZ').AsInteger;
   end;
 end;
 
@@ -194,6 +197,7 @@ begin
           SF('T_PrePMan', gSysParam.FUserName),
           SF('T_PrePTime', sField_SQLServer_Now, sfVal),
           SF('T_PrePValue', nTruckP),
+          SF('T_PFBZ', editPFBZ.ItemIndex),
           SF('T_LastTime', sField_SQLServer_Now, sfVal)
           ], sTable_Truck, nStr, FTruckID = '');
   FDM.ExecuteSQL(nStr);

@@ -1047,13 +1047,14 @@ function PrintBillCode(const nTunnel,nBill: string; var nHint: string): Boolean;
 var nStr: string;
     nTask: Int64;
     nOut: TWorkerBusinessCommand;
+    i:integer;
 begin
   Result := True;
   if not gMultiJSManager.CountEnable then Exit;
 
   nTask := gTaskMonitor.AddTask('UHardBusiness.PrintBillCode', cTaskTimeoutLong);
   //to mon
-  
+  for I := 0 to 1 do
   if not CallHardwareCommand(cBC_PrintCode, nBill, nTunnel, @nOut) then
   begin
     nStr := '向通道[ %s ]发送防违流码失败,描述: %s';
@@ -1325,7 +1326,7 @@ begin
 
   gERelayManager.LineOpen(nTunnel);
   //打开放灰
-
+  {$IFDEF QSTL}
   if Pos('熟料',nTruck.FStockName) >0 then
   begin
     nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
@@ -1339,6 +1340,13 @@ begin
             FloatToStr(nTruck.FValue);
     //xxxxx
   end;
+  {$ELSE}
+    nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
+    nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
+    nStr := nStr + nTruck.FStockName + StringOfChar(' ', 12 - Length(nTmp)) +
+            FloatToStr(nTruck.FValue);
+    //xxxxx
+  {$ENDIF}
 
   gERelayManager.ShowTxt(nTunnel, nStr);
   //显示内容
